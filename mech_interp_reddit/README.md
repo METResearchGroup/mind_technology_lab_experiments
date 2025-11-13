@@ -34,6 +34,9 @@ python run_pipeline.py --question "When judging this situation, which concepts a
 python run_pipeline.py --model sshleifer/tiny-gpt2 --question "When judging this situation, which concepts are most salient?"
 # Optional: specify a different posts file
 python run_pipeline.py --posts SAMPLE_REDDIT_POSTS.jsonl --question "..."
+# Multi-model mode (runs each model and writes under output/<timestamp>/<model_name>/)
+# Allowed: Qwen/Qwen2.5-0.5B-Instruct, Qwen/Qwen2.5-1.5B-Instruct, TinyLlama/TinyLlama-1.1B-Chat-v1.0, EleutherAI/pythia-1.4b
+python run_pipeline.py --models "Qwen/Qwen2.5-0.5B-Instruct,TinyLlama/TinyLlama-1.1B-Chat-v1.0" --question "..."
 ```
 
 Images and metadata will be saved under a timestamped folder:
@@ -47,4 +50,5 @@ Notes:
 - The script downloads the HF model `Qwen/Qwen2.5-1.5B-Instruct` on first run.
 - Adjust layers via `--layers` (default: `-4,-3,-2,-1`), and question via `--question`.
 - `metadata.json` includes: `timestamp`, `model`, `git_commit_hash`, and `activation_id_to_comment_id` mapping.
+- In multi-model runs, `metadata.json` also includes `models` (list of model IDs used).
 - The loader accepts the provided `SAMPLE_REDDIT_POSTS.jsonl` (JSON array) with triple-quoted `submission` blocks.

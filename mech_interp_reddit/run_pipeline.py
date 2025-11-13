@@ -11,6 +11,7 @@ from src.concepts import get_concept_pairs
 from src.act_vectors import build_concept_vectors
 from src.score import score_text_against_concepts
 from src.viz import plot_bar
+from src.model_options import ALLOWED_MODELS, is_allowed
 
 
 def load_posts(jsonl_path: str) -> List[Dict]:
@@ -85,24 +86,25 @@ def main():
         default="Qwen/Qwen2.5-1.5B-Instruct",
         help="HF model name to use (override default for testing, e.g., 'sshleifer/tiny-gpt2').",
     )
+    parser.add_argument(
+        "--models",
+        default="",
+        help="Comma-separated list of HF model IDs to run in multi-model mode. "
+             "Only allowed models are accepted.",
+    )
     args = parser.parse_args()
 
-    model, tokenizer, device = load_qwen_15b(model_name=args.model)
-    # Parse desired layers, then constrain to available range [-n_layers, -1]
-    desired_layers = [int(x) for x in args.layers.split(",")]
-    n_layers = getattr(model.config, "num_hidden_layers", None)
-    if isinstance(n_layers, int) and n_layers > 0:
-        safe_layers = [li for li in desired_layers if (-n_layers) <= li <= -1]
-        if not safe_layers:
-            k = min(4, n_layers)
-            safe_layers = [-(k - i) for i in range(k)]  # e.g., [-4,-3,-2,-1] or truncated
-        layer_indices = safe_layers
+    # Decide models to run
+    models_list: List[str]
+    if args.models:
+        requested = [m.strip() for m in args.models.split(",") if m.strip()]
+        models_list = [m for m in requested if is_allowed(m)]
+        if not models_list:
+            raise SystemExit(
+                "No valid models requested. Choose from:\n  - " + "\n  - ".join(ALLOWED_MODELS)
+            )
     else:
-        # Fallback: just use last layer
-        layer_indices = [-1]
-
-    concept_pairs = get_concept_pairs()
-    concept_vectors = build_concept_vectors(model, tokenizer, device, concept_pairs, layer_indices)
+        models_list = [args.model]
 
     posts = load_posts(args.posts)
     # Output session directory
@@ -110,24 +112,50 @@ def main():
     session_dir = os.path.join(args.outdir, timestamp)
     os.makedirs(session_dir, exist_ok=True)
     meta_map = {}
+    models_used: List[str] = []
 
-    for idx, post in enumerate(posts):
-        text = build_input_text(post, args.question)
-        scores = score_text_against_concepts(model, tokenizer, device, text, concept_vectors, layer_indices)
-        print(f"\nPost {idx}: {post.get('link', '')}")
-        for k, v in scores.items():
-            print(f"  {k:22s}: {v:.3f}")
+    for model_id in models_list:
+        print(f"\n=== Running model: {model_id} ===")
+        model, tokenizer, device = load_qwen_15b(model_name=model_id)
+        # Parse desired layers, then constrain to available range [-n_layers, -1]
+        desired_layers = [int(x) for x in args.layers.split(",")]
+        n_layers = getattr(model.config, "num_hidden_layers", None)
+        if isinstance(n_layers, int) and n_layers > 0:
+            safe_layers = [li for li in desired_layers if (-n_layers) <= li <= -1]
+            if not safe_layers:
+                k = min(4, n_layers)
+                safe_layers = [-(k - i) for i in range(k)]  # e.g., [-4,-3,-2,-1] or truncated
+            layer_indices = safe_layers
+        else:
+            layer_indices = [-1]
 
-        out_path = os.path.join(session_dir, f"activations_{idx}.png")
-        plot_bar(scores, title=f"Relative Activations — Post {idx}", out_path=out_path)
-        print(f"Saved: {out_path}")
-        # Track mapping of activation index to comment_id
-        meta_map[str(idx)] = post.get("comment_id", "")
+        concept_pairs = get_concept_pairs()
+        concept_vectors = build_concept_vectors(model, tokenizer, device, concept_pairs, layer_indices)
+
+        model_dir_name = model_id.replace("/", "_")
+        model_out_dir = os.path.join(session_dir, model_dir_name)
+        os.makedirs(model_out_dir, exist_ok=True)
+
+        for idx, post in enumerate(posts):
+            text = build_input_text(post, args.question)
+            scores = score_text_against_concepts(model, tokenizer, device, text, concept_vectors, layer_indices)
+            print(f"\nPost {idx}: {post.get('link', '')}")
+            for k, v in scores.items():
+                print(f"  {k:22s}: {v:.3f}")
+
+            out_path = os.path.join(model_out_dir, f"activations_{idx}.png")
+            plot_bar(scores, title=f"Relative Activations — Post {idx}", out_path=out_path)
+            print(f"Saved: {out_path}")
+            # Track mapping of activation index to comment_id (global mapping)
+            meta_map[str(idx)] = post.get("comment_id", "")
+
+        models_used.append(getattr(model, "name_or_path", model_id))
 
     # Write metadata.json
     metadata = {
         "timestamp": timestamp,
-        "model": getattr(model, "name_or_path", args.model),
+        "models": models_used,
+        "model": models_used[0] if models_used else args.model,
         "git_commit_hash": get_git_commit_hash(),
         "activation_id_to_comment_id": meta_map,
     }
