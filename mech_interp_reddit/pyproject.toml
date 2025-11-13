@@ -1,0 +1,36 @@
+[project]
+name = "mech-interp-reddit"
+version = "0.1.0"
+description = "Concept activation measurement on Reddit posts using Qwen and activation-engineering vectors."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Mark / Mind Technology Lab" }
+]
+dependencies = [
+    "torch>=2.2.0",
+    "transformers>=4.43.0",
+    "matplotlib>=3.8.0",
+    "numpy>=1.24.0",
+    "tqdm>=4.66.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4.0",
+]
+
+[project.scripts]
+mech-activations = "run_pipeline:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = ["E", "F", "I"]
+ignore = []
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
