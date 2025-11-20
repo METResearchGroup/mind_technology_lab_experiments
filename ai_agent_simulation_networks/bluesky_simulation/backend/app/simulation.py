@@ -164,6 +164,16 @@ def run_agent_turn(agent_handle: str, turn: int):
         # 3. Decide Likes
         like_chain = ChatPromptTemplate.from_template(LIKE_DECISION_PROMPT) | llm.bind(response_format={"type": "json_object"})
         
+        # keep raw inputs/outputs for telemetry
+        telemetry: Dict[str, Any] = {
+            "agent_handle": agent_handle,
+            "turn": turn,
+            "like_input": {},
+            "like_output_raw": None,
+            "draft_input": {},
+            "draft_output_raw": None
+        }
+        
         try:
             like_result = like_chain.invoke({
                 "name": agent_handle,
@@ -171,6 +181,12 @@ def run_agent_turn(agent_handle: str, turn: int):
                 "feed_posts": feed_str
             })
             likes_data = json.loads(like_result.content)
+            telemetry["like_input"] = {
+                "name": agent_handle,
+                "bio": bio_str,
+                "feed_posts": feed_str
+            }
+            telemetry["like_output_raw"] = like_result.content
             
             for like in likes_data.get("likes", []):
                 # Find the post URI from the feed list (we need to map back or just trust LLM if it outputs URI correctly)
@@ -192,6 +208,12 @@ def run_agent_turn(agent_handle: str, turn: int):
             "feed_posts": feed_str_uris
         })
         likes_data = json.loads(like_result.content)
+        telemetry["like_input"] = {
+            "name": agent_handle,
+            "bio": bio_str,
+            "feed_posts": feed_str_uris
+        }
+        telemetry["like_output_raw"] = like_result.content
         likes_count = 0
         for like in likes_data.get("likes", []):
             save_like(cursor, agent_handle, like['post_uri'], like['reason'], turn)
@@ -211,6 +233,13 @@ def run_agent_turn(agent_handle: str, turn: int):
             "feed_posts": feed_str # Text only is fine here, or use URIs
         })
         drafts_data = json.loads(draft_result.content)
+        telemetry["draft_input"] = {
+            "name": agent_handle,
+            "bio": bio_str,
+            "past_posts": past_posts_str,
+            "feed_posts": feed_str
+        }
+        telemetry["draft_output_raw"] = draft_result.content
         drafts = drafts_data.get("drafts", [])
         
         # 5. Decide to write (p=0.05)
@@ -243,6 +272,12 @@ def run_agent_turn(agent_handle: str, turn: int):
             "log": log_output
         })
         
+        # Return telemetry so Opik can display prompt/response content
+        telemetry["likes_count"] = likes_count
+        telemetry["posts_count"] = posts_count
+        telemetry["log_excerpt"] = log_output[:4000]  # avoid overlong payloads
+        return telemetry
+        
     except Exception as e:
         sys.stdout = original_stdout
         error_msg = f"Error in agent turn for {agent_handle}: {e}"
@@ -253,6 +288,13 @@ def run_agent_turn(agent_handle: str, turn: int):
             "error": str(e),
             "log": stdout_capture.getvalue()
         })
+        # Surface error in telemetry output for Opik
+        return {
+            "agent_handle": agent_handle,
+            "turn": turn,
+            "error": str(e),
+            "log_excerpt": stdout_capture.getvalue()[:4000]
+        }
     finally:
         conn.close()
 
