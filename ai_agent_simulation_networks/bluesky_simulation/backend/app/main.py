@@ -13,6 +13,7 @@ from app.simulation import app as simulation_app, event_queue
 import os
 from dotenv import load_dotenv, find_dotenv
 import opik
+from pathlib import Path
 
 app = FastAPI()
 
@@ -34,12 +35,26 @@ def configure_opik_from_environment() -> None:
       - OPIK_URL or OPIK_URL_OVERRIDE    # optional server URL
       - OPIK_PROJECT_NAME / OPIK_PROJECT # project name (picked up by SDK via env)
     """
-    # Load .env (search upwards from CWD to handle repo-level .env files)
+    # Load .env robustly:
+    # 1) Try from current working directory upwards
+    # 2) Try from this file's directory upwards
+    # 3) As a fallback, try known repo structure: up to ai_agent_simulation_networks/.env
+    loaded_env_path = None
     dotenv_path = find_dotenv(usecwd=True)
+    if not dotenv_path:
+        dotenv_path = find_dotenv(usecwd=False)
+    if not dotenv_path:
+        try:
+            candidate = Path(__file__).resolve().parents[3] / ".env"
+            if candidate.exists():
+                dotenv_path = str(candidate)
+        except Exception:
+            pass
     if dotenv_path:
-        load_dotenv(dotenv_path=dotenv_path)
+        load_dotenv(dotenv_path=dotenv_path, override=True)
+        loaded_env_path = dotenv_path
     else:
-        load_dotenv()
+        load_dotenv(override=True)
     
     use_local = os.getenv("OPIK_USE_LOCAL", "").strip()
     api_key = os.getenv("OPIK_API_KEY", "").strip()
@@ -73,7 +88,12 @@ def configure_opik_from_environment() -> None:
             return
         
         # If neither local nor api key provided, skip configuration silently
+        # Help diagnose env loading issues without printing secrets
+        debug_env_src = loaded_env_path or "<none>"
+        has_api_key = "yes" if bool(api_key) else "no"
+        has_workspace = "yes" if bool(workspace) else "no"
         print(f"[opik] no configuration provided (set OPIK_USE_LOCAL=1 or OPIK_API_KEY); using project: {project_name}")
+        print(f"[opik] debug: .env loaded from: {debug_env_src}; OPIK_API_KEY present: {has_api_key}; OPIK_WORKSPACE present: {has_workspace}")
     except Exception as e:
         # Do not crash the app if Opik configuration fails
         print(f"[opik] configuration skipped: {e}")
