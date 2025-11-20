@@ -5,7 +5,7 @@ from typing import List, Dict, Any, TypedDict, Annotated
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from opik import track
+import opik
 from app.db import get_db_connection
 from app.models import AgentBioSchema
 import asyncio
@@ -15,31 +15,6 @@ from io import StringIO
 
 # Global event queue for real-time updates
 event_queue = Queue()
-
-@track
-def log_turn_trace(
-    agent_handle: str,
-    turn: int,
-    like_input: Dict[str, Any],
-    draft_input: Dict[str, Any],
-    like_prompt: str,
-    draft_prompt: str,
-    like_response: str,
-    draft_response: str,
-    likes_count: int,
-    posts_count: int,
-    log_excerpt: str,
-    thread_id: str
-):
-    """
-    Dedicated tracked span to record inputs/prompts in the Input pane and keep responses as Output.
-    Counts and log excerpt are included as arguments so they can also be inspected (child span Input).
-    """
-    # Return only the model responses to keep Output focused
-    return {
-        "like_response": like_response,
-        "draft_response": draft_response
-    }
 
 def emit_event(event_type: str, data: Dict[str, Any]):
     """Emit an event to the event queue for SSE streaming."""
@@ -161,7 +136,6 @@ class SimulationState(TypedDict):
     turn: int
     agents: List[str]
     
-@track
 def run_agent_turn(agent_handle: str, turn: int):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -186,130 +160,101 @@ def run_agent_turn(agent_handle: str, turn: int):
         
         llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
         
-        # 3. Decide Likes
-        like_chain = ChatPromptTemplate.from_template(LIKE_DECISION_PROMPT) | llm.bind(response_format={"type": "json_object"})
-        like_prompt_text = LIKE_DECISION_PROMPT.format(name=agent_handle, bio=bio_str, feed_posts=feed_str)
-        
-        # keep raw inputs/outputs for telemetry
-        telemetry: Dict[str, Any] = {
-            "agent_handle": agent_handle,
-            "turn": turn,
-            "like_input": {},
-            "like_output_raw": None,
-            "draft_input": {},
-            "draft_output_raw": None
-        }
-        
-        try:
-            like_inputs_initial = {
-                "name": agent_handle,
-                "bio": bio_str,
-                "feed_posts": feed_str
-            }
-            like_result = like_chain.invoke(like_inputs_initial)
-            likes_data = json.loads(like_result.content)
-            telemetry["like_input"] = {
-                "name": agent_handle,
-                "bio": bio_str,
-                "feed_posts": feed_str
-            }
-            telemetry["like_output_raw"] = like_result.content
-            telemetry["like_prompt"] = like_prompt_text
-            telemetry["like_response"] = like_result.content
-            print("[telemetry] like_prompt:=\n" + like_prompt_text)
-            print("[telemetry] like_response:=\n" + like_result.content)
-            
-            for like in likes_data.get("likes", []):
-                # Find the post URI from the feed list (we need to map back or just trust LLM if it outputs URI correctly)
-                # The prompt asks to output "post_uri". We need to provide URIs in the feed.
-                # Let's re-format feed_str to include URIs
-                pass 
-                # Wait, I didn't include URI in feed_str above. Let me fix that in the loop below.
-        except Exception as e:
-            print(f"    Error in liking: {e}")
-
-        # Re-doing feed string with URIs for the prompt
+        # Prepare feed with URIs for prompts
         feed_with_uris = [{"uri": p['uri'], "author": p['author_handle'], "text": p['text']} for p in feed]
         feed_str_uris = json.dumps(feed_with_uris, indent=2)
-        like_prompt_text = LIKE_DECISION_PROMPT.format(name=agent_handle, bio=bio_str, feed_posts=feed_str_uris)
         
-        # Retry Like invocation with correct feed
-        like_inputs = {
-            "name": agent_handle,
-            "bio": bio_str,
-            "feed_posts": feed_str_uris
-        }
-        like_result = like_chain.invoke(like_inputs)
-        likes_data = json.loads(like_result.content)
-        telemetry["like_input"] = {
-            "name": agent_handle,
-            "bio": bio_str,
-            "feed_posts": feed_str_uris
-        }
-        telemetry["like_output_raw"] = like_result.content
-        telemetry["like_prompt"] = like_prompt_text
-        telemetry["like_response"] = like_result.content
-        print("[telemetry] like_prompt:=\n" + like_prompt_text)
-        print("[telemetry] like_response:=\n" + like_result.content)
-        likes_count = 0
-        for like in likes_data.get("likes", []):
-            save_like(cursor, agent_handle, like['post_uri'], like['reason'], turn)
-            print(f"    Liked post by {like.get('post_uri')} because: {like.get('reason')}")
-            likes_count += 1
-
-        # 4. Draft & Post
-        past_posts = get_agent_past_posts(cursor, agent_handle)
-        past_posts_str = json.dumps(past_posts, indent=2)
-        
+        # Build chains
+        like_chain = ChatPromptTemplate.from_template(LIKE_DECISION_PROMPT) | llm.bind(response_format={"type": "json_object"})
         draft_chain = ChatPromptTemplate.from_template(POST_DRAFTING_PROMPT) | llm.bind(response_format={"type": "json_object"})
-        draft_prompt_text = POST_DRAFTING_PROMPT.format(
-            name=agent_handle,
-            bio=bio_str,
-            past_posts=past_posts_str,
-            feed_posts=feed_str
-        )
-        
-        draft_inputs = {
-            "name": agent_handle,
-            "bio": bio_str,
-            "past_posts": past_posts_str,
-            "feed_posts": feed_str # Text only is fine here, or use URIs
-        }
-        draft_result = draft_chain.invoke(draft_inputs)
-        drafts_data = json.loads(draft_result.content)
-        telemetry["draft_input"] = {
-            "name": agent_handle,
-            "bio": bio_str,
-            "past_posts": past_posts_str,
-            "feed_posts": feed_str
-        }
-        telemetry["draft_output_raw"] = draft_result.content
-        telemetry["draft_prompt"] = draft_prompt_text
-        telemetry["draft_response"] = draft_result.content
-        print("[telemetry] draft_prompt:=\n" + draft_prompt_text)
-        print("[telemetry] draft_response:=\n" + draft_result.content)
-        drafts = drafts_data.get("drafts", [])
-        
-        # 5. Decide to write (p=0.05)
-        # Requirement: "iterate through the 3 draft posts and choose to 'write' the post"
-        # "let's say with p=0.05 ... we iterate through ... and choose to write"
-        # This implies p=0.05 per draft? Or p=0.05 chance to write ANY post?
-        # "iterate through the 3 draft posts and choose to 'write' the post" -> ambiguous.
-        # Let's assume p=0.05 chance to write ONE post from the drafts.
-        
+
+        likes_count = 0
         posts_count = 0
-        if random.random() < 0.05 and drafts:
-            # Pick one random draft to post
-            chosen_draft = random.choice(drafts)
-            save_post(cursor, agent_handle, chosen_draft['text'], turn)
-            print(f"    Wrote post: {chosen_draft['text']}")
-            posts_count = 1
+        drafts: List[Dict[str, Any]] = []
+
+        # Agent-level span to group the LLM spans and hold metadata
+        with opik.start_as_current_span(
+            name=f"agent:{agent_handle}",
+            type="general",
+            metadata={"agent_handle": agent_handle, "turn": turn}
+        ) as agent_span:
+            # LIKE span
+            like_prompt_text = LIKE_DECISION_PROMPT.format(name=agent_handle, bio=bio_str, feed_posts=feed_str_uris)
+            with opik.start_as_current_span(
+                name="like",
+                type="llm",
+                metadata={"agent_handle": agent_handle, "turn": turn}
+            ) as like_span:
+                like_span.model = "gpt-4o"
+                like_span.provider = "openai"
+                like_input = {
+                    "name": agent_handle,
+                    "bio": bio_str,
+                    "feed_posts": feed_str_uris
+                }
+                like_span.input = {
+                    "like_input": like_input,
+                    "like_prompt": like_prompt_text
+                }
+                like_result = like_chain.invoke(like_input)
+                like_span.output = {"response": like_result.content}
+                likes_data = json.loads(like_result.content)
+                for like in likes_data.get("likes", []):
+                    save_like(cursor, agent_handle, like['post_uri'], like['reason'], turn)
+                    print(f"    Liked post by {like.get('post_uri')} because: {like.get('reason')}")
+                    likes_count += 1
+                like_span.metadata = {**(like_span.metadata or {}), "likes_count": likes_count}
+
+            # DRAFT span
+            past_posts = get_agent_past_posts(cursor, agent_handle)
+            past_posts_str = json.dumps(past_posts, indent=2)
+            draft_prompt_text = POST_DRAFTING_PROMPT.format(
+                name=agent_handle,
+                bio=bio_str,
+                past_posts=past_posts_str,
+                feed_posts=feed_str
+            )
+            with opik.start_as_current_span(
+                name="draft",
+                type="llm",
+                metadata={"agent_handle": agent_handle, "turn": turn}
+            ) as draft_span:
+                draft_span.model = "gpt-4o"
+                draft_span.provider = "openai"
+                draft_input = {
+                    "name": agent_handle,
+                    "bio": bio_str,
+                    "past_posts": past_posts_str,
+                    "feed_posts": feed_str
+                }
+                draft_span.input = {
+                    "draft_input": draft_input,
+                    "draft_prompt": draft_prompt_text
+                }
+                draft_result = draft_chain.invoke(draft_input)
+                draft_span.output = {"response": draft_result.content}
+                drafts_data = json.loads(draft_result.content)
+                drafts = drafts_data.get("drafts", [])
+
+            # Decide to write (p=0.05)
+            if random.random() < 0.05 and drafts:
+                chosen_draft = random.choice(drafts)
+                save_post(cursor, agent_handle, chosen_draft['text'], turn)
+                print(f"    Wrote post: {chosen_draft['text']}")
+                posts_count = 1
+
+            # Commit DB changes for the agent
+            conn.commit()
             
-        conn.commit()
-        
-        # Restore stdout and get captured output
-        sys.stdout = original_stdout
-        log_output = stdout_capture.getvalue()
+            # Restore stdout and attach logs to agent span metadata
+            sys.stdout = original_stdout
+            log_output = stdout_capture.getvalue()
+            agent_span.metadata = {
+                **(agent_span.metadata or {}),
+                "likes_count": likes_count,
+                "posts_count": posts_count,
+                "log_excerpt": log_output[:4000]
+            }
         
         # Emit completion event with results
         emit_event("agent_complete", {
@@ -317,30 +262,13 @@ def run_agent_turn(agent_handle: str, turn: int):
             "turn": turn,
             "likes_count": likes_count,
             "posts_count": posts_count,
-            "log": log_output
+            "log": stdout_capture.getvalue()
         })
         
-        # Record a child span focused on placing prompts/inputs in Input and responses in Output
-        log_turn_trace(
-            agent_handle=agent_handle,
-            turn=turn,
-            like_input=telemetry.get("like_input", {}),
-            draft_input=telemetry.get("draft_input", {}),
-            like_prompt=telemetry.get("like_prompt", ""),
-            draft_prompt=telemetry.get("draft_prompt", ""),
-            like_response=telemetry.get("like_output_raw", "") or "",
-            draft_response=telemetry.get("draft_output_raw", "") or "",
-            likes_count=likes_count,
-            posts_count=posts_count,
-            log_excerpt=log_output[:4000],
-            thread_id=f"turn-{turn}"
-        )
-        
-        # Return minimal output for the parent span
+        # Return minimal counts for parent summarization
         return {
-            "like_response": telemetry.get("like_output_raw", "") or "",
-            "draft_response": telemetry.get("draft_output_raw", "") or "",
-            "thread_id": f"turn-{turn}"
+            "likes_count": likes_count,
+            "posts_count": posts_count
         }
         
     except Exception as e:
@@ -363,25 +291,42 @@ def run_agent_turn(agent_handle: str, turn: int):
     finally:
         conn.close()
 
-@track
 def run_simulation_step(state: SimulationState):
     turn = state['turn']
-    print(f"Starting Turn {turn}")
-    emit_event("turn_start", {"turn": turn})
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # Get all agents
-    cursor.execute("SELECT handle FROM agent_profiles")
-    agents = [row['handle'] for row in cursor.fetchall()]
-    conn.close()
-    
-    for agent in agents:
-        run_agent_turn(agent, turn)
-    
-    emit_event("turn_complete", {"turn": turn})
-    return {"turn": turn + 1}
+    with opik.start_as_current_trace(
+        name=f"turn-{turn}",
+        tags=["turn"],
+        metadata={"turn": turn}
+    ) as trace:
+        print(f"Starting Turn {turn}")
+        emit_event("turn_start", {"turn": turn})
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get all agents
+        cursor.execute("SELECT handle FROM agent_profiles")
+        agents = [row['handle'] for row in cursor.fetchall()]
+        conn.close()
+        
+        total_likes = 0
+        total_posts = 0
+        
+        for agent in agents:
+            result = run_agent_turn(agent, turn)
+            if isinstance(result, dict):
+                total_likes += int(result.get("likes_count", 0))
+                total_posts += int(result.get("posts_count", 0))
+        
+        # Summarize at the trace level
+        trace.metadata = {
+            **(trace.metadata or {}),
+            "likes_count": total_likes,
+            "posts_count": total_posts
+        }
+        
+        emit_event("turn_complete", {"turn": turn})
+        return {"turn": turn + 1}
 
 # --- LangGraph Definition ---
 
