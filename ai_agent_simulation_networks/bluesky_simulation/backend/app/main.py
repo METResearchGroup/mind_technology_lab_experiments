@@ -45,6 +45,14 @@ def configure_opik_from_environment() -> None:
     api_key = os.getenv("OPIK_API_KEY", "").strip()
     url = (os.getenv("OPIK_URL") or os.getenv("OPIK_URL_OVERRIDE") or "").strip()
     workspace = os.getenv("OPIK_WORKSPACE", "").strip()
+    project_name = (os.getenv("OPIK_PROJECT_NAME") or os.getenv("OPIK_PROJECT") or "").strip()
+    
+    # Set a default project name if none provided
+    if not project_name:
+        default_project = "AI Agent Social Network Simulation, V1"
+        os.environ["OPIK_PROJECT_NAME"] = default_project
+        project_name = default_project
+        print(f"[opik] default project set: {default_project}")
     
     try:
         # Prefer explicit local usage
@@ -61,11 +69,11 @@ def configure_opik_from_environment() -> None:
             if url:
                 kwargs["url"] = url
             opik.configure(**kwargs)
-            print("[opik] configured with API key")
+            print(f"[opik] configured with API key (project: {project_name})")
             return
         
         # If neither local nor api key provided, skip configuration silently
-        print("[opik] no configuration provided (set OPIK_USE_LOCAL=1 or OPIK_API_KEY)")
+        print(f"[opik] no configuration provided (set OPIK_USE_LOCAL=1 or OPIK_API_KEY); using project: {project_name}")
     except Exception as e:
         # Do not crash the app if Opik configuration fails
         print(f"[opik] configuration skipped: {e}")
