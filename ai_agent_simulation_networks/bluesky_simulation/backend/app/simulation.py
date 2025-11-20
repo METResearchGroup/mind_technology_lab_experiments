@@ -16,6 +16,31 @@ from io import StringIO
 # Global event queue for real-time updates
 event_queue = Queue()
 
+@track
+def log_turn_trace(
+    agent_handle: str,
+    turn: int,
+    like_input: Dict[str, Any],
+    draft_input: Dict[str, Any],
+    like_prompt: str,
+    draft_prompt: str,
+    like_response: str,
+    draft_response: str,
+    likes_count: int,
+    posts_count: int,
+    log_excerpt: str,
+    thread_id: str
+):
+    """
+    Dedicated tracked span to record inputs/prompts in the Input pane and keep responses as Output.
+    Counts and log excerpt are included as arguments so they can also be inspected (child span Input).
+    """
+    # Return only the model responses to keep Output focused
+    return {
+        "like_response": like_response,
+        "draft_response": draft_response
+    }
+
 def emit_event(event_type: str, data: Dict[str, Any]):
     """Emit an event to the event queue for SSE streaming."""
     event_queue.put({
@@ -295,12 +320,28 @@ def run_agent_turn(agent_handle: str, turn: int):
             "log": log_output
         })
         
-        # Return telemetry so Opik can display prompt/response content
-        telemetry["likes_count"] = likes_count
-        telemetry["posts_count"] = posts_count
-        telemetry["log_excerpt"] = log_output[:4000]  # avoid overlong payloads
-        telemetry["thread_id"] = f"turn-{turn}"
-        return telemetry
+        # Record a child span focused on placing prompts/inputs in Input and responses in Output
+        log_turn_trace(
+            agent_handle=agent_handle,
+            turn=turn,
+            like_input=telemetry.get("like_input", {}),
+            draft_input=telemetry.get("draft_input", {}),
+            like_prompt=telemetry.get("like_prompt", ""),
+            draft_prompt=telemetry.get("draft_prompt", ""),
+            like_response=telemetry.get("like_output_raw", "") or "",
+            draft_response=telemetry.get("draft_output_raw", "") or "",
+            likes_count=likes_count,
+            posts_count=posts_count,
+            log_excerpt=log_output[:4000],
+            thread_id=f"turn-{turn}"
+        )
+        
+        # Return minimal output for the parent span
+        return {
+            "like_response": telemetry.get("like_output_raw", "") or "",
+            "draft_response": telemetry.get("draft_output_raw", "") or "",
+            "thread_id": f"turn-{turn}"
+        }
         
     except Exception as e:
         sys.stdout = original_stdout
@@ -312,12 +353,11 @@ def run_agent_turn(agent_handle: str, turn: int):
             "error": str(e),
             "log": stdout_capture.getvalue()
         })
-        # Surface error in telemetry output for Opik
+        # Surface error minimally in parent span output
         return {
             "agent_handle": agent_handle,
             "turn": turn,
             "error": str(e),
-            "log_excerpt": stdout_capture.getvalue()[:4000],
             "thread_id": f"turn-{turn}"
         }
     finally:
