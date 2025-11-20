@@ -1,0 +1,18 @@
+{
+    "timestamp": "2025_11_20-14:41:55",
+    "runtime_configuration": {
+        "num_requests": 100,
+        "model": "gpt-4o-mini",
+        "max_tokens": 300,
+        "log_interval": 10
+    },
+    "metrics": {
+        "total_runtime": 7.798256874084473,
+        "total_requests": 100,
+        "successful_requests": 100,
+        "failed_requests": 0,
+        "total_tokens": 63746,
+        "total_cost": 0.021305099999999993,
+        "avg_latency": 5.793115966320038
+    }
+}

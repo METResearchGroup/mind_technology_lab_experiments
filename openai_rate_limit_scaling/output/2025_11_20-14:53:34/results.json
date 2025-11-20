@@ -1,0 +1,1002 @@
+[
+    {
+        "id": 0,
+        "status": "success",
+        "duration": 7.831079959869385,
+        "prompt_tokens": 432,
+        "completion_tokens": 257,
+        "total_tokens": 689,
+        "cost": 0.00021899999999999998,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 1,
+        "status": "success",
+        "duration": 7.406819820404053,
+        "prompt_tokens": 455,
+        "completion_tokens": 300,
+        "total_tokens": 755,
+        "cost": 0.00024825,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 2,
+        "status": "success",
+        "duration": 6.069076061248779,
+        "prompt_tokens": 464,
+        "completion_tokens": 234,
+        "total_tokens": 698,
+        "cost": 0.00021,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 3,
+        "status": "success",
+        "duration": 6.385328054428101,
+        "prompt_tokens": 498,
+        "completion_tokens": 292,
+        "total_tokens": 790,
+        "cost": 0.00024989999999999995,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 4,
+        "status": "success",
+        "duration": 6.669018030166626,
+        "prompt_tokens": 424,
+        "completion_tokens": 274,
+        "total_tokens": 698,
+        "cost": 0.000228,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 5,
+        "status": "success",
+        "duration": 10.552356958389282,
+        "prompt_tokens": 500,
+        "completion_tokens": 300,
+        "total_tokens": 800,
+        "cost": 0.000255,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 6,
+        "status": "success",
+        "duration": 8.537879228591919,
+        "prompt_tokens": 466,
+        "completion_tokens": 220,
+        "total_tokens": 686,
+        "cost": 0.0002019,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 7,
+        "status": "success",
+        "duration": 7.278076887130737,
+        "prompt_tokens": 447,
+        "completion_tokens": 288,
+        "total_tokens": 735,
+        "cost": 0.00023984999999999998,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 8,
+        "status": "success",
+        "duration": 7.210693836212158,
+        "prompt_tokens": 449,
+        "completion_tokens": 290,
+        "total_tokens": 739,
+        "cost": 0.00024134999999999998,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 9,
+        "status": "success",
+        "duration": 7.3331921100616455,
+        "prompt_tokens": 409,
+        "completion_tokens": 300,
+        "total_tokens": 709,
+        "cost": 0.00024135,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 10,
+        "status": "success",
+        "duration": 7.6919779777526855,
+        "prompt_tokens": 413,
+        "completion_tokens": 300,
+        "total_tokens": 713,
+        "cost": 0.00024195,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 11,
+        "status": "success",
+        "duration": 6.0016491413116455,
+        "prompt_tokens": 488,
+        "completion_tokens": 235,
+        "total_tokens": 723,
+        "cost": 0.0002142,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 12,
+        "status": "success",
+        "duration": 7.206520080566406,
+        "prompt_tokens": 420,
+        "completion_tokens": 291,
+        "total_tokens": 711,
+        "cost": 0.00023759999999999997,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 13,
+        "status": "success",
+        "duration": 7.0794737339019775,
+        "prompt_tokens": 450,
+        "completion_tokens": 300,
+        "total_tokens": 750,
+        "cost": 0.0002475,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 14,
+        "status": "success",
+        "duration": 5.614063024520874,
+        "prompt_tokens": 478,
+        "completion_tokens": 242,
+        "total_tokens": 720,
+        "cost": 0.0002169,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 15,
+        "status": "success",
+        "duration": 7.356303930282593,
+        "prompt_tokens": 416,
+        "completion_tokens": 300,
+        "total_tokens": 716,
+        "cost": 0.0002424,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 16,
+        "status": "success",
+        "duration": 7.653448820114136,
+        "prompt_tokens": 550,
+        "completion_tokens": 288,
+        "total_tokens": 838,
+        "cost": 0.00025529999999999997,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 17,
+        "status": "success",
+        "duration": 6.390854835510254,
+        "prompt_tokens": 522,
+        "completion_tokens": 292,
+        "total_tokens": 814,
+        "cost": 0.0002535,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 18,
+        "status": "success",
+        "duration": 8.743741035461426,
+        "prompt_tokens": 419,
+        "completion_tokens": 300,
+        "total_tokens": 719,
+        "cost": 0.00024285000000000002,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 19,
+        "status": "success",
+        "duration": 6.374255180358887,
+        "prompt_tokens": 520,
+        "completion_tokens": 300,
+        "total_tokens": 820,
+        "cost": 0.000258,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 20,
+        "status": "success",
+        "duration": 6.905065059661865,
+        "prompt_tokens": 475,
+        "completion_tokens": 300,
+        "total_tokens": 775,
+        "cost": 0.00025125,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 21,
+        "status": "success",
+        "duration": 8.958460092544556,
+        "prompt_tokens": 436,
+        "completion_tokens": 300,
+        "total_tokens": 736,
+        "cost": 0.0002454,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 22,
+        "status": "success",
+        "duration": 8.241785049438477,
+        "prompt_tokens": 490,
+        "completion_tokens": 300,
+        "total_tokens": 790,
+        "cost": 0.00025350000000000004,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 23,
+        "status": "success",
+        "duration": 7.948594808578491,
+        "prompt_tokens": 443,
+        "completion_tokens": 266,
+        "total_tokens": 709,
+        "cost": 0.00022605,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 24,
+        "status": "success",
+        "duration": 9.356381177902222,
+        "prompt_tokens": 447,
+        "completion_tokens": 283,
+        "total_tokens": 730,
+        "cost": 0.00023684999999999998,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 25,
+        "status": "success",
+        "duration": 6.926048994064331,
+        "prompt_tokens": 459,
+        "completion_tokens": 272,
+        "total_tokens": 731,
+        "cost": 0.00023204999999999998,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 26,
+        "status": "success",
+        "duration": 6.420511960983276,
+        "prompt_tokens": 482,
+        "completion_tokens": 255,
+        "total_tokens": 737,
+        "cost": 0.0002253,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 27,
+        "status": "success",
+        "duration": 12.013908863067627,
+        "prompt_tokens": 519,
+        "completion_tokens": 300,
+        "total_tokens": 819,
+        "cost": 0.00025785,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 28,
+        "status": "success",
+        "duration": 5.3185060024261475,
+        "prompt_tokens": 441,
+        "completion_tokens": 300,
+        "total_tokens": 741,
+        "cost": 0.00024615,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 29,
+        "status": "success",
+        "duration": 9.136024236679077,
+        "prompt_tokens": 508,
+        "completion_tokens": 300,
+        "total_tokens": 808,
+        "cost": 0.00025620000000000005,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 30,
+        "status": "success",
+        "duration": 7.858734130859375,
+        "prompt_tokens": 449,
+        "completion_tokens": 290,
+        "total_tokens": 739,
+        "cost": 0.00024134999999999998,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 31,
+        "status": "success",
+        "duration": 5.977387189865112,
+        "prompt_tokens": 458,
+        "completion_tokens": 287,
+        "total_tokens": 745,
+        "cost": 0.0002409,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 32,
+        "status": "success",
+        "duration": 8.244371891021729,
+        "prompt_tokens": 475,
+        "completion_tokens": 300,
+        "total_tokens": 775,
+        "cost": 0.00025125,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 33,
+        "status": "success",
+        "duration": 16.556380033493042,
+        "prompt_tokens": 338,
+        "completion_tokens": 269,
+        "total_tokens": 607,
+        "cost": 0.0002121,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 34,
+        "status": "success",
+        "duration": 8.86192011833191,
+        "prompt_tokens": 421,
+        "completion_tokens": 300,
+        "total_tokens": 721,
+        "cost": 0.00024315000000000003,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 35,
+        "status": "success",
+        "duration": 5.827724933624268,
+        "prompt_tokens": 360,
+        "completion_tokens": 256,
+        "total_tokens": 616,
+        "cost": 0.0002076,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 36,
+        "status": "success",
+        "duration": 6.608899116516113,
+        "prompt_tokens": 511,
+        "completion_tokens": 300,
+        "total_tokens": 811,
+        "cost": 0.00025665,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 37,
+        "status": "success",
+        "duration": 7.14159893989563,
+        "prompt_tokens": 498,
+        "completion_tokens": 300,
+        "total_tokens": 798,
+        "cost": 0.0002547,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 38,
+        "status": "success",
+        "duration": 6.693039178848267,
+        "prompt_tokens": 493,
+        "completion_tokens": 291,
+        "total_tokens": 784,
+        "cost": 0.00024855,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 39,
+        "status": "success",
+        "duration": 6.839854001998901,
+        "prompt_tokens": 482,
+        "completion_tokens": 299,
+        "total_tokens": 781,
+        "cost": 0.0002517,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 40,
+        "status": "success",
+        "duration": 7.704878091812134,
+        "prompt_tokens": 441,
+        "completion_tokens": 300,
+        "total_tokens": 741,
+        "cost": 0.00024615,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 41,
+        "status": "success",
+        "duration": 8.424465894699097,
+        "prompt_tokens": 469,
+        "completion_tokens": 296,
+        "total_tokens": 765,
+        "cost": 0.00024795,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 42,
+        "status": "success",
+        "duration": 6.469369888305664,
+        "prompt_tokens": 478,
+        "completion_tokens": 300,
+        "total_tokens": 778,
+        "cost": 0.0002517,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 43,
+        "status": "success",
+        "duration": 6.69638729095459,
+        "prompt_tokens": 446,
+        "completion_tokens": 300,
+        "total_tokens": 746,
+        "cost": 0.0002469,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 44,
+        "status": "success",
+        "duration": 9.712896823883057,
+        "prompt_tokens": 497,
+        "completion_tokens": 300,
+        "total_tokens": 797,
+        "cost": 0.00025455,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 45,
+        "status": "success",
+        "duration": 6.429131984710693,
+        "prompt_tokens": 456,
+        "completion_tokens": 300,
+        "total_tokens": 756,
+        "cost": 0.0002484,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 46,
+        "status": "success",
+        "duration": 6.28012490272522,
+        "prompt_tokens": 430,
+        "completion_tokens": 268,
+        "total_tokens": 698,
+        "cost": 0.00022529999999999997,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 47,
+        "status": "success",
+        "duration": 7.990514755249023,
+        "prompt_tokens": 450,
+        "completion_tokens": 300,
+        "total_tokens": 750,
+        "cost": 0.0002475,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 48,
+        "status": "success",
+        "duration": 6.721559047698975,
+        "prompt_tokens": 413,
+        "completion_tokens": 289,
+        "total_tokens": 702,
+        "cost": 0.00023535,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 49,
+        "status": "success",
+        "duration": 7.6994969844818115,
+        "prompt_tokens": 447,
+        "completion_tokens": 259,
+        "total_tokens": 706,
+        "cost": 0.00022245,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 50,
+        "status": "success",
+        "duration": 6.448453187942505,
+        "prompt_tokens": 511,
+        "completion_tokens": 277,
+        "total_tokens": 788,
+        "cost": 0.00024285,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 51,
+        "status": "success",
+        "duration": 4.484073877334595,
+        "prompt_tokens": 493,
+        "completion_tokens": 300,
+        "total_tokens": 793,
+        "cost": 0.00025395,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 52,
+        "status": "success",
+        "duration": 11.136754989624023,
+        "prompt_tokens": 463,
+        "completion_tokens": 297,
+        "total_tokens": 760,
+        "cost": 0.00024765,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 53,
+        "status": "success",
+        "duration": 8.276261329650879,
+        "prompt_tokens": 425,
+        "completion_tokens": 246,
+        "total_tokens": 671,
+        "cost": 0.00021135,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 54,
+        "status": "success",
+        "duration": 7.637305736541748,
+        "prompt_tokens": 435,
+        "completion_tokens": 300,
+        "total_tokens": 735,
+        "cost": 0.00024525,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 55,
+        "status": "success",
+        "duration": 6.561481952667236,
+        "prompt_tokens": 458,
+        "completion_tokens": 249,
+        "total_tokens": 707,
+        "cost": 0.0002181,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 56,
+        "status": "success",
+        "duration": 8.2494478225708,
+        "prompt_tokens": 506,
+        "completion_tokens": 300,
+        "total_tokens": 806,
+        "cost": 0.0002559,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 57,
+        "status": "success",
+        "duration": 9.632259845733643,
+        "prompt_tokens": 470,
+        "completion_tokens": 300,
+        "total_tokens": 770,
+        "cost": 0.0002505,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 58,
+        "status": "success",
+        "duration": 5.529566049575806,
+        "prompt_tokens": 471,
+        "completion_tokens": 274,
+        "total_tokens": 745,
+        "cost": 0.00023505,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 59,
+        "status": "success",
+        "duration": 7.250648021697998,
+        "prompt_tokens": 534,
+        "completion_tokens": 300,
+        "total_tokens": 834,
+        "cost": 0.0002601,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 60,
+        "status": "success",
+        "duration": 8.493399143218994,
+        "prompt_tokens": 454,
+        "completion_tokens": 282,
+        "total_tokens": 736,
+        "cost": 0.00023729999999999997,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 61,
+        "status": "success",
+        "duration": 4.954657077789307,
+        "prompt_tokens": 467,
+        "completion_tokens": 267,
+        "total_tokens": 734,
+        "cost": 0.00023024999999999999,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 62,
+        "status": "success",
+        "duration": 7.465968132019043,
+        "prompt_tokens": 465,
+        "completion_tokens": 300,
+        "total_tokens": 765,
+        "cost": 0.00024975,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 63,
+        "status": "success",
+        "duration": 8.050874710083008,
+        "prompt_tokens": 550,
+        "completion_tokens": 300,
+        "total_tokens": 850,
+        "cost": 0.00026250000000000004,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 64,
+        "status": "success",
+        "duration": 13.256545066833496,
+        "prompt_tokens": 492,
+        "completion_tokens": 300,
+        "total_tokens": 792,
+        "cost": 0.0002538,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 65,
+        "status": "success",
+        "duration": 9.06961989402771,
+        "prompt_tokens": 477,
+        "completion_tokens": 300,
+        "total_tokens": 777,
+        "cost": 0.00025155,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 66,
+        "status": "success",
+        "duration": 8.223744869232178,
+        "prompt_tokens": 504,
+        "completion_tokens": 278,
+        "total_tokens": 782,
+        "cost": 0.00024239999999999998,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 67,
+        "status": "success",
+        "duration": 4.571008920669556,
+        "prompt_tokens": 496,
+        "completion_tokens": 215,
+        "total_tokens": 711,
+        "cost": 0.00020339999999999998,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 68,
+        "status": "success",
+        "duration": 5.638314247131348,
+        "prompt_tokens": 477,
+        "completion_tokens": 237,
+        "total_tokens": 714,
+        "cost": 0.00021374999999999996,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 69,
+        "status": "success",
+        "duration": 6.723355293273926,
+        "prompt_tokens": 492,
+        "completion_tokens": 282,
+        "total_tokens": 774,
+        "cost": 0.000243,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 70,
+        "status": "success",
+        "duration": 7.380537748336792,
+        "prompt_tokens": 459,
+        "completion_tokens": 300,
+        "total_tokens": 759,
+        "cost": 0.00024885,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 71,
+        "status": "success",
+        "duration": 6.841156959533691,
+        "prompt_tokens": 417,
+        "completion_tokens": 300,
+        "total_tokens": 717,
+        "cost": 0.00024255000000000001,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 72,
+        "status": "success",
+        "duration": 7.493657827377319,
+        "prompt_tokens": 450,
+        "completion_tokens": 278,
+        "total_tokens": 728,
+        "cost": 0.0002343,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 73,
+        "status": "success",
+        "duration": 6.293700933456421,
+        "prompt_tokens": 431,
+        "completion_tokens": 272,
+        "total_tokens": 703,
+        "cost": 0.00022784999999999998,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 74,
+        "status": "success",
+        "duration": 6.254556179046631,
+        "prompt_tokens": 507,
+        "completion_tokens": 255,
+        "total_tokens": 762,
+        "cost": 0.00022905,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 75,
+        "status": "success",
+        "duration": 8.213889122009277,
+        "prompt_tokens": 419,
+        "completion_tokens": 300,
+        "total_tokens": 719,
+        "cost": 0.00024285000000000002,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 76,
+        "status": "success",
+        "duration": 6.360623121261597,
+        "prompt_tokens": 526,
+        "completion_tokens": 238,
+        "total_tokens": 764,
+        "cost": 0.00022169999999999997,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 77,
+        "status": "success",
+        "duration": 8.968953847885132,
+        "prompt_tokens": 395,
+        "completion_tokens": 300,
+        "total_tokens": 695,
+        "cost": 0.00023925000000000001,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 78,
+        "status": "success",
+        "duration": 7.4836790561676025,
+        "prompt_tokens": 499,
+        "completion_tokens": 298,
+        "total_tokens": 797,
+        "cost": 0.00025364999999999996,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 79,
+        "status": "success",
+        "duration": 9.397557020187378,
+        "prompt_tokens": 495,
+        "completion_tokens": 261,
+        "total_tokens": 756,
+        "cost": 0.00023085,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 80,
+        "status": "success",
+        "duration": 8.706023931503296,
+        "prompt_tokens": 505,
+        "completion_tokens": 300,
+        "total_tokens": 805,
+        "cost": 0.00025575,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 81,
+        "status": "success",
+        "duration": 6.721529722213745,
+        "prompt_tokens": 482,
+        "completion_tokens": 268,
+        "total_tokens": 750,
+        "cost": 0.00023309999999999997,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 82,
+        "status": "success",
+        "duration": 4.425076007843018,
+        "prompt_tokens": 497,
+        "completion_tokens": 290,
+        "total_tokens": 787,
+        "cost": 0.00024855,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 83,
+        "status": "success",
+        "duration": 6.048738956451416,
+        "prompt_tokens": 366,
+        "completion_tokens": 260,
+        "total_tokens": 626,
+        "cost": 0.0002109,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 84,
+        "status": "success",
+        "duration": 8.229379177093506,
+        "prompt_tokens": 538,
+        "completion_tokens": 300,
+        "total_tokens": 838,
+        "cost": 0.0002607,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 85,
+        "status": "success",
+        "duration": 7.620881080627441,
+        "prompt_tokens": 485,
+        "completion_tokens": 300,
+        "total_tokens": 785,
+        "cost": 0.00025275000000000004,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 86,
+        "status": "success",
+        "duration": 8.628883123397827,
+        "prompt_tokens": 488,
+        "completion_tokens": 300,
+        "total_tokens": 788,
+        "cost": 0.00025320000000000003,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 87,
+        "status": "success",
+        "duration": 13.023267030715942,
+        "prompt_tokens": 526,
+        "completion_tokens": 300,
+        "total_tokens": 826,
+        "cost": 0.0002589,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 88,
+        "status": "success",
+        "duration": 9.197463035583496,
+        "prompt_tokens": 492,
+        "completion_tokens": 300,
+        "total_tokens": 792,
+        "cost": 0.0002538,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 89,
+        "status": "success",
+        "duration": 8.82835078239441,
+        "prompt_tokens": 414,
+        "completion_tokens": 300,
+        "total_tokens": 714,
+        "cost": 0.0002421,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 90,
+        "status": "success",
+        "duration": 8.530549049377441,
+        "prompt_tokens": 515,
+        "completion_tokens": 300,
+        "total_tokens": 815,
+        "cost": 0.00025725,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 91,
+        "status": "success",
+        "duration": 6.56440806388855,
+        "prompt_tokens": 419,
+        "completion_tokens": 272,
+        "total_tokens": 691,
+        "cost": 0.00022605,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 92,
+        "status": "success",
+        "duration": 10.30246877670288,
+        "prompt_tokens": 550,
+        "completion_tokens": 267,
+        "total_tokens": 817,
+        "cost": 0.0002427,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 93,
+        "status": "success",
+        "duration": 8.229515075683594,
+        "prompt_tokens": 459,
+        "completion_tokens": 300,
+        "total_tokens": 759,
+        "cost": 0.00024885,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 94,
+        "status": "success",
+        "duration": 4.606639862060547,
+        "prompt_tokens": 479,
+        "completion_tokens": 274,
+        "total_tokens": 753,
+        "cost": 0.00023625000000000002,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 95,
+        "status": "success",
+        "duration": 8.219908237457275,
+        "prompt_tokens": 493,
+        "completion_tokens": 300,
+        "total_tokens": 793,
+        "cost": 0.00025395,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 96,
+        "status": "success",
+        "duration": 6.313349008560181,
+        "prompt_tokens": 535,
+        "completion_tokens": 286,
+        "total_tokens": 821,
+        "cost": 0.00025184999999999997,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 97,
+        "status": "success",
+        "duration": 5.683341026306152,
+        "prompt_tokens": 424,
+        "completion_tokens": 250,
+        "total_tokens": 674,
+        "cost": 0.0002136,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 98,
+        "status": "success",
+        "duration": 7.989420652389526,
+        "prompt_tokens": 490,
+        "completion_tokens": 292,
+        "total_tokens": 782,
+        "cost": 0.0002487,
+        "run_id": "run_20251120_145318"
+    },
+    {
+        "id": 99,
+        "status": "success",
+        "duration": 8.739872932434082,
+        "prompt_tokens": 508,
+        "completion_tokens": 276,
+        "total_tokens": 784,
+        "cost": 0.0002418,
+        "run_id": "run_20251120_145318"
+    }
+]

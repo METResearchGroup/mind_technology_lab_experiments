@@ -1,0 +1,902 @@
+[
+    {
+        "id": 0,
+        "status": "success",
+        "duration": 6.25282621383667,
+        "prompt_tokens": 407,
+        "completion_tokens": 213,
+        "total_tokens": 620,
+        "cost": 0.00018884999999999998
+    },
+    {
+        "id": 1,
+        "status": "success",
+        "duration": 6.5414879322052,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 2,
+        "status": "success",
+        "duration": 7.275812864303589,
+        "prompt_tokens": 407,
+        "completion_tokens": 234,
+        "total_tokens": 641,
+        "cost": 0.00020145
+    },
+    {
+        "id": 3,
+        "status": "success",
+        "duration": 6.7292139530181885,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 4,
+        "status": "success",
+        "duration": 7.109513998031616,
+        "prompt_tokens": 407,
+        "completion_tokens": 220,
+        "total_tokens": 627,
+        "cost": 0.00019305
+    },
+    {
+        "id": 5,
+        "status": "success",
+        "duration": 4.434668779373169,
+        "prompt_tokens": 346,
+        "completion_tokens": 227,
+        "total_tokens": 573,
+        "cost": 0.00018809999999999996
+    },
+    {
+        "id": 6,
+        "status": "success",
+        "duration": 6.2036919593811035,
+        "prompt_tokens": 407,
+        "completion_tokens": 203,
+        "total_tokens": 610,
+        "cost": 0.00018284999999999997
+    },
+    {
+        "id": 7,
+        "status": "success",
+        "duration": 7.398209095001221,
+        "prompt_tokens": 346,
+        "completion_tokens": 277,
+        "total_tokens": 623,
+        "cost": 0.0002181
+    },
+    {
+        "id": 8,
+        "status": "success",
+        "duration": 7.449228048324585,
+        "prompt_tokens": 407,
+        "completion_tokens": 288,
+        "total_tokens": 695,
+        "cost": 0.00023384999999999997
+    },
+    {
+        "id": 9,
+        "status": "success",
+        "duration": 4.0142662525177,
+        "prompt_tokens": 346,
+        "completion_tokens": 207,
+        "total_tokens": 553,
+        "cost": 0.0001761
+    },
+    {
+        "id": 10,
+        "status": "success",
+        "duration": 7.582559823989868,
+        "prompt_tokens": 407,
+        "completion_tokens": 214,
+        "total_tokens": 621,
+        "cost": 0.00018945
+    },
+    {
+        "id": 11,
+        "status": "success",
+        "duration": 6.067455053329468,
+        "prompt_tokens": 346,
+        "completion_tokens": 264,
+        "total_tokens": 610,
+        "cost": 0.00021030000000000002
+    },
+    {
+        "id": 12,
+        "status": "success",
+        "duration": 9.92745590209961,
+        "prompt_tokens": 407,
+        "completion_tokens": 300,
+        "total_tokens": 707,
+        "cost": 0.00024105
+    },
+    {
+        "id": 13,
+        "status": "success",
+        "duration": 4.596606016159058,
+        "prompt_tokens": 346,
+        "completion_tokens": 209,
+        "total_tokens": 555,
+        "cost": 0.00017729999999999997
+    },
+    {
+        "id": 14,
+        "status": "success",
+        "duration": 7.052224159240723,
+        "prompt_tokens": 407,
+        "completion_tokens": 300,
+        "total_tokens": 707,
+        "cost": 0.00024105
+    },
+    {
+        "id": 15,
+        "status": "success",
+        "duration": 6.972032070159912,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 16,
+        "status": "success",
+        "duration": 5.978623867034912,
+        "prompt_tokens": 407,
+        "completion_tokens": 222,
+        "total_tokens": 629,
+        "cost": 0.00019424999999999998
+    },
+    {
+        "id": 17,
+        "status": "success",
+        "duration": 5.4907519817352295,
+        "prompt_tokens": 346,
+        "completion_tokens": 265,
+        "total_tokens": 611,
+        "cost": 0.00021089999999999998
+    },
+    {
+        "id": 18,
+        "status": "success",
+        "duration": 7.488070964813232,
+        "prompt_tokens": 407,
+        "completion_tokens": 255,
+        "total_tokens": 662,
+        "cost": 0.00021405
+    },
+    {
+        "id": 19,
+        "status": "success",
+        "duration": 5.5880491733551025,
+        "prompt_tokens": 346,
+        "completion_tokens": 266,
+        "total_tokens": 612,
+        "cost": 0.0002115
+    },
+    {
+        "id": 20,
+        "status": "success",
+        "duration": 7.0907511711120605,
+        "prompt_tokens": 407,
+        "completion_tokens": 246,
+        "total_tokens": 653,
+        "cost": 0.00020864999999999998
+    },
+    {
+        "id": 21,
+        "status": "success",
+        "duration": 4.84271502494812,
+        "prompt_tokens": 346,
+        "completion_tokens": 234,
+        "total_tokens": 580,
+        "cost": 0.0001923
+    },
+    {
+        "id": 22,
+        "status": "success",
+        "duration": 6.271116018295288,
+        "prompt_tokens": 407,
+        "completion_tokens": 236,
+        "total_tokens": 643,
+        "cost": 0.00020265
+    },
+    {
+        "id": 23,
+        "status": "success",
+        "duration": 4.671773910522461,
+        "prompt_tokens": 346,
+        "completion_tokens": 254,
+        "total_tokens": 600,
+        "cost": 0.00020430000000000003
+    },
+    {
+        "id": 24,
+        "status": "success",
+        "duration": 7.433360815048218,
+        "prompt_tokens": 407,
+        "completion_tokens": 243,
+        "total_tokens": 650,
+        "cost": 0.00020684999999999999
+    },
+    {
+        "id": 25,
+        "status": "success",
+        "duration": 6.134841203689575,
+        "prompt_tokens": 346,
+        "completion_tokens": 259,
+        "total_tokens": 605,
+        "cost": 0.0002073
+    },
+    {
+        "id": 26,
+        "status": "success",
+        "duration": 8.052551984786987,
+        "prompt_tokens": 407,
+        "completion_tokens": 249,
+        "total_tokens": 656,
+        "cost": 0.00021045
+    },
+    {
+        "id": 27,
+        "status": "success",
+        "duration": 5.937877178192139,
+        "prompt_tokens": 346,
+        "completion_tokens": 273,
+        "total_tokens": 619,
+        "cost": 0.00021569999999999998
+    },
+    {
+        "id": 28,
+        "status": "success",
+        "duration": 7.572109937667847,
+        "prompt_tokens": 407,
+        "completion_tokens": 244,
+        "total_tokens": 651,
+        "cost": 0.00020745
+    },
+    {
+        "id": 29,
+        "status": "success",
+        "duration": 5.462443113327026,
+        "prompt_tokens": 346,
+        "completion_tokens": 287,
+        "total_tokens": 633,
+        "cost": 0.00022409999999999997
+    },
+    {
+        "id": 30,
+        "status": "success",
+        "duration": 7.833085060119629,
+        "prompt_tokens": 407,
+        "completion_tokens": 273,
+        "total_tokens": 680,
+        "cost": 0.00022484999999999996
+    },
+    {
+        "id": 31,
+        "status": "success",
+        "duration": 6.964675188064575,
+        "prompt_tokens": 346,
+        "completion_tokens": 237,
+        "total_tokens": 583,
+        "cost": 0.0001941
+    },
+    {
+        "id": 32,
+        "status": "success",
+        "duration": 6.703232765197754,
+        "prompt_tokens": 407,
+        "completion_tokens": 228,
+        "total_tokens": 635,
+        "cost": 0.00019784999999999998
+    },
+    {
+        "id": 33,
+        "status": "success",
+        "duration": 7.780808925628662,
+        "prompt_tokens": 346,
+        "completion_tokens": 292,
+        "total_tokens": 638,
+        "cost": 0.0002271
+    },
+    {
+        "id": 34,
+        "status": "success",
+        "duration": 7.827773094177246,
+        "prompt_tokens": 407,
+        "completion_tokens": 268,
+        "total_tokens": 675,
+        "cost": 0.00022184999999999997
+    },
+    {
+        "id": 35,
+        "status": "success",
+        "duration": 7.082493305206299,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 36,
+        "status": "success",
+        "duration": 8.46345591545105,
+        "prompt_tokens": 407,
+        "completion_tokens": 300,
+        "total_tokens": 707,
+        "cost": 0.00024105
+    },
+    {
+        "id": 37,
+        "status": "success",
+        "duration": 6.608234167098999,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 38,
+        "status": "success",
+        "duration": 6.611011266708374,
+        "prompt_tokens": 407,
+        "completion_tokens": 217,
+        "total_tokens": 624,
+        "cost": 0.00019125
+    },
+    {
+        "id": 39,
+        "status": "success",
+        "duration": 5.637755870819092,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 40,
+        "status": "success",
+        "duration": 9.169553279876709,
+        "prompt_tokens": 407,
+        "completion_tokens": 286,
+        "total_tokens": 693,
+        "cost": 0.00023265
+    },
+    {
+        "id": 41,
+        "status": "success",
+        "duration": 4.005197048187256,
+        "prompt_tokens": 346,
+        "completion_tokens": 207,
+        "total_tokens": 553,
+        "cost": 0.0001761
+    },
+    {
+        "id": 42,
+        "status": "success",
+        "duration": 7.2134552001953125,
+        "prompt_tokens": 407,
+        "completion_tokens": 247,
+        "total_tokens": 654,
+        "cost": 0.00020925
+    },
+    {
+        "id": 43,
+        "status": "success",
+        "duration": 6.3253960609436035,
+        "prompt_tokens": 346,
+        "completion_tokens": 288,
+        "total_tokens": 634,
+        "cost": 0.0002247
+    },
+    {
+        "id": 44,
+        "status": "success",
+        "duration": 7.484388113021851,
+        "prompt_tokens": 407,
+        "completion_tokens": 230,
+        "total_tokens": 637,
+        "cost": 0.00019905
+    },
+    {
+        "id": 45,
+        "status": "success",
+        "duration": 5.462265729904175,
+        "prompt_tokens": 346,
+        "completion_tokens": 255,
+        "total_tokens": 601,
+        "cost": 0.0002049
+    },
+    {
+        "id": 46,
+        "status": "success",
+        "duration": 9.475998163223267,
+        "prompt_tokens": 407,
+        "completion_tokens": 300,
+        "total_tokens": 707,
+        "cost": 0.00024105
+    },
+    {
+        "id": 47,
+        "status": "success",
+        "duration": 7.188153982162476,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 48,
+        "status": "success",
+        "duration": 5.791167974472046,
+        "prompt_tokens": 407,
+        "completion_tokens": 288,
+        "total_tokens": 695,
+        "cost": 0.00023384999999999997
+    },
+    {
+        "id": 49,
+        "status": "success",
+        "duration": 5.857079029083252,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 50,
+        "status": "success",
+        "duration": 7.903753995895386,
+        "prompt_tokens": 407,
+        "completion_tokens": 286,
+        "total_tokens": 693,
+        "cost": 0.00023265
+    },
+    {
+        "id": 51,
+        "status": "success",
+        "duration": 7.856829881668091,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 52,
+        "status": "success",
+        "duration": 7.342353105545044,
+        "prompt_tokens": 407,
+        "completion_tokens": 235,
+        "total_tokens": 642,
+        "cost": 0.00020205
+    },
+    {
+        "id": 53,
+        "status": "success",
+        "duration": 5.83870792388916,
+        "prompt_tokens": 346,
+        "completion_tokens": 275,
+        "total_tokens": 621,
+        "cost": 0.00021690000000000001
+    },
+    {
+        "id": 54,
+        "status": "success",
+        "duration": 8.437777996063232,
+        "prompt_tokens": 407,
+        "completion_tokens": 275,
+        "total_tokens": 682,
+        "cost": 0.00022605
+    },
+    {
+        "id": 55,
+        "status": "success",
+        "duration": 6.132881164550781,
+        "prompt_tokens": 346,
+        "completion_tokens": 298,
+        "total_tokens": 644,
+        "cost": 0.00023069999999999997
+    },
+    {
+        "id": 56,
+        "status": "success",
+        "duration": 7.794406890869141,
+        "prompt_tokens": 407,
+        "completion_tokens": 272,
+        "total_tokens": 679,
+        "cost": 0.00022424999999999998
+    },
+    {
+        "id": 57,
+        "status": "success",
+        "duration": 7.685295820236206,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 58,
+        "status": "success",
+        "duration": 6.281226873397827,
+        "prompt_tokens": 407,
+        "completion_tokens": 195,
+        "total_tokens": 602,
+        "cost": 0.00017805
+    },
+    {
+        "id": 59,
+        "status": "success",
+        "duration": 6.6576619148254395,
+        "prompt_tokens": 346,
+        "completion_tokens": 235,
+        "total_tokens": 581,
+        "cost": 0.00019290000000000003
+    },
+    {
+        "id": 60,
+        "status": "success",
+        "duration": 7.7031660079956055,
+        "prompt_tokens": 407,
+        "completion_tokens": 255,
+        "total_tokens": 662,
+        "cost": 0.00021405
+    },
+    {
+        "id": 61,
+        "status": "success",
+        "duration": 7.802304983139038,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 62,
+        "status": "success",
+        "duration": 5.747177839279175,
+        "prompt_tokens": 407,
+        "completion_tokens": 190,
+        "total_tokens": 597,
+        "cost": 0.00017505
+    },
+    {
+        "id": 63,
+        "status": "success",
+        "duration": 5.69795298576355,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 64,
+        "status": "success",
+        "duration": 7.024508953094482,
+        "prompt_tokens": 407,
+        "completion_tokens": 221,
+        "total_tokens": 628,
+        "cost": 0.00019365
+    },
+    {
+        "id": 65,
+        "status": "success",
+        "duration": 5.981003046035767,
+        "prompt_tokens": 346,
+        "completion_tokens": 251,
+        "total_tokens": 597,
+        "cost": 0.0002025
+    },
+    {
+        "id": 66,
+        "status": "success",
+        "duration": 7.450262069702148,
+        "prompt_tokens": 407,
+        "completion_tokens": 243,
+        "total_tokens": 650,
+        "cost": 0.00020684999999999999
+    },
+    {
+        "id": 67,
+        "status": "success",
+        "duration": 5.360114097595215,
+        "prompt_tokens": 346,
+        "completion_tokens": 255,
+        "total_tokens": 601,
+        "cost": 0.0002049
+    },
+    {
+        "id": 68,
+        "status": "success",
+        "duration": 10.196022033691406,
+        "prompt_tokens": 407,
+        "completion_tokens": 300,
+        "total_tokens": 707,
+        "cost": 0.00024105
+    },
+    {
+        "id": 69,
+        "status": "success",
+        "duration": 5.604410886764526,
+        "prompt_tokens": 346,
+        "completion_tokens": 242,
+        "total_tokens": 588,
+        "cost": 0.00019709999999999997
+    },
+    {
+        "id": 70,
+        "status": "success",
+        "duration": 7.432877779006958,
+        "prompt_tokens": 407,
+        "completion_tokens": 235,
+        "total_tokens": 642,
+        "cost": 0.00020205
+    },
+    {
+        "id": 71,
+        "status": "success",
+        "duration": 7.083695888519287,
+        "prompt_tokens": 346,
+        "completion_tokens": 264,
+        "total_tokens": 610,
+        "cost": 0.00021030000000000002
+    },
+    {
+        "id": 72,
+        "status": "success",
+        "duration": 7.145353078842163,
+        "prompt_tokens": 407,
+        "completion_tokens": 221,
+        "total_tokens": 628,
+        "cost": 0.00019365
+    },
+    {
+        "id": 73,
+        "status": "success",
+        "duration": 5.8672778606414795,
+        "prompt_tokens": 346,
+        "completion_tokens": 279,
+        "total_tokens": 625,
+        "cost": 0.00021930000000000002
+    },
+    {
+        "id": 74,
+        "status": "success",
+        "duration": 7.184519290924072,
+        "prompt_tokens": 407,
+        "completion_tokens": 237,
+        "total_tokens": 644,
+        "cost": 0.00020324999999999998
+    },
+    {
+        "id": 75,
+        "status": "success",
+        "duration": 6.844993591308594,
+        "prompt_tokens": 346,
+        "completion_tokens": 295,
+        "total_tokens": 641,
+        "cost": 0.00022889999999999998
+    },
+    {
+        "id": 76,
+        "status": "success",
+        "duration": 8.641639947891235,
+        "prompt_tokens": 407,
+        "completion_tokens": 300,
+        "total_tokens": 707,
+        "cost": 0.00024105
+    },
+    {
+        "id": 77,
+        "status": "success",
+        "duration": 7.591916799545288,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 78,
+        "status": "success",
+        "duration": 8.933439016342163,
+        "prompt_tokens": 407,
+        "completion_tokens": 299,
+        "total_tokens": 706,
+        "cost": 0.00024045
+    },
+    {
+        "id": 79,
+        "status": "success",
+        "duration": 5.01093316078186,
+        "prompt_tokens": 346,
+        "completion_tokens": 223,
+        "total_tokens": 569,
+        "cost": 0.00018569999999999996
+    },
+    {
+        "id": 80,
+        "status": "success",
+        "duration": 9.362299919128418,
+        "prompt_tokens": 407,
+        "completion_tokens": 300,
+        "total_tokens": 707,
+        "cost": 0.00024105
+    },
+    {
+        "id": 81,
+        "status": "success",
+        "duration": 7.842922925949097,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 82,
+        "status": "success",
+        "duration": 9.926031827926636,
+        "prompt_tokens": 407,
+        "completion_tokens": 300,
+        "total_tokens": 707,
+        "cost": 0.00024105
+    },
+    {
+        "id": 83,
+        "status": "success",
+        "duration": 6.682818174362183,
+        "prompt_tokens": 346,
+        "completion_tokens": 246,
+        "total_tokens": 592,
+        "cost": 0.00019949999999999997
+    },
+    {
+        "id": 84,
+        "status": "success",
+        "duration": 7.757107973098755,
+        "prompt_tokens": 407,
+        "completion_tokens": 275,
+        "total_tokens": 682,
+        "cost": 0.00022605
+    },
+    {
+        "id": 85,
+        "status": "success",
+        "duration": 5.831415891647339,
+        "prompt_tokens": 346,
+        "completion_tokens": 251,
+        "total_tokens": 597,
+        "cost": 0.0002025
+    },
+    {
+        "id": 86,
+        "status": "success",
+        "duration": 7.706934928894043,
+        "prompt_tokens": 407,
+        "completion_tokens": 251,
+        "total_tokens": 658,
+        "cost": 0.00021165
+    },
+    {
+        "id": 87,
+        "status": "success",
+        "duration": 5.814222812652588,
+        "prompt_tokens": 346,
+        "completion_tokens": 263,
+        "total_tokens": 609,
+        "cost": 0.0002097
+    },
+    {
+        "id": 88,
+        "status": "success",
+        "duration": 7.360769987106323,
+        "prompt_tokens": 407,
+        "completion_tokens": 236,
+        "total_tokens": 643,
+        "cost": 0.00020265
+    },
+    {
+        "id": 89,
+        "status": "success",
+        "duration": 5.952934980392456,
+        "prompt_tokens": 346,
+        "completion_tokens": 269,
+        "total_tokens": 615,
+        "cost": 0.00021329999999999998
+    },
+    {
+        "id": 90,
+        "status": "success",
+        "duration": 6.360965728759766,
+        "prompt_tokens": 407,
+        "completion_tokens": 228,
+        "total_tokens": 635,
+        "cost": 0.00019784999999999998
+    },
+    {
+        "id": 91,
+        "status": "success",
+        "duration": 6.045150995254517,
+        "prompt_tokens": 346,
+        "completion_tokens": 238,
+        "total_tokens": 584,
+        "cost": 0.00019469999999999996
+    },
+    {
+        "id": 92,
+        "status": "success",
+        "duration": 7.025384187698364,
+        "prompt_tokens": 407,
+        "completion_tokens": 241,
+        "total_tokens": 648,
+        "cost": 0.00020564999999999998
+    },
+    {
+        "id": 93,
+        "status": "success",
+        "duration": 7.208251714706421,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    },
+    {
+        "id": 94,
+        "status": "success",
+        "duration": 7.590146064758301,
+        "prompt_tokens": 407,
+        "completion_tokens": 280,
+        "total_tokens": 687,
+        "cost": 0.00022904999999999998
+    },
+    {
+        "id": 95,
+        "status": "success",
+        "duration": 6.2009899616241455,
+        "prompt_tokens": 346,
+        "completion_tokens": 273,
+        "total_tokens": 619,
+        "cost": 0.00021569999999999998
+    },
+    {
+        "id": 96,
+        "status": "success",
+        "duration": 7.363590955734253,
+        "prompt_tokens": 407,
+        "completion_tokens": 246,
+        "total_tokens": 653,
+        "cost": 0.00020864999999999998
+    },
+    {
+        "id": 97,
+        "status": "success",
+        "duration": 7.40163516998291,
+        "prompt_tokens": 346,
+        "completion_tokens": 251,
+        "total_tokens": 597,
+        "cost": 0.0002025
+    },
+    {
+        "id": 98,
+        "status": "success",
+        "duration": 9.209236860275269,
+        "prompt_tokens": 407,
+        "completion_tokens": 242,
+        "total_tokens": 649,
+        "cost": 0.00020624999999999997
+    },
+    {
+        "id": 99,
+        "status": "success",
+        "duration": 6.70008111000061,
+        "prompt_tokens": 346,
+        "completion_tokens": 300,
+        "total_tokens": 646,
+        "cost": 0.0002319
+    }
+]
