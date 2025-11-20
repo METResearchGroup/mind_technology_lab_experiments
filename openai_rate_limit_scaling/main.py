@@ -13,6 +13,8 @@ from opik import Opik, track
 import opik
 import tqdm
 
+from models import MODELS, MODEL_PRICING
+
 # Load environment variables
 load_dotenv(find_dotenv())
 
@@ -21,12 +23,12 @@ OPIK_API_KEY = os.getenv("OPIK_API_KEY")
 OPIK_WORKSPACE = os.getenv("OPIK_WORKSPACE")
 OPIK_PROJECT = "OpenAI rate limit testing (for r/aita project)"
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
-# Ensure Opik uses the correct project name via env var (fallback)
-# os.environ["OPIK_PROJECT_NAME"] = OPIK_PROJECT
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 if not OPIK_API_KEY:
     print("Warning: OPIK_API_KEY not found in .env")
+if not OPENROUTER_API_KEY:
+    print("Warning: OPENROUTER_API_KEY not found in .env")
 
 # Configure Opik globally to use the correct project
 opik.configure(use_local=False)
@@ -38,9 +40,18 @@ opik_client = Opik(
     project_name=OPIK_PROJECT
 )
 
-# Initialize OpenAI
-client = AsyncOpenAI(api_key=OPENAI_API_KEY)
-client = track_openai(client)
+# Initialize OpenAI client
+client_openai = AsyncOpenAI(api_key=OPENAI_API_KEY)
+client_openai = track_openai(client_openai, project_name=OPIK_PROJECT)
+
+# Initialize OpenRouter client (using AsyncOpenAI compatible client)
+client_openrouter = AsyncOpenAI(
+    api_key=OPENROUTER_API_KEY,
+    base_url="https://openrouter.ai/api/v1"
+)
+# Also track OpenRouter client
+client_openrouter = track_openai(client_openrouter, project_name=OPIK_PROJECT)
+
 
 DB_PATH = "data.db"
 
@@ -64,41 +75,58 @@ def load_submissions_from_db(db_path):
         return []
 
 @track(project_name=OPIK_PROJECT)
-async def generate_response(submission, request_id, run_id):
-    """Generate a response for a given submission."""
-    # Add run_id as a tag to the current trace if possible
-    try:
-        # Try to update tags if context is available
-        # opik.opik_context.update_current_trace(tags=[run_id])
-        pass 
-    except:
-        pass
-
+async def generate_response(submission, request_id, run_id, model_alias="gpt-4o-mini"):
+    """Generate a response for a given submission using the specified model."""
+    
     start_time = time.time()
+    
+    # Determine model ID and client to use
+    model_id = MODELS.get(model_alias, "gpt-4o-mini")
+    
+    if model_alias == "gpt-4o-mini":
+        client = client_openai
+    else:
+        client = client_openrouter
+        
     try:
         prompt = f"You are a helpful assistant. A user on r/AITA posted the following. Please provide a thoughtful response judging whether they are the asshole or not.\n\nSubmission:\n{submission}"
         
-        # Pass tags to the create call if the library supports it, or rely on the wrapper capturing arguments
-        response = await client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
+        # Prepare request arguments
+        request_kwargs = {
+            "model": model_id,
+            "messages": [
                 {"role": "system", "content": "You are a helpful Reddit bot."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=300
-        )
+            "max_tokens": 300
+        }
+        
+        # For OpenRouter requests, ignore problematic providers like Together
+        if client == client_openrouter:
+            request_kwargs["extra_body"] = {
+                "provider": {
+                    "ignore": ["Together"]
+                }
+            }
+        
+        response = await client.chat.completions.create(**request_kwargs)
         
         end_time = time.time()
         duration = end_time - start_time
         
         usage = response.usage
-        prompt_tokens = usage.prompt_tokens
-        completion_tokens = usage.completion_tokens
-        total_tokens = usage.total_tokens
+        if usage:
+            prompt_tokens = usage.prompt_tokens
+            completion_tokens = usage.completion_tokens
+            total_tokens = usage.total_tokens
+        else:
+            prompt_tokens = 0
+            completion_tokens = 0
+            total_tokens = 0
         
-        # Cost calculation for gpt-4o-mini
-        # Input: $0.15 / 1M tokens, Output: $0.60 / 1M tokens
-        cost = (prompt_tokens * 0.15 / 1_000_000) + (completion_tokens * 0.60 / 1_000_000)
+        # Cost calculation
+        pricing = MODEL_PRICING.get(model_id, {"input": 0, "output": 0})
+        cost = (prompt_tokens * pricing["input"] / 1_000_000) + (completion_tokens * pricing["output"] / 1_000_000)
         
         return {
             "id": request_id,
@@ -108,12 +136,15 @@ async def generate_response(submission, request_id, run_id):
             "completion_tokens": completion_tokens,
             "total_tokens": total_tokens,
             "cost": cost,
-            "run_id": run_id
+            "run_id": run_id,
+            "model": model_alias,
+            "model_id": model_id,
+            "submission": submission
         }
         
     except Exception as e:
         end_time = time.time()
-        print(f"Request {request_id} failed: {e}")
+        print(f"Request {request_id} ({model_alias}) failed: {e}")
         return {
             "id": request_id,
             "status": "error",
@@ -121,18 +152,23 @@ async def generate_response(submission, request_id, run_id):
             "error": str(e),
             "cost": 0,
             "total_tokens": 0,
-            "run_id": run_id
+            "run_id": run_id,
+            "model": model_alias,
+            "model_id": model_id,
+            "submission": submission
         }
 
 async def main():
     parser = argparse.ArgumentParser(description="Run OpenAI rate limit scaling test")
     parser.add_argument("--num_requests", type=int, default=100, help="Number of requests to run")
     parser.add_argument("--log_interval", type=int, default=10, help="Log progress every N requests")
+    parser.add_argument("--model", type=str, default="gpt-4o-mini", choices=list(MODELS.keys()), help="Model to use")
     args = parser.parse_args()
     
     # Generate a run ID based on timestamp
     run_id = f"run_{time.strftime('%Y%m%d_%H%M%S')}"
     print(f"Starting Run ID: {run_id}")
+    print(f"Using model: {args.model} ({MODELS[args.model]})")
     
     print(f"Loading submissions from {DB_PATH}...")
     submissions = load_submissions_from_db(DB_PATH)
@@ -148,8 +184,8 @@ async def main():
     
     async def tracked_generate_response(submission, request_id):
         nonlocal completed_count
-        # Pass run_id to the function
-        result = await generate_response(submission, request_id, run_id)
+        # Pass run_id and model to the function
+        result = await generate_response(submission, request_id, run_id, args.model)
         completed_count += 1
         if completed_count % args.log_interval == 0:
             print(f"Request {completed_count}/{args.num_requests}")
@@ -202,7 +238,8 @@ async def main():
         "run_id": run_id,
         "runtime_configuration": {
             "num_requests": args.num_requests,
-            "model": "gpt-4o-mini",
+            "model_alias": args.model,
+            "model_id": MODELS[args.model],
             "max_tokens": 300,
             "log_interval": args.log_interval,
             "data_source": DB_PATH
@@ -224,6 +261,15 @@ async def main():
     # Save results
     with open(f"{output_dir}/results.json", "w") as f:
         json.dump(results, f, indent=4)
+        
+    # Save deadletter queue for failed requests
+    if failed:
+        deadletter_path = f"{output_dir}/deadletter.jsonl"
+        with open(deadletter_path, "w") as f:
+            for fail in failed:
+                json.dump(fail, f)
+                f.write("\n")
+        print(f"Failed requests saved to {deadletter_path}")
         
     print(f"Results saved to {output_dir}")
     
