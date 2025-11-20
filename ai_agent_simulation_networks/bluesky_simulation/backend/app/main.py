@@ -10,6 +10,9 @@ from app.db import get_db_connection, init_db
 from app.ingestion import ingest_data
 from app.agent_generation import generate_agent_bios
 from app.simulation import app as simulation_app, event_queue
+import os
+from dotenv import load_dotenv, find_dotenv
+import opik
 
 app = FastAPI()
 
@@ -20,6 +23,57 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+def configure_opik_from_environment() -> None:
+    """
+    Configure Opik telemetry using environment variables.
+    Supported environment variables:
+      - OPIK_USE_LOCAL=1                 # enable local Opik
+      - OPIK_API_KEY=<key>               # Opik Cloud/api key
+      - OPIK_WORKSPACE=<workspace>       # optional workspace (cloud)
+      - OPIK_URL or OPIK_URL_OVERRIDE    # optional server URL
+      - OPIK_PROJECT_NAME / OPIK_PROJECT # project name (picked up by SDK via env)
+    """
+    # Load .env (search upwards from CWD to handle repo-level .env files)
+    dotenv_path = find_dotenv(usecwd=True)
+    if dotenv_path:
+        load_dotenv(dotenv_path=dotenv_path)
+    else:
+        load_dotenv()
+    
+    use_local = os.getenv("OPIK_USE_LOCAL", "").strip()
+    api_key = os.getenv("OPIK_API_KEY", "").strip()
+    url = (os.getenv("OPIK_URL") or os.getenv("OPIK_URL_OVERRIDE") or "").strip()
+    workspace = os.getenv("OPIK_WORKSPACE", "").strip()
+    
+    try:
+        # Prefer explicit local usage
+        if use_local == "1" or ("localhost" in url if url else False):
+            opik.configure(use_local=True)
+            print("[opik] configured for local usage")
+            return
+        
+        # Cloud configuration if API key available
+        if api_key:
+            kwargs = {"api_key": api_key}
+            if workspace:
+                kwargs["workspace"] = workspace
+            if url:
+                kwargs["url"] = url
+            opik.configure(**kwargs)
+            print("[opik] configured with API key")
+            return
+        
+        # If neither local nor api key provided, skip configuration silently
+        print("[opik] no configuration provided (set OPIK_USE_LOCAL=1 or OPIK_API_KEY)")
+    except Exception as e:
+        # Do not crash the app if Opik configuration fails
+        print(f"[opik] configuration skipped: {e}")
+
+@app.on_event("startup")
+def on_startup():
+    # Initialize Opik if configured via env
+    configure_opik_from_environment()
 
 class SimulationConfig(BaseModel):
     total_rounds: int = 10

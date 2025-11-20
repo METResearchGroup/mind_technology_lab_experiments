@@ -49,7 +49,15 @@ Create a `.env` file in `ai_agent_simulation_networks/` with:
 BLUESKY_HANDLE="your.handle.bsky.social"
 BLUESKY_PASSWORD="your_password"
 OPENAI_API_KEY="sk-..."
-COMET_API_KEY="your_comet_key"
+# Opik (telemetry) - choose one of the following setups
+# Local Opik:
+# OPIK_USE_LOCAL="1"
+#
+# Or Opik Cloud / self-hosted:
+# OPIK_API_KEY="your_opik_api_key"
+# OPIK_WORKSPACE="your_workspace"          # optional
+# OPIK_PROJECT_NAME="your_project"         # or OPIK_PROJECT
+# OPIK_URL="https://your-opik-server/api"  # optional, for self-hosted
 ```
 
 ### Installation
