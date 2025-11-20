@@ -8,7 +8,7 @@ A social science research platform for simulating AI agent behaviors based on re
 - **Frontend**: Next.js with TypeScript and Tailwind CSS
 - **AI**: OpenAI GPT-4 for bio generation and agent behavior
 - **Workflow**: LangGraph for simulation orchestration
-- **Telemetry**: Opik Comet for tracking
+- **Telemetry**: Opik for tracking
 
 ## Project Structure
 
