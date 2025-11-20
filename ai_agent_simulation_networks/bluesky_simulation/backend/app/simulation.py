@@ -8,6 +8,21 @@ from langchain_core.prompts import ChatPromptTemplate
 from opik import track
 from app.db import get_db_connection
 from app.models import AgentBioSchema
+import asyncio
+from queue import Queue
+import sys
+from io import StringIO
+
+# Global event queue for real-time updates
+event_queue = Queue()
+
+def emit_event(event_type: str, data: Dict[str, Any]):
+    """Emit an event to the event queue for SSE streaming."""
+    event_queue.put({
+        "type": event_type,
+        "data": data,
+        "timestamp": datetime.now().isoformat()
+    })
 
 # --- Prompts ---
 
@@ -126,8 +141,15 @@ def run_agent_turn(agent_handle: str, turn: int):
     conn = get_db_connection()
     cursor = conn.cursor()
     
+    # Capture stdout
+    stdout_capture = StringIO()
+    original_stdout = sys.stdout
+    
     try:
+        sys.stdout = stdout_capture
+        
         print(f"  Running turn {turn} for {agent_handle}...")
+        emit_event("agent_start", {"agent": agent_handle, "turn": turn})
         
         # 1. Get Bio
         bio = get_agent_bio(cursor, agent_handle)
@@ -170,9 +192,11 @@ def run_agent_turn(agent_handle: str, turn: int):
             "feed_posts": feed_str_uris
         })
         likes_data = json.loads(like_result.content)
+        likes_count = 0
         for like in likes_data.get("likes", []):
             save_like(cursor, agent_handle, like['post_uri'], like['reason'], turn)
             print(f"    Liked post by {like.get('post_uri')} because: {like.get('reason')}")
+            likes_count += 1
 
         # 4. Draft & Post
         past_posts = get_agent_past_posts(cursor, agent_handle)
@@ -196,22 +220,46 @@ def run_agent_turn(agent_handle: str, turn: int):
         # "iterate through the 3 draft posts and choose to 'write' the post" -> ambiguous.
         # Let's assume p=0.05 chance to write ONE post from the drafts.
         
+        posts_count = 0
         if random.random() < 0.05 and drafts:
             # Pick one random draft to post
             chosen_draft = random.choice(drafts)
             save_post(cursor, agent_handle, chosen_draft['text'], turn)
             print(f"    Wrote post: {chosen_draft['text']}")
+            posts_count = 1
             
         conn.commit()
         
+        # Restore stdout and get captured output
+        sys.stdout = original_stdout
+        log_output = stdout_capture.getvalue()
+        
+        # Emit completion event with results
+        emit_event("agent_complete", {
+            "agent": agent_handle,
+            "turn": turn,
+            "likes_count": likes_count,
+            "posts_count": posts_count,
+            "log": log_output
+        })
+        
     except Exception as e:
-        print(f"Error in agent turn for {agent_handle}: {e}")
+        sys.stdout = original_stdout
+        error_msg = f"Error in agent turn for {agent_handle}: {e}"
+        print(error_msg)
+        emit_event("agent_error", {
+            "agent": agent_handle,
+            "turn": turn,
+            "error": str(e),
+            "log": stdout_capture.getvalue()
+        })
     finally:
         conn.close()
 
 def run_simulation_step(state: SimulationState):
     turn = state['turn']
     print(f"Starting Turn {turn}")
+    emit_event("turn_start", {"turn": turn})
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -223,7 +271,8 @@ def run_simulation_step(state: SimulationState):
     
     for agent in agents:
         run_agent_turn(agent, turn)
-        
+    
+    emit_event("turn_complete", {"turn": turn})
     return {"turn": turn + 1}
 
 # --- LangGraph Definition ---

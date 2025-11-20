@@ -34,12 +34,22 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [expandedTurns, setExpandedTurns] = useState<Set<number>>(new Set([0]));
   const [expandedAgents, setExpandedAgents] = useState<Record<number, Set<string>>>({});
+  const [logs, setLogs] = useState<string[]>([]);
+  const [logsExpanded, setLogsExpanded] = useState(true);
+  const [eventSource, setEventSource] = useState<EventSource | null>(null);
 
   const API_BASE = 'http://localhost:8000';
 
   useEffect(() => {
     fetchState();
     fetchHistory();
+
+    // Cleanup event source on unmount
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
   }, []);
 
   const fetchState = async () => {
@@ -74,28 +84,99 @@ export default function Home() {
       await fetchHistory();
       setExpandedTurns(new Set([0]));
       setExpandedAgents({});
+      setLogs([]);
     } catch (error) {
       console.error('Error resetting simulation:', error);
     }
     setLoading(false);
   };
 
+  const addLog = (message: string) => {
+    setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`]);
+  };
+
   const runStep = async () => {
     setLoading(true);
+    setLogs([]);
+
     try {
+      // Start the simulation step
       const res = await fetch(`${API_BASE}/simulation/step`, { method: 'POST' });
       const data = await res.json();
-      await fetchState();
-      await fetchHistory();
 
-      // Auto-expand the new turn
-      if (data.turn !== undefined) {
-        setExpandedTurns(prev => new Set([...prev, data.turn - 1]));
+      if (data.running) {
+        addLog('⚠️ Simulation already running');
+        setLoading(false);
+        return;
       }
+
+      addLog(`🚀 Starting Turn ${data.turn}`);
+
+      // Connect to SSE endpoint for real-time updates
+      const es = new EventSource(`${API_BASE}/simulation/events`);
+      setEventSource(es);
+
+      es.onmessage = (event) => {
+        if (event.data.startsWith(':')) return; // Ignore heartbeat
+
+        try {
+          const eventData = JSON.parse(event.data);
+
+          switch (eventData.type) {
+            case 'turn_start':
+              addLog(`📍 Turn ${eventData.data.turn} started`);
+              break;
+
+            case 'agent_start':
+              addLog(`🤖 ${eventData.data.agent} - Starting turn ${eventData.data.turn}`);
+              break;
+
+            case 'agent_complete':
+              addLog(`✅ ${eventData.data.agent} - Completed (${eventData.data.likes_count} likes, ${eventData.data.posts_count} posts)`);
+              if (eventData.data.log) {
+                addLog(`   Log: ${eventData.data.log.trim()}`);
+              }
+              // Fetch updated history incrementally
+              fetchHistory();
+              break;
+
+            case 'agent_error':
+              addLog(`❌ ${eventData.data.agent} - Error: ${eventData.data.error}`);
+              break;
+
+            case 'turn_complete':
+              addLog(`🎉 Turn ${eventData.data.turn} completed`);
+              fetchState();
+              fetchHistory();
+              // Auto-expand the new turn
+              setExpandedTurns(prev => new Set([...prev, eventData.data.turn]));
+              break;
+
+            case 'simulation_complete':
+              addLog(`🏁 Simulation complete at turn ${eventData.data.turn}`);
+              break;
+
+            case 'error':
+              addLog(`💥 Error: ${eventData.data.error}`);
+              break;
+          }
+        } catch (e) {
+          console.error('Error parsing event:', e);
+        }
+      };
+
+      es.onerror = () => {
+        es.close();
+        setEventSource(null);
+        setLoading(false);
+        addLog('📡 Event stream closed');
+      };
+
     } catch (error) {
       console.error('Error running step:', error);
+      addLog(`💥 Error: ${error}`);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const toggleTurn = (turn: number) => {
@@ -220,6 +301,48 @@ export default function Home() {
                   </div>
                 </div>
               )}
+
+              {/* Logs Panel */}
+              <div className="mt-6 bg-slate-700/50 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setLogsExpanded(!logsExpanded)}
+                  className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-700 transition-colors"
+                >
+                  <span className="font-semibold text-white">Execution Logs</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400">{logs.length} entries</span>
+                    {logsExpanded ? <ChevronUp size={20} className="text-slate-300" /> : <ChevronDown size={20} className="text-slate-300" />}
+                  </div>
+                </button>
+
+                {logsExpanded && (
+                  <div className="px-4 pb-4 max-h-96 overflow-y-auto">
+                    {logs.length === 0 ? (
+                      <div className="text-center py-8 text-slate-400 text-sm">
+                        No logs yet. Run a simulation step to see progress.
+                      </div>
+                    ) : (
+                      <div className="space-y-1 font-mono text-xs">
+                        {logs.map((log, idx) => (
+                          <div
+                            key={idx}
+                            className={`p-2 rounded ${log.includes('❌') || log.includes('💥')
+                                ? 'bg-red-900/20 text-red-300'
+                                : log.includes('✅')
+                                  ? 'bg-green-900/20 text-green-300'
+                                  : log.includes('🚀') || log.includes('🎉')
+                                    ? 'bg-blue-900/20 text-blue-300'
+                                    : 'bg-slate-800/50 text-slate-300'
+                              }`}
+                          >
+                            {log}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
