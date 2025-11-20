@@ -161,6 +161,7 @@ async def generate_response(submission, request_id, run_id, model_alias="gpt-4o-
 async def main():
     parser = argparse.ArgumentParser(description="Run OpenAI rate limit scaling test")
     parser.add_argument("--num_requests", type=int, default=100, help="Number of requests to run")
+    parser.add_argument("--concurrency", type=int, default=50, help="Maximum number of concurrent requests")
     parser.add_argument("--log_interval", type=int, default=10, help="Log progress every N requests")
     parser.add_argument("--model", type=str, default="gpt-4o-mini", choices=list(MODELS.keys()), help="Model to use")
     args = parser.parse_args()
@@ -181,15 +182,17 @@ async def main():
     
     # Initialize progress tracking
     completed_count = 0
+    semaphore = asyncio.Semaphore(args.concurrency)
     
     async def tracked_generate_response(submission, request_id):
         nonlocal completed_count
-        # Pass run_id and model to the function
-        result = await generate_response(submission, request_id, run_id, args.model)
-        completed_count += 1
-        if completed_count % args.log_interval == 0:
-            print(f"Request {completed_count}/{args.num_requests}")
-        return result
+        async with semaphore:
+            # Pass run_id and model to the function
+            result = await generate_response(submission, request_id, run_id, args.model)
+            completed_count += 1
+            if completed_count % args.log_interval == 0:
+                print(f"Request {completed_count}/{args.num_requests}")
+            return result
 
     # Prepare requests by cycling through submissions
     tasks = []
@@ -238,6 +241,7 @@ async def main():
         "run_id": run_id,
         "runtime_configuration": {
             "num_requests": args.num_requests,
+            "concurrency": args.concurrency,
             "model_alias": args.model,
             "model_id": MODELS[args.model],
             "max_tokens": 300,

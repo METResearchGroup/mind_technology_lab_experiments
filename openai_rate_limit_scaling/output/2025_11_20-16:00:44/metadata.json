@@ -1,0 +1,21 @@
+{
+    "timestamp": "2025_11_20-16:00:44",
+    "run_id": "run_20251120_155449",
+    "runtime_configuration": {
+        "num_requests": 500,
+        "model_alias": "qwen-2.5-72b",
+        "model_id": "deepinfra/qwen-2.5-72b-instruct",
+        "max_tokens": 300,
+        "log_interval": 10,
+        "data_source": "data.db"
+    },
+    "metrics": {
+        "total_runtime": 355.2813560962677,
+        "total_requests": 500,
+        "successful_requests": 0,
+        "failed_requests": 500,
+        "total_tokens": 0,
+        "total_cost": 0,
+        "avg_latency": 0
+    }
+}
