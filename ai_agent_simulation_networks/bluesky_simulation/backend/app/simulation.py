@@ -163,6 +163,7 @@ def run_agent_turn(agent_handle: str, turn: int):
         
         # 3. Decide Likes
         like_chain = ChatPromptTemplate.from_template(LIKE_DECISION_PROMPT) | llm.bind(response_format={"type": "json_object"})
+        like_prompt_text = LIKE_DECISION_PROMPT.format(name=agent_handle, bio=bio_str, feed_posts=feed_str)
         
         # keep raw inputs/outputs for telemetry
         telemetry: Dict[str, Any] = {
@@ -175,11 +176,12 @@ def run_agent_turn(agent_handle: str, turn: int):
         }
         
         try:
-            like_result = like_chain.invoke({
+            like_inputs_initial = {
                 "name": agent_handle,
                 "bio": bio_str,
                 "feed_posts": feed_str
-            })
+            }
+            like_result = like_chain.invoke(like_inputs_initial)
             likes_data = json.loads(like_result.content)
             telemetry["like_input"] = {
                 "name": agent_handle,
@@ -187,6 +189,10 @@ def run_agent_turn(agent_handle: str, turn: int):
                 "feed_posts": feed_str
             }
             telemetry["like_output_raw"] = like_result.content
+            telemetry["like_prompt"] = like_prompt_text
+            telemetry["like_response"] = like_result.content
+            print("[telemetry] like_prompt:=\n" + like_prompt_text)
+            print("[telemetry] like_response:=\n" + like_result.content)
             
             for like in likes_data.get("likes", []):
                 # Find the post URI from the feed list (we need to map back or just trust LLM if it outputs URI correctly)
@@ -200,13 +206,15 @@ def run_agent_turn(agent_handle: str, turn: int):
         # Re-doing feed string with URIs for the prompt
         feed_with_uris = [{"uri": p['uri'], "author": p['author_handle'], "text": p['text']} for p in feed]
         feed_str_uris = json.dumps(feed_with_uris, indent=2)
+        like_prompt_text = LIKE_DECISION_PROMPT.format(name=agent_handle, bio=bio_str, feed_posts=feed_str_uris)
         
         # Retry Like invocation with correct feed
-        like_result = like_chain.invoke({
+        like_inputs = {
             "name": agent_handle,
             "bio": bio_str,
             "feed_posts": feed_str_uris
-        })
+        }
+        like_result = like_chain.invoke(like_inputs)
         likes_data = json.loads(like_result.content)
         telemetry["like_input"] = {
             "name": agent_handle,
@@ -214,6 +222,10 @@ def run_agent_turn(agent_handle: str, turn: int):
             "feed_posts": feed_str_uris
         }
         telemetry["like_output_raw"] = like_result.content
+        telemetry["like_prompt"] = like_prompt_text
+        telemetry["like_response"] = like_result.content
+        print("[telemetry] like_prompt:=\n" + like_prompt_text)
+        print("[telemetry] like_response:=\n" + like_result.content)
         likes_count = 0
         for like in likes_data.get("likes", []):
             save_like(cursor, agent_handle, like['post_uri'], like['reason'], turn)
@@ -225,13 +237,20 @@ def run_agent_turn(agent_handle: str, turn: int):
         past_posts_str = json.dumps(past_posts, indent=2)
         
         draft_chain = ChatPromptTemplate.from_template(POST_DRAFTING_PROMPT) | llm.bind(response_format={"type": "json_object"})
+        draft_prompt_text = POST_DRAFTING_PROMPT.format(
+            name=agent_handle,
+            bio=bio_str,
+            past_posts=past_posts_str,
+            feed_posts=feed_str
+        )
         
-        draft_result = draft_chain.invoke({
+        draft_inputs = {
             "name": agent_handle,
             "bio": bio_str,
             "past_posts": past_posts_str,
             "feed_posts": feed_str # Text only is fine here, or use URIs
-        })
+        }
+        draft_result = draft_chain.invoke(draft_inputs)
         drafts_data = json.loads(draft_result.content)
         telemetry["draft_input"] = {
             "name": agent_handle,
@@ -240,6 +259,10 @@ def run_agent_turn(agent_handle: str, turn: int):
             "feed_posts": feed_str
         }
         telemetry["draft_output_raw"] = draft_result.content
+        telemetry["draft_prompt"] = draft_prompt_text
+        telemetry["draft_response"] = draft_result.content
+        print("[telemetry] draft_prompt:=\n" + draft_prompt_text)
+        print("[telemetry] draft_response:=\n" + draft_result.content)
         drafts = drafts_data.get("drafts", [])
         
         # 5. Decide to write (p=0.05)
@@ -276,6 +299,7 @@ def run_agent_turn(agent_handle: str, turn: int):
         telemetry["likes_count"] = likes_count
         telemetry["posts_count"] = posts_count
         telemetry["log_excerpt"] = log_output[:4000]  # avoid overlong payloads
+        telemetry["thread_id"] = f"turn-{turn}"
         return telemetry
         
     except Exception as e:
@@ -293,11 +317,13 @@ def run_agent_turn(agent_handle: str, turn: int):
             "agent_handle": agent_handle,
             "turn": turn,
             "error": str(e),
-            "log_excerpt": stdout_capture.getvalue()[:4000]
+            "log_excerpt": stdout_capture.getvalue()[:4000],
+            "thread_id": f"turn-{turn}"
         }
     finally:
         conn.close()
 
+@track
 def run_simulation_step(state: SimulationState):
     turn = state['turn']
     print(f"Starting Turn {turn}")
