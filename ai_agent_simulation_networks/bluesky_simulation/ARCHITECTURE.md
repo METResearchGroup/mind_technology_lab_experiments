@@ -20,6 +20,7 @@
 │  │                    API Endpoints                          │  │
 │  │  POST /simulation/reset  │  POST /simulation/step        │  │
 │  │  GET  /simulation/state  │  GET  /simulation/history     │  │
+│  │  POST /eval/run          │                                │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                         │                                       │
 │                         ▼                                       │
@@ -36,7 +37,7 @@
 │  │                    │ Save Likes │    │ Write Posts│     │  │
 │  │                    └────────────┘    └────────────┘     │  │
 │  │                                                            │  │
-│  │  @track (Opik Telemetry) ──────────────────────────────▶ │  │
+│  │  Opik Telemetry & Metrics (Usefulness/Moderation/Structure) ─▶ │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                         │                                       │
 │                         ▼                                       │
@@ -120,7 +121,7 @@ Frontend ← JSON response ← Backend ← Query results
 
 1. **FastAPI + Next.js**: Separation of concerns, better state management
 2. **LangGraph**: Structured workflow for agent behavior
-3. **Opik Telemetry**: Track all simulation steps for analysis
+3. **Opik Telemetry**: Track all simulation steps and built-in metrics (Usefulness, Moderation, Structured Output Compliance) for analysis
 4. **SQLite**: Simple, file-based, perfect for research
 5. **Pydantic**: Type safety and schema validation
 6. **Step-through UI**: Allows careful observation of agent behavior

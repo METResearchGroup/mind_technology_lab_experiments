@@ -8,7 +8,7 @@ A social science research platform for simulating AI agent behaviors based on re
 - **Frontend**: Next.js with TypeScript and Tailwind CSS
 - **AI**: OpenAI GPT-4 for bio generation and agent behavior
 - **Workflow**: LangGraph for simulation orchestration
-- **Telemetry**: Opik for tracking
+- **Telemetry/Evals**: Opik for tracking + built-in metrics (Usefulness, Moderation, Structured Output Compliance) + offline eval suite
 
 ## Project Structure
 
@@ -22,7 +22,12 @@ bluesky_simulation/
 │   │   ├── bluesky_client.py    # Bluesky API wrapper
 │   │   ├── ingestion.py         # Data ingestion script
 │   │   ├── agent_generation.py  # AI bio generation
-│   │   └── simulation.py        # LangGraph simulation logic
+│   │   ├── simulation.py        # LangGraph simulation logic
+│   │   └── evals/               # Evals package (Opik metrics + suite)
+│   │       ├── __init__.py
+│   │       ├── README.md
+│   │       ├── opik_metrics.py  # Usefulness/Moderation/Structure metrics
+│   │       └── suite.py         # Deterministic offline eval suite
 │   ├── pyproject.toml
 │   └── simulation.db            # SQLite database
 ├── frontend/
@@ -157,6 +162,7 @@ Visit `http://localhost:3000` to access the UI.
 - `POST /simulation/step` - Run one turn
 - `GET /simulation/state` - Get current state
 - `GET /simulation/history` - Get all activity
+- `POST /eval/run` - Run deterministic offline eval suite (records to Opik)
 
 ## Customization
 
@@ -175,7 +181,9 @@ Edit `TARGET_PROFILES` in `backend/app/ingestion.py`.
 
 - **Modular Design**: Each component (ingestion, generation, simulation) is independent
 - **Type Safety**: Pydantic models enforce schema validation
-- **Telemetry**: All simulation steps are tracked with Opik
+- **Telemetry/Evals**: Simulation steps traced with Opik; evals include:
+  - Built-in Opik metrics: Usefulness, Moderation, Structured Output Compliance
+  - Offline regression suite (`POST /eval/run`)
 - **Extensibility**: Easy to add new agent behaviors or metrics
 
 ## Future Enhancements

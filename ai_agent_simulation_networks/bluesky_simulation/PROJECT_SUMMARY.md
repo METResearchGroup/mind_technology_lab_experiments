@@ -23,7 +23,9 @@ A complete social science research platform for simulating AI agent behaviors ba
 ### ✅ Simulation Logic (Step 3)
 - **File**: `backend/app/simulation.py`
 - Built with **LangGraph** for workflow orchestration
-- **Telemetry**: Integrated with **Opik Comet** using `@track` decorator
+- **Telemetry/Evals**: Integrated with **Opik** spans + built-in metrics:
+  - Usefulness, Moderation, Structured Output Compliance (per agent-turn)
+  - Offline deterministic eval suite (`POST /eval/run`)
 - **Modular Tools**:
   - `get_feed()`: Fetch latest 20 posts by timestamp
   - `get_agent_bio()`: Retrieve agent persona
@@ -43,6 +45,7 @@ A complete social science research platform for simulating AI agent behaviors ba
   - `POST /simulation/step`: Run one turn
   - `GET /simulation/state`: Get current state
   - `GET /simulation/history`: Get all activity
+  - `POST /eval/run`: Execute deterministic eval suite
 - **Frontend** (`frontend/app/page.tsx`):
   - Control panel with hyperparameters
   - Step-through simulation (one turn at a time)
@@ -88,6 +91,7 @@ A complete social science research platform for simulating AI agent behaviors ba
 - [x] Agent bio generation with specified JSON schema
 - [x] LangGraph workflow for simulation
 - [x] Opik telemetry integration
+- [x] Evals & Metrics (Opik built-in metrics + offline suite)
 - [x] Modular tools (fetch feed, like, post)
 - [x] Turn-based simulation
 - [x] Step-through UI

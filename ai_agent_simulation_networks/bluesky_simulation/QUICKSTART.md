@@ -95,6 +95,14 @@ Each turn, every agent will:
 3. **Draft Posts**: Generate 3 potential posts
 4. **Write Posts**: 5% chance to publish each draft
 
+### Optional: Run Opik’s Built-in Metrics
+
+- Trigger the deterministic eval suite (which runs Opik Usefulness/Moderation/Structured Output Compliance metrics) after the backend is up:
+```bash
+curl -X POST http://localhost:8000/eval/run
+```
+- Inspect the resulting `opik_metrics` spans inside Opik to see the built-in scores ([metric overview](https://www.comet.com/docs/opik/evaluation/metrics/overview/)).
+
 ## Troubleshooting
 
 ### Backend won't start

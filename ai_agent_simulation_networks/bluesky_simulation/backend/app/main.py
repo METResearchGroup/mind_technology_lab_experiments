@@ -14,6 +14,7 @@ import os
 from dotenv import load_dotenv, find_dotenv
 import opik
 from pathlib import Path
+from app.evals.suite import run_eval_suite
 
 app = FastAPI()
 
@@ -280,3 +281,8 @@ def get_simulation_history():
     
     conn.close()
     return {"likes": likes, "posts": posts}
+
+@app.post("/eval/run")
+def run_eval_endpoint():
+    """Run the deterministic eval suite and record results in Opik."""
+    return run_eval_suite()

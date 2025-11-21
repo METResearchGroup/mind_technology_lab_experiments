@@ -12,6 +12,8 @@ import asyncio
 from queue import Queue
 import sys
 from io import StringIO
+from time import perf_counter
+from app.evals.opik_metrics import score_with_opik_metrics
 
 # Global event queue for real-time updates
 event_queue = Queue()
@@ -171,90 +173,98 @@ def run_agent_turn(agent_handle: str, turn: int):
         likes_count = 0
         posts_count = 0
         drafts: List[Dict[str, Any]] = []
+        likes_data: Dict[str, Any] = {}
+        drafts_data: Dict[str, Any] = {}
+        like_latency_s: float = 0.0
+        draft_latency_s: float = 0.0
+        like_tokens: Dict[str, Any] = {}
+        draft_tokens: Dict[str, Any] = {}
 
-        # Agent-level span to group the LLM spans and hold metadata
+        # LIKE span
+        like_prompt_text = LIKE_DECISION_PROMPT.format(name=agent_handle, bio=bio_str, feed_posts=feed_str_uris)
         with opik.start_as_current_span(
-            name=f"agent:{agent_handle}",
-            type="general",
+            name="like",
+            type="llm",
             metadata={"agent_handle": agent_handle, "turn": turn}
-        ) as agent_span:
-            # LIKE span
-            like_prompt_text = LIKE_DECISION_PROMPT.format(name=agent_handle, bio=bio_str, feed_posts=feed_str_uris)
-            with opik.start_as_current_span(
-                name="like",
-                type="llm",
-                metadata={"agent_handle": agent_handle, "turn": turn}
-            ) as like_span:
-                like_span.model = "gpt-4o"
-                like_span.provider = "openai"
-                like_input = {
-                    "name": agent_handle,
-                    "bio": bio_str,
-                    "feed_posts": feed_str_uris
-                }
-                like_span.input = {
-                    "like_input": like_input,
-                    "like_prompt": like_prompt_text
-                }
-                like_result = like_chain.invoke(like_input)
-                like_span.output = {"response": like_result.content}
-                likes_data = json.loads(like_result.content)
-                for like in likes_data.get("likes", []):
-                    save_like(cursor, agent_handle, like['post_uri'], like['reason'], turn)
-                    print(f"    Liked post by {like.get('post_uri')} because: {like.get('reason')}")
-                    likes_count += 1
-                like_span.metadata = {**(like_span.metadata or {}), "likes_count": likes_count}
-
-            # DRAFT span
-            past_posts = get_agent_past_posts(cursor, agent_handle)
-            past_posts_str = json.dumps(past_posts, indent=2)
-            draft_prompt_text = POST_DRAFTING_PROMPT.format(
-                name=agent_handle,
-                bio=bio_str,
-                past_posts=past_posts_str,
-                feed_posts=feed_str
-            )
-            with opik.start_as_current_span(
-                name="draft",
-                type="llm",
-                metadata={"agent_handle": agent_handle, "turn": turn}
-            ) as draft_span:
-                draft_span.model = "gpt-4o"
-                draft_span.provider = "openai"
-                draft_input = {
-                    "name": agent_handle,
-                    "bio": bio_str,
-                    "past_posts": past_posts_str,
-                    "feed_posts": feed_str
-                }
-                draft_span.input = {
-                    "draft_input": draft_input,
-                    "draft_prompt": draft_prompt_text
-                }
-                draft_result = draft_chain.invoke(draft_input)
-                draft_span.output = {"response": draft_result.content}
-                drafts_data = json.loads(draft_result.content)
-                drafts = drafts_data.get("drafts", [])
-
-            # Decide to write (p=0.05)
-            if random.random() < 0.05 and drafts:
-                chosen_draft = random.choice(drafts)
-                save_post(cursor, agent_handle, chosen_draft['text'], turn)
-                print(f"    Wrote post: {chosen_draft['text']}")
-                posts_count = 1
-
-            # Commit DB changes for the agent
-            conn.commit()
-            
-            # Restore stdout and attach logs to agent span metadata
-            sys.stdout = original_stdout
-            log_output = stdout_capture.getvalue()
-            agent_span.metadata = {
-                **(agent_span.metadata or {}),
-                "likes_count": likes_count,
-                "posts_count": posts_count,
-                "log_excerpt": log_output[:4000]
+        ) as like_span:
+            like_span.model = "gpt-4o"
+            like_span.provider = "openai"
+            like_input = {
+                "name": agent_handle,
+                "bio": bio_str,
+                "feed_posts": feed_str_uris
             }
+            like_span.input = {
+                "like_input": like_input,
+                "like_prompt": like_prompt_text
+            }
+            t0 = perf_counter()
+            like_result = like_chain.invoke(like_input)
+            like_latency_s = perf_counter() - t0
+            like_tokens = getattr(like_result, "response_metadata", {}).get("token_usage", {})
+            like_span.output = {"response": like_result.content}
+            likes_data = json.loads(like_result.content)
+            for like in likes_data.get("likes", []):
+                save_like(cursor, agent_handle, like['post_uri'], like['reason'], turn)
+                print(f"    Liked post by {like.get('post_uri')} because: {like.get('reason')}")
+                likes_count += 1
+            like_span.metadata = {**(like_span.metadata or {}), "likes_count": likes_count}
+
+        # DRAFT span
+        past_posts = get_agent_past_posts(cursor, agent_handle)
+        past_posts_str = json.dumps(past_posts, indent=2)
+        draft_prompt_text = POST_DRAFTING_PROMPT.format(
+            name=agent_handle,
+            bio=bio_str,
+            past_posts=past_posts_str,
+            feed_posts=feed_str
+        )
+        with opik.start_as_current_span(
+            name="draft",
+            type="llm",
+            metadata={"agent_handle": agent_handle, "turn": turn}
+        ) as draft_span:
+            draft_span.model = "gpt-4o"
+            draft_span.provider = "openai"
+            draft_input = {
+                "name": agent_handle,
+                "bio": bio_str,
+                "past_posts": past_posts_str,
+                "feed_posts": feed_str
+            }
+            draft_span.input = {
+                "draft_input": draft_input,
+                "draft_prompt": draft_prompt_text
+            }
+            t1 = perf_counter()
+            draft_result = draft_chain.invoke(draft_input)
+            draft_latency_s = perf_counter() - t1
+            draft_tokens = getattr(draft_result, "response_metadata", {}).get("token_usage", {})
+            draft_span.output = {"response": draft_result.content}
+            drafts_data = json.loads(draft_result.content)
+            drafts = drafts_data.get("drafts", [])
+
+        # Decide to write (p=0.05)
+        if random.random() < 0.05 and drafts:
+            chosen_draft = random.choice(drafts)
+            save_post(cursor, agent_handle, chosen_draft['text'], turn)
+            print(f"    Wrote post: {chosen_draft['text']}")
+            posts_count = 1
+
+        # Commit DB changes for the agent
+        conn.commit()
+        
+        # Restore stdout and capture logs
+        sys.stdout = original_stdout
+        log_output = stdout_capture.getvalue()
+        score_with_opik_metrics(
+            agent_handle=agent_handle,
+            turn=turn,
+            like_prompt=like_prompt_text,
+            like_response=like_result.content,
+            draft_prompt=draft_prompt_text,
+            draft_response=draft_result.content,
+        )
         
         # Emit completion event with results
         emit_event("agent_complete", {
@@ -262,13 +272,14 @@ def run_agent_turn(agent_handle: str, turn: int):
             "turn": turn,
             "likes_count": likes_count,
             "posts_count": posts_count,
-            "log": stdout_capture.getvalue()
+            "log": log_output
         })
         
-        # Return minimal counts for parent summarization
+        # Return minimal counts and log excerpt for parent summarization
         return {
             "likes_count": likes_count,
-            "posts_count": posts_count
+            "posts_count": posts_count,
+            "log_excerpt": log_output[:4000]
         }
         
     except Exception as e:
@@ -313,10 +324,22 @@ def run_simulation_step(state: SimulationState):
         total_posts = 0
         
         for agent in agents:
-            result = run_agent_turn(agent, turn)
-            if isinstance(result, dict):
-                total_likes += int(result.get("likes_count", 0))
-                total_posts += int(result.get("posts_count", 0))
+            # Ensure each agent is a top-level child of the turn trace
+            with opik.start_as_current_span(
+                name=f"agent:{agent}",
+                type="general",
+                metadata={"agent_handle": agent, "turn": turn}
+            ) as agent_span:
+                result = run_agent_turn(agent, turn)
+                if isinstance(result, dict):
+                    total_likes += int(result.get("likes_count", 0))
+                    total_posts += int(result.get("posts_count", 0))
+                    agent_span.metadata = {
+                        **(agent_span.metadata or {}),
+                        "likes_count": int(result.get("likes_count", 0)),
+                        "posts_count": int(result.get("posts_count", 0)),
+                        "log_excerpt": result.get("log_excerpt", "")
+                    }
         
         # Summarize at the trace level
         trace.metadata = {
