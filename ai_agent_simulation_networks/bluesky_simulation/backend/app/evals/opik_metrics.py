@@ -1,5 +1,6 @@
 from functools import lru_cache
 from typing import Dict, Any
+from datetime import datetime
 import opik
 from opik.evaluation.metrics import Usefulness, Moderation, StructuredOutputCompliance
 
@@ -20,6 +21,10 @@ def _structure_metric() -> StructuredOutputCompliance:
     return StructuredOutputCompliance(model="gpt-4o-mini")
 
 
+def _metadata_timestamp() -> str:
+    return datetime.now().strftime("%Y_%m_%d-%H:%M:%S")
+
+
 def score_with_opik_metrics(
     agent_handle: str,
     turn: int,
@@ -27,6 +32,7 @@ def score_with_opik_metrics(
     like_response: str,
     draft_prompt: str,
     draft_response: str,
+    session_id: str,
 ) -> Dict[str, Any]:
     """
     Runs Opik's built-in evaluation metrics (Usefulness, Moderation, StructuredOutputCompliance)
@@ -35,7 +41,12 @@ def score_with_opik_metrics(
     with opik.start_as_current_span(
         name="opik_metrics",
         type="eval",
-        metadata={"agent_handle": agent_handle, "turn": turn},
+        metadata={
+            "agent_handle": agent_handle,
+            "turn": turn,
+            "session_id": session_id,
+            "timestamp": _metadata_timestamp(),
+        },
     ) as span:
         usefulness = _usefulness_metric()
         moderation = _moderation_metric()

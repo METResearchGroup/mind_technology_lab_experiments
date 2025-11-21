@@ -83,12 +83,17 @@ def init_db():
         id INTEGER PRIMARY KEY CHECK (id = 1),
         current_turn INTEGER DEFAULT 0,
         is_running BOOLEAN DEFAULT 0,
-        total_rounds INTEGER DEFAULT 10
+        total_rounds INTEGER DEFAULT 10,
+        session_id TEXT
     )
     ''')
+    cursor.execute("PRAGMA table_info(simulation_state)")
+    simulation_state_columns = [row[1] for row in cursor.fetchall()]
+    if "session_id" not in simulation_state_columns:
+        cursor.execute("ALTER TABLE simulation_state ADD COLUMN session_id TEXT")
     
     # Initialize simulation state if not exists
-    cursor.execute('INSERT OR IGNORE INTO simulation_state (id, current_turn, is_running, total_rounds) VALUES (1, 0, 0, 10)')
+    cursor.execute('INSERT OR IGNORE INTO simulation_state (id, current_turn, is_running, total_rounds, session_id) VALUES (1, 0, 0, 10, "")')
     
     conn.commit()
     conn.close()

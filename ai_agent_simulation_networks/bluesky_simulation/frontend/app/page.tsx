@@ -7,6 +7,7 @@ interface SimulationState {
   current_turn: number;
   is_running: boolean;
   total_rounds: number;
+  session_id: string;
 }
 
 interface Like {

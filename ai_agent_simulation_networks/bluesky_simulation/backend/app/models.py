@@ -60,3 +60,4 @@ class SimulationState(BaseModel):
     current_turn: int = 0
     is_running: bool = False
     total_rounds: int = 10
+    session_id: str = ""

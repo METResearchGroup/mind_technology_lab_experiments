@@ -22,6 +22,7 @@ EVAL_CASES: List[Dict[str, Any]] = [
 @track
 def run_eval_case(case: Dict[str, Any]) -> Dict[str, Any]:
     llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
+    session_id = case.get("session_id", "eval_suite")
     like_chain = ChatPromptTemplate.from_template(LIKE_DECISION_PROMPT) | llm.bind(
         response_format={"type": "json_object"}
     )
@@ -65,6 +66,7 @@ def run_eval_case(case: Dict[str, Any]) -> Dict[str, Any]:
             feed_posts=feed_str,
         ),
         draft_response=draft_result.content,
+        session_id=session_id,
     )
 
     return {

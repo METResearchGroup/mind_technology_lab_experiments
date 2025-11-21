@@ -1,7 +1,8 @@
 import json
 import random
+import uuid
 from datetime import datetime
-from typing import List, Dict, Any, TypedDict, Annotated
+from typing import List, Dict, Any, TypedDict
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
@@ -25,6 +26,28 @@ def emit_event(event_type: str, data: Dict[str, Any]):
         "data": data,
         "timestamp": datetime.now().isoformat()
     })
+
+
+def current_timestamp_str() -> str:
+    """Return current timestamp in YYYY_MM_DD-HH:MM:SS format for metadata."""
+    return datetime.now().strftime("%Y_%m_%d-%H:%M:%S")
+
+
+def generate_session_id() -> str:
+    """Generate a session identifier in the required format."""
+    return f"{current_timestamp_str()}_{uuid.uuid4().hex[:6]}"
+
+
+def build_metadata(session_id: str, **extra: Any) -> Dict[str, Any]:
+    """Helper to attach standard metadata (session + timestamp) plus extras."""
+    metadata: Dict[str, Any] = {
+        "session_id": session_id,
+        "timestamp": current_timestamp_str(),
+    }
+    for key, value in extra.items():
+        if value is not None:
+            metadata[key] = value
+    return metadata
 
 # --- Prompts ---
 
@@ -123,7 +146,6 @@ def save_like(cursor, agent_handle: str, post_uri: str, reason: str, turn: int):
 
 def save_post(cursor, agent_handle: str, text: str, turn: int):
     # Generate a fake URI/CID for the simulation post
-    import uuid
     fake_uri = f"at://simulation/{agent_handle}/{uuid.uuid4()}"
     fake_cid = f"bafy...{uuid.uuid4()}" # Mock CID
     
@@ -137,8 +159,9 @@ def save_post(cursor, agent_handle: str, text: str, turn: int):
 class SimulationState(TypedDict):
     turn: int
     agents: List[str]
+    session_id: str
     
-def run_agent_turn(agent_handle: str, turn: int):
+def run_agent_turn(agent_handle: str, turn: int, session_id: str, turn_id: str):
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -150,7 +173,12 @@ def run_agent_turn(agent_handle: str, turn: int):
         sys.stdout = stdout_capture
         
         print(f"  Running turn {turn} for {agent_handle}...")
-        emit_event("agent_start", {"agent": agent_handle, "turn": turn})
+        emit_event("agent_start", {
+            "agent": agent_handle,
+            "turn": turn,
+            "session_id": session_id,
+            "turn_id": turn_id,
+        })
         
         # 1. Get Bio
         bio = get_agent_bio(cursor, agent_handle)
@@ -185,7 +213,13 @@ def run_agent_turn(agent_handle: str, turn: int):
         with opik.start_as_current_span(
             name="like",
             type="llm",
-            metadata={"agent_handle": agent_handle, "turn": turn}
+            metadata=build_metadata(
+                session_id,
+                agent_handle=agent_handle,
+                turn=turn,
+                turn_id=turn_id,
+                span="like",
+            ),
         ) as like_span:
             like_span.model = "gpt-4o"
             like_span.provider = "openai"
@@ -208,7 +242,12 @@ def run_agent_turn(agent_handle: str, turn: int):
                 save_like(cursor, agent_handle, like['post_uri'], like['reason'], turn)
                 print(f"    Liked post by {like.get('post_uri')} because: {like.get('reason')}")
                 likes_count += 1
-            like_span.metadata = {**(like_span.metadata or {}), "likes_count": likes_count}
+            like_span.metadata = {
+                **(like_span.metadata or {}),
+                "likes_count": likes_count,
+                "latency_s": like_latency_s,
+                "token_usage": like_tokens,
+            }
 
         # DRAFT span
         past_posts = get_agent_past_posts(cursor, agent_handle)
@@ -222,7 +261,13 @@ def run_agent_turn(agent_handle: str, turn: int):
         with opik.start_as_current_span(
             name="draft",
             type="llm",
-            metadata={"agent_handle": agent_handle, "turn": turn}
+            metadata=build_metadata(
+                session_id,
+                agent_handle=agent_handle,
+                turn=turn,
+                turn_id=turn_id,
+                span="draft",
+            ),
         ) as draft_span:
             draft_span.model = "gpt-4o"
             draft_span.provider = "openai"
@@ -243,11 +288,31 @@ def run_agent_turn(agent_handle: str, turn: int):
             draft_span.output = {"response": draft_result.content}
             drafts_data = json.loads(draft_result.content)
             drafts = drafts_data.get("drafts", [])
+            draft_span.metadata = {
+                **(draft_span.metadata or {}),
+                "latency_s": draft_latency_s,
+                "token_usage": draft_tokens,
+            }
 
         # Decide to write (p=0.05)
         if random.random() < 0.05 and drafts:
             chosen_draft = random.choice(drafts)
-            save_post(cursor, agent_handle, chosen_draft['text'], turn)
+            with opik.start_as_current_span(
+                name="post",
+                type="action",
+                metadata=build_metadata(
+                    session_id,
+                    agent_handle=agent_handle,
+                    turn=turn,
+                    turn_id=turn_id,
+                    span="post",
+                ),
+            ) as post_span:
+                save_post(cursor, agent_handle, chosen_draft['text'], turn)
+                post_span.metadata = {
+                    **(post_span.metadata or {}),
+                    "post_text": chosen_draft.get("text", ""),
+                }
             print(f"    Wrote post: {chosen_draft['text']}")
             posts_count = 1
 
@@ -264,12 +329,15 @@ def run_agent_turn(agent_handle: str, turn: int):
             like_response=like_result.content,
             draft_prompt=draft_prompt_text,
             draft_response=draft_result.content,
+            session_id=session_id,
         )
         
         # Emit completion event with results
         emit_event("agent_complete", {
             "agent": agent_handle,
             "turn": turn,
+            "session_id": session_id,
+            "turn_id": turn_id,
             "likes_count": likes_count,
             "posts_count": posts_count,
             "log": log_output
@@ -289,6 +357,8 @@ def run_agent_turn(agent_handle: str, turn: int):
         emit_event("agent_error", {
             "agent": agent_handle,
             "turn": turn,
+            "session_id": session_id,
+            "turn_id": turn_id,
             "error": str(e),
             "log": stdout_capture.getvalue()
         })
@@ -304,13 +374,15 @@ def run_agent_turn(agent_handle: str, turn: int):
 
 def run_simulation_step(state: SimulationState):
     turn = state['turn']
+    session_id = state['session_id']
+    turn_id = f"{session_id}_turn_{turn:04d}"
     with opik.start_as_current_trace(
-        name=f"turn-{turn}",
+        name=turn_id,
         tags=["turn"],
-        metadata={"turn": turn}
+        metadata=build_metadata(session_id, turn=turn, turn_id=turn_id)
     ) as trace:
         print(f"Starting Turn {turn}")
-        emit_event("turn_start", {"turn": turn})
+        emit_event("turn_start", {"turn": turn, "session_id": session_id, "turn_id": turn_id})
         
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -326,11 +398,16 @@ def run_simulation_step(state: SimulationState):
         for agent in agents:
             # Ensure each agent is a top-level child of the turn trace
             with opik.start_as_current_span(
-                name=f"agent:{agent}",
+                name=f"{turn_id}_agent_{agent}",
                 type="general",
-                metadata={"agent_handle": agent, "turn": turn}
+                metadata=build_metadata(
+                    session_id,
+                    agent_handle=agent,
+                    turn=turn,
+                    turn_id=turn_id,
+                )
             ) as agent_span:
-                result = run_agent_turn(agent, turn)
+                result = run_agent_turn(agent, turn, session_id, turn_id)
                 if isinstance(result, dict):
                     total_likes += int(result.get("likes_count", 0))
                     total_posts += int(result.get("posts_count", 0))
@@ -348,8 +425,8 @@ def run_simulation_step(state: SimulationState):
             "posts_count": total_posts
         }
         
-        emit_event("turn_complete", {"turn": turn})
-        return {"turn": turn + 1}
+        emit_event("turn_complete", {"turn": turn, "session_id": session_id, "turn_id": turn_id})
+        return {"turn": turn + 1, "agents": agents, "session_id": session_id}
 
 # --- LangGraph Definition ---
 

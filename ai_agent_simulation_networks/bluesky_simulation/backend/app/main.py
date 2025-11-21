@@ -9,7 +9,7 @@ import asyncio
 from app.db import get_db_connection, init_db
 from app.ingestion import ingest_data
 from app.agent_generation import generate_agent_bios
-from app.simulation import app as simulation_app, event_queue
+from app.simulation import app as simulation_app, event_queue, generate_session_id
 import os
 from dotenv import load_dotenv, find_dotenv
 import opik
@@ -126,7 +126,11 @@ def reset_simulation(config: SimulationConfig):
     conn = get_db_connection()
     cursor = conn.cursor()
     # Reset state
-    cursor.execute("UPDATE simulation_state SET current_turn = 0, is_running = 0, total_rounds = ?", (config.total_rounds,))
+    new_session_id = generate_session_id()
+    cursor.execute(
+        "UPDATE simulation_state SET current_turn = 0, is_running = 0, total_rounds = ?, session_id = ?",
+        (config.total_rounds, new_session_id),
+    )
     # Clear simulation data (likes, non-seed posts)
     cursor.execute("DELETE FROM agent_likes")
     cursor.execute("DELETE FROM posts WHERE is_seed = 0")
@@ -142,19 +146,26 @@ def run_simulation_step_background():
     """Run simulation step in background and emit events."""
     global simulation_running
     simulation_running = True
+    session_id = None
     
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT current_turn, total_rounds FROM simulation_state WHERE id = 1")
+        cursor.execute("SELECT current_turn, total_rounds, session_id FROM simulation_state WHERE id = 1")
         row = cursor.fetchone()
         current_turn = row['current_turn']
         total_rounds = row['total_rounds']
+        session_id = row['session_id']
+        
+        if not session_id:
+            session_id = generate_session_id()
+            cursor.execute("UPDATE simulation_state SET session_id = ?", (session_id,))
+            conn.commit()
         
         if current_turn >= total_rounds:
             event_queue.put({
                 "type": "simulation_complete",
-                "data": {"turn": current_turn},
+                "data": {"turn": current_turn, "session_id": session_id},
                 "timestamp": ""
             })
             simulation_running = False
@@ -162,7 +173,11 @@ def run_simulation_step_background():
             return
         
         # Run one step using LangGraph app
-        result = simulation_app.invoke({"turn": current_turn, "agents": []})
+        result = simulation_app.invoke({
+            "turn": current_turn,
+            "agents": [],
+            "session_id": session_id,
+        })
         new_turn = result['turn']
         
         # Update state
@@ -173,7 +188,7 @@ def run_simulation_step_background():
     except Exception as e:
         event_queue.put({
             "type": "error",
-            "data": {"error": str(e)},
+            "data": {"error": str(e), "session_id": session_id},
             "timestamp": ""
         })
     finally:
