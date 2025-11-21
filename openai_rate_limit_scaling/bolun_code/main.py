@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
 Reddit AITA LLM Comment Generator
-Converts notebook functionality to a standalone script with Opik telemetry
+Async version with concurrent processing and Opik telemetry
 """
 
 import pandas as pd
 import json
-from openai import OpenAI
-from tqdm import tqdm
+from openai import AsyncOpenAI
+import asyncio
 import time
 import os
 from pathlib import Path
@@ -28,8 +28,9 @@ if local_env.exists():
     load_dotenv(local_env)
 
 # Initialize Opik with credentials from env
+OPIK_PROJECT_NAME = "Bolun API scaling testing, 2025-11-20"
 opik_client = Opik(
-    project_name="Bolun API scaling testing, 2025-11-20",
+    project_name=OPIK_PROJECT_NAME,
     api_key=os.getenv("OPIK_API_KEY"),
     workspace=os.getenv("OPIK_WORKSPACE")
 )
@@ -40,9 +41,13 @@ if not API_KEY:
     raise ValueError("DEEPINFRA_API_KEY not found in environment variables")
 
 BASE_URL = "https://api.deepinfra.com/v1/openai"
-SUBMISSION_FILE = "final_1000_submissions.json"
-COMMENT_FILE = "final_3000_comments.json"
+INPUT_FILE = "AITA_LLM_results_test_1000.xlsx"
 OUTPUT_FILE = "AITA_LLM_results_test_1000.csv"
+
+# Concurrency settings
+# 40 concurrent requests keeps us under Opik's 5000 events/min workspace limit
+# (40 requests/sec × 3 events each × 60 sec = ~7200/min, but spread over time)
+CONCURRENCY_LIMIT = 40
 
 # System prompt
 SYSTEM_PROMPT = """You are an AI assistant acting as a member of the Reddit community on the r/AmItheAsshole forum. Your task is to provide a judgment on a user's post.
@@ -69,7 +74,7 @@ MODELS = {
     "llama": "meta-llama/Llama-3.3-70B-Instruct"
 }
 
-# Global metrics tracking
+# Global metrics tracking (thread-safe for async)
 METRICS = {
     "start_time": None,
     "end_time": None,
@@ -80,25 +85,21 @@ METRICS = {
 }
 
 
-@track
-def call_llm(model_name, submission_body, max_retries=3):
-    """Call LLM API to get response with Opik tracking"""
-    # Wrap OpenAI client with Opik tracking
-    openai_client = track_openai(OpenAI(
-        api_key=API_KEY,
-        base_url=BASE_URL,
-    ))
-    
+@track(project_name=OPIK_PROJECT_NAME)
+async def call_llm(client, model_name, submission_body, max_retries=3):
+    """Async LLM API call with Opik tracking"""
     prompt = SYSTEM_PROMPT + "\n" + submission_body
     
     # Track metrics
     start_time = time.time()
     success = False
     error_msg = None
+    result = None
     
     for attempt in range(max_retries):
         try:
-            chat_completion = openai_client.chat.completions.create(
+            # Async API call
+            chat_completion = await client.chat.completions.create(
                 model=model_name,
                 messages=[{"role": "user", "content": prompt}],
                 timeout=60
@@ -108,13 +109,12 @@ def call_llm(model_name, submission_body, max_retries=3):
             break
         except Exception as e:
             error_msg = str(e)
-            print(f"    Attempt {attempt + 1}/{max_retries} failed: {error_msg}")
             if attempt < max_retries - 1:
-                time.sleep(2)
+                await asyncio.sleep(2)  # Async sleep for retry
             else:
                 result = f"ERROR: {error_msg}"
     
-    # Record metrics
+    # Record metrics (using locks would be overkill for this use case)
     latency = time.time() - start_time
     
     if model_name not in METRICS["requests_by_model"]:
@@ -128,77 +128,68 @@ def call_llm(model_name, submission_body, max_retries=3):
         METRICS["requests_by_model"][model_name]["success"] += 1
     else:
         METRICS["requests_by_model"][model_name]["failed"] += 1
-        METRICS["errors_by_model"][model_name].append(error_msg)
+        if error_msg:
+            METRICS["errors_by_model"][model_name].append(error_msg)
     
     METRICS["latencies_by_model"][model_name].append(latency)
     
     return result
 
 
-@track
-def load_json_data():
-    """Load data from JSON files and organize into DataFrame"""
-    print("Reading JSON files...")
+async def process_single_submission(client, idx, row, semaphore):
+    """Process one submission with all 3 models concurrently"""
+    submission_body = row['submission_body']
     
-    # Read submissions (first 1000)
-    submissions = []
-    with open(SUBMISSION_FILE, 'r', encoding='utf-8') as f:
-        for i, line in enumerate(f):
-            if i >= 1000:
-                break
-            submissions.append(json.loads(line.strip()))
+    # Skip empty submissions
+    if pd.isna(submission_body) or str(submission_body).strip() == "":
+        return idx, {}
     
-    # Read comments and group by submission
-    comments_by_sub = {}
-    with open(COMMENT_FILE, 'r', encoding='utf-8') as f:
-        for line in f:
-            comment = json.loads(line.strip())
-            link_id = comment.get('link_id', '')
-            if link_id.startswith('t3_'):
-                sub_id = link_id[3:]
-            else:
-                sub_id = link_id
-            
-            if sub_id not in comments_by_sub:
-                comments_by_sub[sub_id] = []
-            comments_by_sub[sub_id].append(comment)
+    # Control overall concurrency across all submissions
+    async with semaphore:
+        # Launch all 3 models at once for this submission
+        # ALWAYS process all models (ignore existing responses)
+        tasks = {}
+        for model_key, model_name in MODELS.items():
+            # Create task for this model
+            tasks[model_key] = call_llm(client, model_name, str(submission_body))
+        
+        # Wait for all models to complete for this submission
+        results = {}
+        if tasks:
+            completed = await asyncio.gather(*tasks.values(), return_exceptions=True)
+            for model_key, result in zip(tasks.keys(), completed):
+                if isinstance(result, Exception):
+                    results[f"{model_key}_comment"] = f"ERROR: {result}"
+                else:
+                    results[f"{model_key}_comment"] = result
+        
+        return idx, results
+
+
+@track(project_name=OPIK_PROJECT_NAME)
+def load_excel_data():
+    """Load data from Excel file"""
+    print(f"Reading Excel file: {INPUT_FILE}...")
     
-    print(f"Read {len(submissions)} submissions")
+    # Read existing Excel file
+    df = pd.read_excel(INPUT_FILE)
     
-    # Build DataFrame
-    data_rows = []
-    for sub in submissions:
-        sub_id = sub['id']
-        sub_comments = comments_by_sub.get(sub_id, [])
-        
-        # Sort comments by score, take top 3
-        sub_comments.sort(key=lambda x: x.get('score', 0), reverse=True)
-        top_3 = sub_comments[:3]
-        
-        row = {
-            'submission_id': sub_id,
-            'submission_title': sub.get('title', ''),
-            'submission_body': sub.get('selftext', ''),
-            'submission_score': sub.get('score', 0),
-            'submission_author': sub.get('author', ''),
-            'submission_created': sub.get('created_utc', ''),
-        }
-        
-        # Add 3 comments
-        for i, comment in enumerate(top_3, 1):
-            row[f'comment_{i}_body'] = comment.get('body', '')
-            row[f'comment_{i}_score'] = comment.get('score', 0)
-            row[f'comment_{i}_author'] = comment.get('author', '')
-        
-        # Add columns for 3 model results (to be filled)
-        row['deepseek_comment'] = ""
-        row['gpt_comment'] = ""
-        row['llama_comment'] = ""
-        
-        data_rows.append(row)
+    print(f"Loaded {len(df)} submissions from Excel file")
     
-    df = pd.DataFrame(data_rows)
-    print(f"Created DataFrame with {len(df)} rows")
+    # Ensure model comment columns exist
+    for model_key in MODELS.keys():
+        column_name = f"{model_key}_comment"
+        if column_name not in df.columns:
+            df[column_name] = ""
+    
+    # Clear all existing model responses to force reprocessing
+    print(f"  - Clearing all existing model responses for fresh processing")
+    for model_key in MODELS.keys():
+        column_name = f"{model_key}_comment"
+        df[column_name] = ""
+    
+    print(f"  - All {len(df)} submissions will be processed")
+    
     return df
 
 
@@ -231,8 +222,9 @@ def save_metrics(output_dir, df=None):
         "project": "Bolun API scaling testing, 2025-11-20",
         "timestamp": METRICS["start_time"],
         "total_runtime_seconds": METRICS["total_runtime_seconds"],
+        "concurrency_limit": CONCURRENCY_LIMIT,
         "models": list(MODELS.keys()),
-        "input_files": [SUBMISSION_FILE, COMMENT_FILE],
+        "input_file": INPUT_FILE,
         "output_file": OUTPUT_FILE,
     }
     
@@ -244,6 +236,7 @@ def save_metrics(output_dir, df=None):
         "timestamp": METRICS["start_time"],
         "end_time": METRICS["end_time"],
         "total_runtime_seconds": METRICS["total_runtime_seconds"],
+        "concurrency_limit": CONCURRENCY_LIMIT,
         "total_requests": total_requests,
         "total_success": total_success,
         "total_failed": total_failed,
@@ -271,56 +264,70 @@ def save_metrics(output_dir, df=None):
         print(f"   - results.csv")
 
 
-@track
-def process_data(output_dir=None):
-    """Process data and call LLMs with Opik tracking"""
+@track(project_name=OPIK_PROJECT_NAME)
+async def process_data_async(output_dir=None):
+    """Async data processing with controlled concurrency"""
     # Initialize metrics
     METRICS["start_time"] = datetime.now().isoformat()
     start_time = time.time()
     
-    # Load JSON data
-    df = load_json_data()
+    # Load Excel data (synchronous)
+    df = load_excel_data()
     
-    # Process each row
-    print(f"\nStarting LLM processing for {len(df)} items...")
-    for idx, row in tqdm(df.iterrows(), total=len(df), desc="Processing"):
-        # Get submission_body
-        submission_body = row['submission_body']
-        if pd.isna(submission_body) or str(submission_body).strip() == "":
-            print(f"  Skipping row {idx + 1} (empty submission_body)")
-            continue
+    # Create shared async client with Opik tracking
+    client = track_openai(AsyncOpenAI(
+        api_key=API_KEY,
+        base_url=BASE_URL,
+    ))
+    
+    # Concurrency control semaphore
+    semaphore = asyncio.Semaphore(CONCURRENCY_LIMIT)
+    
+    print(f"\n🚀 Starting async LLM processing for {len(df)} submissions...", flush=True)
+    print(f"   Concurrency limit: {CONCURRENCY_LIMIT}", flush=True)
+    print(f"   Models per submission: {len(MODELS)}", flush=True)
+    print(f"   Max concurrent API calls: ~{CONCURRENCY_LIMIT}", flush=True)
+    print(flush=True)
+    
+    # Create tasks for all submissions
+    tasks = []
+    for idx, row in df.iterrows():
+        task = process_single_submission(client, idx, row, semaphore)
+        tasks.append(task)
+    
+    # Process with progress tracking using as_completed
+    completed_count = 0
+    completed_requests = 0  # Track individual API requests
+    save_interval = 50  # Save every 50 submissions
+    total_requests = len(df) * len(MODELS)  # Total API requests expected
+    
+    print(f"⏳ Processing started - total API requests to make: {total_requests}", flush=True)
+    print(flush=True)
+    
+    for future in asyncio.as_completed(tasks):
+        idx, results = await future
         
-        print(f"\nProcessing row {idx + 1}:")
+        # Update dataframe with results
+        num_results = 0
+        for column, value in results.items():
+            df.at[idx, column] = value
+            num_results += 1
         
-        # Call each of the 3 models
-        for model_key, model_name in MODELS.items():
-            column_name = f"{model_key}_comment"
-            
-            # Skip if already processed
-            if pd.notna(row[column_name]) and str(row[column_name]).strip() != "":
-                print(f"  - {model_key}: Already processed, skipping")
-                continue
-            
-            print(f"  - Calling {model_key} ({model_name})...")
-            
-            # Call LLM
-            llm_response = call_llm(model_name, str(submission_body))
-            
-            # Save result
-            df.at[idx, column_name] = llm_response
-            
-            # Add delay to avoid API rate limiting
-            time.sleep(0.1)
+        completed_count += 1
+        completed_requests += num_results
         
-        # Save intermediate results every 10 rows
-        if (idx + 1) % 10 == 0:
-            if output_dir:
-                temp_output = Path(output_dir) / "results.csv"
-                df.to_csv(temp_output, index=False)
-                print(f"  Saved intermediate results to {temp_output}")
-            else:
-                df.to_csv(OUTPUT_FILE, index=False)
-                print(f"  Saved intermediate results to {OUTPUT_FILE}")
+        # Progress updates every 10 API requests
+        if completed_requests % 10 == 0 or completed_count == len(df):
+            elapsed = time.time() - start_time
+            rate = completed_requests / elapsed if elapsed > 0 else 0
+            eta = (total_requests - completed_requests) / rate if rate > 0 else 0
+            print(f"  ✓ Completed {completed_requests}/{total_requests} API requests | {completed_count}/{len(df)} submissions | Rate: {rate:.1f} req/sec | ETA: {eta/60:.1f} min", flush=True)
+        
+        # Save intermediate results
+        if completed_count % save_interval == 0 and output_dir:
+            temp_output = Path(output_dir) / "results.csv"
+            df.to_csv(temp_output, index=False)
+            print(f"    💾 Checkpoint saved to {temp_output.name}", flush=True)
     
     # Finalize metrics
     METRICS["end_time"] = datetime.now().isoformat()
@@ -333,13 +340,14 @@ def process_data(output_dir=None):
         df.to_csv(OUTPUT_FILE, index=False)
     
     print(f"\n✅ Processing complete!")
-    print(f"   Processed {len(df)} rows")
-    print(f"   Total runtime: {METRICS['total_runtime_seconds']:.2f} seconds")
+    print(f"   Processed {len(df)} submissions")
+    print(f"   Total runtime: {METRICS['total_runtime_seconds']:.2f} seconds ({METRICS['total_runtime_seconds']/60:.2f} minutes)")
+    print(f"   Average: {len(df)/METRICS['total_runtime_seconds']:.2f} submissions/sec")
     
     # Display column information
-    print("\nOutput file contains the following columns:")
+    print("\n📋 Output file contains the following columns:")
     for col in df.columns:
-        print(f"  - {col}")
+        print(f"   - {col}")
     
     return df
 
@@ -347,19 +355,17 @@ def process_data(output_dir=None):
 def main(output_dir=None):
     """Main entry point"""
     print("=" * 80)
-    print("Reddit AITA LLM Comment Generator")
+    print("Reddit AITA LLM Comment Generator (Async Version)")
     print("Project: Bolun API scaling testing, 2025-11-20")
     print("=" * 80)
     
     try:
-        # Verify input files exist
-        if not Path(SUBMISSION_FILE).exists():
-            raise FileNotFoundError(f"Submission file not found: {SUBMISSION_FILE}")
-        if not Path(COMMENT_FILE).exists():
-            raise FileNotFoundError(f"Comment file not found: {COMMENT_FILE}")
+        # Verify input file exists
+        if not Path(INPUT_FILE).exists():
+            raise FileNotFoundError(f"Input file not found: {INPUT_FILE}")
         
-        # Process data
-        df = process_data(output_dir=output_dir)
+        # Run async processing
+        df = asyncio.run(process_data_async(output_dir=output_dir))
         
         print("\n" + "=" * 80)
         print("SUCCESS: All processing completed!")
@@ -378,4 +384,3 @@ if __name__ == "__main__":
     # Accept output directory as command line argument
     output_dir = sys.argv[1] if len(sys.argv) > 1 else None
     main(output_dir=output_dir)
-

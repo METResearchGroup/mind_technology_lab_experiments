@@ -1,0 +1,13 @@
+{
+  "project": "Bolun API scaling testing, 2025-11-20",
+  "timestamp": "2025-11-20T18:43:09.416951",
+  "total_runtime_seconds": 294.87289214134216,
+  "concurrency_limit": 40,
+  "models": [
+    "deepseek",
+    "gpt",
+    "llama"
+  ],
+  "input_file": "AITA_LLM_results_test_1000.xlsx",
+  "output_file": "AITA_LLM_results_test_1000.csv"
+}

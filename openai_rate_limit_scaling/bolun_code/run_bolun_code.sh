@@ -40,9 +40,9 @@ source "$PARENT_DIR/venv/bin/activate"
 
 # Verify required packages
 echo -e "${GREEN}Checking dependencies...${NC}"
-python -c "import pandas, openai, opik, dotenv" 2>/dev/null || {
+python -c "import pandas, openai, opik, dotenv, openpyxl" 2>/dev/null || {
     echo -e "${RED}Error: Required packages not installed${NC}"
-    echo "Please install requirements: pip install -r $PARENT_DIR/requirements.txt"
+    echo "Please install: pip install pandas openai opik python-dotenv openpyxl"
     exit 1
 }
 
