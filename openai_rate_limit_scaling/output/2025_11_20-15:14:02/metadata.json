@@ -1,0 +1,21 @@
+{
+    "timestamp": "2025_11_20-15:14:02",
+    "run_id": "run_20251120_151243",
+    "runtime_configuration": {
+        "num_requests": 1000,
+        "model_alias": "qwen-2.5-72b",
+        "model_id": "qwen/qwen-2.5-72b-instruct",
+        "max_tokens": 300,
+        "log_interval": 10,
+        "data_source": "data.db"
+    },
+    "metrics": {
+        "total_runtime": 79.26278400421143,
+        "total_requests": 1000,
+        "successful_requests": 314,
+        "failed_requests": 686,
+        "total_tokens": 204780,
+        "total_cost": 0.074478,
+        "avg_latency": 55.91331960668989
+    }
+}
