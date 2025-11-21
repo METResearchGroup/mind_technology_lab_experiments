@@ -1,0 +1,45 @@
+{
+  "timestamp": "2025-11-20T18:47:52.438516",
+  "end_time": "2025-11-20T18:53:27.731381",
+  "total_runtime_seconds": 335.2929391860962,
+  "concurrency_limit": 40,
+  "total_requests": 2757,
+  "total_success": 2757,
+  "total_failed": 0,
+  "success_rate": 1.0,
+  "requests_by_model": {
+    "deepseek-ai/DeepSeek-V3.1": {
+      "success": 919,
+      "failed": 0
+    },
+    "meta-llama/Llama-3.3-70B-Instruct": {
+      "success": 919,
+      "failed": 0
+    },
+    "openai/gpt-oss-120b": {
+      "success": 919,
+      "failed": 0
+    }
+  },
+  "average_latencies_ms": {
+    "deepseek-ai/DeepSeek-V3.1": {
+      "mean_ms": 5146.363818995711,
+      "min_ms": 603.5788059234619,
+      "max_ms": 13527.360916137695,
+      "count": 919
+    },
+    "meta-llama/Llama-3.3-70B-Instruct": {
+      "mean_ms": 4453.817959060088,
+      "min_ms": 1704.2150497436523,
+      "max_ms": 12268.517017364502,
+      "count": 919
+    },
+    "openai/gpt-oss-120b": {
+      "mean_ms": 14153.658365399067,
+      "min_ms": 5746.815919876099,
+      "max_ms": 28273.45585823059,
+      "count": 919
+    }
+  },
+  "errors_by_model": {}
+}
