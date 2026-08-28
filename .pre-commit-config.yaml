@@ -1,0 +1,43 @@
+# Tool versions come from uv.lock (test extra). Run `uv sync --extra test` before committing.
+# Ruff / pyright / complexipy mirror CI (.github/workflows/ci.yml).
+exclude: ^(\.agents/|\.cursor/|\.venv/|ai_agent_simulation_networks/|mech_interp_reddit/|openai_rate_limit_scaling/)
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-toml
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix, lf]
+
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run --extra test ruff check .
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: ruff-format
+        name: ruff format
+        entry: uv run --extra test ruff format --check .
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: pyright
+        name: pyright
+        entry: uv run --extra test pyright
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: complexipy
+        name: complexipy
+        entry: uv run --extra test complexipy tests
+        language: system
+        pass_filenames: false
+        always_run: true

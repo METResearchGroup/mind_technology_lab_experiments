@@ -1,0 +1,56 @@
+[project]
+name = "mind-technology-lab-experiments"
+version = "0.1.0"
+description = "Experimental proof-of-concept work for Mind Technology Lab."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+test = [
+    "complexipy>=5.0.0",
+    "pre-commit>=4.0.0",
+    "pyright>=1.1.400",
+    "pytest>=8.0.0",
+    "ruff>=0.9.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+extend-exclude = [
+    ".cursor",
+    ".agents",
+    ".venv",
+    "ai_agent_simulation_networks",
+    "mech_interp_reddit",
+    "openai_rate_limit_scaling",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+include = ["tests"]
+exclude = [
+    ".cursor",
+    ".agents",
+    ".venv",
+    "**/__pycache__",
+    "ai_agent_simulation_networks",
+    "mech_interp_reddit",
+    "openai_rate_limit_scaling",
+]
+reportMissingTypeStubs = false
