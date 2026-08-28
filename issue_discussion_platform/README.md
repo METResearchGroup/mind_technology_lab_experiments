@@ -1,6 +1,6 @@
 # Issue discussion platform
 
-Streamlit voice discussion experiment for exploring issues with a voice agent.
+This folder is a Streamlit experiment for talking through an issue with a voice agent.
 
 ## Run
 
@@ -12,4 +12,4 @@ uv run streamlit run issue_discussion_platform/app.py
 
 ## Environment
 
-Set `OPENAI_API_KEY` in the repo-root `.env` file.
+Set `OPENAI_API_KEY` in the `.env` file at the repo root.
