@@ -1,5 +1,8 @@
 """System prompts for the issue discussion voice agent.
 
+``SYSTEM_PROMPT`` is the spoken discussion instructions passed to the voice
+session.
+
 Run from the repo root:
 
     uv run streamlit run issue_discussion_platform/app.py

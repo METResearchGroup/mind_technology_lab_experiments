@@ -54,7 +54,11 @@ class TurnResult:
 
 
 class CapturingVoiceWorkflow(VoiceWorkflowBase):
-    """Wraps a voice workflow and records the latest user and assistant text."""
+    """Delegates to an inner workflow and captures per-turn transcript text.
+
+    After each ``run`` call, ``last_user_text`` holds the user transcription and
+    ``last_assistant_text`` holds the full assistant reply for that turn.
+    """
 
     def __init__(self, inner: SingleAgentVoiceWorkflow) -> None:
         self._inner = inner
