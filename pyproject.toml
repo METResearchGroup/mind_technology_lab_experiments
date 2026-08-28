@@ -4,7 +4,19 @@ version = "0.1.0"
 description = "Experimental proof-of-concept work for Mind Technology Lab."
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "streamlit>=1.50",
+    "openai-agents>=0.22.0",
+    "python-dotenv",
+    "numpy",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["shared", "issue_discussion_platform"]
 
 [project.optional-dependencies]
 test = [
