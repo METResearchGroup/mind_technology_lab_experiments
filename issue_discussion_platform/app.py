@@ -89,8 +89,9 @@ def _handle_new_recording(wav_bytes: bytes, fingerprint: str) -> None:
     voice_session: VoiceSession = st.session_state[VOICE_SESSION_KEY]
     try:
         result = asyncio.run(voice_session.handle_turn(wav_bytes))
-    except ValueError as exc:
+    except Exception as exc:
         st.error(str(exc))
+        st.session_state[LAST_AUDIO_FINGERPRINT_KEY] = fingerprint
         return
 
     messages: list[dict[str, str]] = st.session_state[MESSAGES_KEY]
