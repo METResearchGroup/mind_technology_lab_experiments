@@ -1,10 +1,9 @@
 # Issue discussion platform
 
-Streamlit push-to-talk experiment for talking through an issue with a realtime
-voice agent. Each turn sends recorded audio to OpenAI **gpt-realtime-2.1**
-(speech-to-speech over a short-lived WebSocket session). The app replays prior
-turns in the agent instructions so multi-turn memory works without keeping a
-socket open across Streamlit reruns.
+Streamlit experiment for talking through an issue with a **persistent WebRTC**
+realtime voice agent. The browser connects directly to OpenAI **gpt-realtime-2.1**
+using an ephemeral server-minted client secret; semantic VAD handles turn-taking
+so you can speak naturally without push-to-talk record/stop.
 
 ## Run
 
@@ -14,21 +13,21 @@ From the repo root:
 uv run streamlit run issue_discussion_platform/app.py
 ```
 
+Use **localhost** or **HTTPS** so the browser can grant microphone permission.
+Plain HTTP on a remote host will block mic access.
+
 ## Environment
 
 Set `OPENAI_API_KEY` in the `.env` file at the repo root.
 
-## Audio
-
-Record at **24 kHz** mono (the microphone widget is configured for 24000 Hz).
-Assistant replies are returned as 24 kHz WAV and autoplay after each turn.
-
 ## How it works
 
-1. Click the microphone, speak one turn, then stop recording.
-2. The app sends that clip to the realtime model and shows user and assistant
-   transcripts in the chat (empty transcripts are skipped).
-3. Session output (including `chat.jsonl`) is written under
+1. Open the app; the server mints a short-lived `ek_` secret (kept in Streamlit
+   session state only, never written to disk or `chat.jsonl`).
+2. Click **Connect** in the WebRTC panel, allow the microphone, and speak.
+3. Assistant audio plays in the browser as it arrives. Your speech is transcribed
+   (`gpt-live-transcribe`) and both sides stream into chat as text arrives.
+4. Session output (including `chat.jsonl`) is written under
    `issue_discussion_platform/outputs/`.
 
-This is a Streamlit push-to-talk UI, not a browser WebRTC client.
+This is a browser WebRTC client (CCv2 component), not Streamlit push-to-talk.

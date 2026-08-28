@@ -7,157 +7,153 @@ Run from the repo root:
 
 from __future__ import annotations
 
-import asyncio
-import hashlib
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import streamlit as st
 
-from issue_discussion_platform.prompts import SYSTEM_PROMPT
+from issue_discussion_platform.realtime_secrets import (
+    RealtimeClientSecretError,
+    create_realtime_client_secret,
+)
 from issue_discussion_platform.voice_agent import (
     REALTIME_MODEL,
-    VoiceSession,
     append_chat_lines,
     create_session_dir,
 )
+from issue_discussion_platform.webrtc_voice import TranscriptLine, webrtc_voice
 from shared.load_env_vars import EnvVarsContainer
 
-AUDIO_SAMPLE_RATE = 24000
-AUDIO_WAV_MIME = "audio/wav"
-AUDIO_INPUT_LABEL = "Record a turn"
-HASH_ALGORITHM = "sha256"
 OUTPUTS_ROOT = Path("issue_discussion_platform/outputs")
 PAGE_TITLE = "Issue discussion"
 REALTIME_CAPTION = (
-    f"Realtime voice agent ({REALTIME_MODEL}). Push-to-talk: record one turn at a time."
-)
-RECORDING_INSTRUCTION = (
-    "Click the microphone, speak your turn at 24 kHz, then stop recording."
+    f"Realtime voice agent ({REALTIME_MODEL}). Persistent WebRTC with semantic VAD—"
+    "speak naturally; no record/stop clip."
 )
 SESSION_DIR_KEY = "session_dir"
-VOICE_SESSION_KEY = "voice_session"
-MESSAGES_KEY = "messages"
-LAST_AUDIO_FINGERPRINT_KEY = "last_audio_fingerprint"
-LAST_REPLY_WAV_KEY = "last_reply_wav"
 SESSION_INITIALIZED_KEY = "session_initialized"
+REALTIME_SECRET_KEY = "realtime_client_secret"
+PERSISTED_TRANSCRIPT_COUNT_KEY = "persisted_transcript_count"
 OPENAI_API_KEY_NAME = "OPENAI_API_KEY"
 CHAT_FILENAME = "chat.jsonl"
-EMPTY_MESSAGES: list[dict[str, str]] = []
+WEBRTC_COMPONENT_KEY = "webrtc"
 
 
 def _ensure_session_state() -> None:
-    """Create per-browser session folders and voice state on first load."""
+    """Create per-browser session folders on first load."""
     if st.session_state.get(SESSION_INITIALIZED_KEY):
         return
 
     EnvVarsContainer.get_env_var(OPENAI_API_KEY_NAME, required=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     st.session_state[SESSION_DIR_KEY] = create_session_dir(OUTPUTS_ROOT, timestamp)
-    st.session_state[VOICE_SESSION_KEY] = VoiceSession(instructions=SYSTEM_PROMPT)
-    st.session_state[MESSAGES_KEY] = list(EMPTY_MESSAGES)
-    st.session_state[LAST_AUDIO_FINGERPRINT_KEY] = None
-    st.session_state[LAST_REPLY_WAV_KEY] = None
+    st.session_state[PERSISTED_TRANSCRIPT_COUNT_KEY] = 0
     st.session_state[SESSION_INITIALIZED_KEY] = True
 
 
-def _has_transcript(text: str) -> bool:
-    """Return whether ``text`` contains non-whitespace transcript content."""
-    return bool(text.strip())
+def _secret_is_valid(secret_state: dict[str, object] | None) -> bool:
+    """Return whether a cached client secret is still usable."""
+    if not secret_state:
+        return False
+    value = secret_state.get("value")
+    expires_at = secret_state.get("expires_at")
+    if not isinstance(value, str) or not value:
+        return False
+    if not isinstance(expires_at, int):
+        return False
+    now = int(datetime.now(UTC).timestamp())
+    return expires_at > now
 
 
-def _fingerprint_audio(wav_bytes: bytes) -> str:
-    """Return a stable hash for recorded audio bytes.
-
-    Parameters
-    ----------
-    wav_bytes
-        Raw WAV file contents from the microphone widget.
-
-    Returns
-    -------
-    str
-        Hex digest used to skip duplicate Streamlit reruns.
-    """
-    digest = hashlib.new(HASH_ALGORITHM)
-    digest.update(wav_bytes)
-    return digest.hexdigest()
+def _mint_client_secret() -> str:
+    """Mint or refresh the ephemeral Realtime client secret in session state."""
+    secret = create_realtime_client_secret()
+    st.session_state[REALTIME_SECRET_KEY] = {
+        "value": secret.value,
+        "expires_at": secret.expires_at,
+    }
+    return secret.value
 
 
-def _handle_new_recording(wav_bytes: bytes, fingerprint: str) -> None:
-    """Run one voice turn and persist transcript lines when audio is new.
-
-    Parameters
-    ----------
-    wav_bytes
-        Recorded WAV bytes from ``st.audio_input``.
-    fingerprint
-        SHA-256 hex digest of ``wav_bytes``.
-    """
-    if fingerprint == st.session_state.get(LAST_AUDIO_FINGERPRINT_KEY):
-        return
-
-    voice_session: VoiceSession = st.session_state[VOICE_SESSION_KEY]
+def _get_client_secret() -> str | None:
+    """Return a valid ephemeral secret, minting when missing or expired."""
+    secret_state = st.session_state.get(REALTIME_SECRET_KEY)
+    if _secret_is_valid(secret_state):
+        return str(secret_state["value"])
     try:
-        result = asyncio.run(voice_session.handle_turn(wav_bytes))
-    except Exception as exc:
+        return _mint_client_secret()
+    except RealtimeClientSecretError as exc:
+        st.session_state.pop(REALTIME_SECRET_KEY, None)
         st.error(str(exc))
-        st.session_state[LAST_AUDIO_FINGERPRINT_KEY] = fingerprint
+        return None
+
+
+def _persist_new_transcripts(
+    chat_path: Path,
+    transcripts: tuple[TranscriptLine, ...],
+    persisted_count: int,
+) -> int:
+    """Append transcript lines not yet written to ``chat.jsonl``.
+
+    Pairs consecutive user/assistant lines via ``append_chat_lines``. Unpaired
+    lines are flushed individually so nothing is dropped when turn order varies.
+    """
+    index = persisted_count
+    while index < len(transcripts):
+        line = transcripts[index]
+        if line.partial:
+            break
+        if line.role == "user":
+            if index + 1 < len(transcripts):
+                assistant_line = transcripts[index + 1]
+                if assistant_line.partial:
+                    break
+                if assistant_line.role == "assistant":
+                    append_chat_lines(chat_path, line.text, assistant_line.text)
+                    index += 2
+                    continue
+            append_chat_lines(chat_path, line.text, "")
+            index += 1
+        elif line.role == "assistant":
+            append_chat_lines(chat_path, "", line.text)
+            index += 1
+        else:
+            index += 1
+    return index
+
+
+def _sync_transcript_persistence(transcripts: tuple[TranscriptLine, ...]) -> None:
+    """Persist any new transcript lines from the WebRTC component."""
+    persisted_count = int(st.session_state.get(PERSISTED_TRANSCRIPT_COUNT_KEY, 0))
+    if persisted_count >= len(transcripts):
         return
 
-    messages: list[dict[str, str]] = st.session_state[MESSAGES_KEY]
-    user_text = result.user_text.strip()
-    assistant_text = result.assistant_text.strip()
-
-    if _has_transcript(user_text):
-        messages.append({"role": "user", "content": user_text})
-    if _has_transcript(assistant_text):
-        messages.append({"role": "assistant", "content": assistant_text})
-
-    if _has_transcript(user_text) or _has_transcript(assistant_text):
-        session_dir: Path = st.session_state[SESSION_DIR_KEY]
-        append_chat_lines(
-            session_dir / CHAT_FILENAME,
-            user_text if _has_transcript(user_text) else "",
-            assistant_text if _has_transcript(assistant_text) else "",
-        )
-
-    if _has_transcript(assistant_text) and result.reply_wav_bytes:
-        st.session_state[LAST_REPLY_WAV_KEY] = result.reply_wav_bytes
-    st.session_state[LAST_AUDIO_FINGERPRINT_KEY] = fingerprint
+    session_dir: Path = st.session_state[SESSION_DIR_KEY]
+    new_count = _persist_new_transcripts(
+        session_dir / CHAT_FILENAME,
+        transcripts,
+        persisted_count,
+    )
+    st.session_state[PERSISTED_TRANSCRIPT_COUNT_KEY] = new_count
 
 
-def _render_messages(messages: list[dict[str, str]]) -> None:
-    """Show the transcript in chat order.
-
-    Parameters
-    ----------
-    messages
-        Ordered user and assistant message dicts with ``role`` and ``content``.
-    """
-    for message in messages:
-        content = message["content"].strip()
-        if not content:
-            continue
-        with st.chat_message(message["role"]):
-            st.write(content)
+def _render_transcripts(transcripts: tuple[TranscriptLine, ...]) -> None:
+    """Show live transcript lines as chat messages."""
+    for line in transcripts:
+        with st.chat_message(line.role):
+            st.write(line.text if not line.partial else f"{line.text}▌")
 
 
-def _render_reply_audio(last_reply_wav: bytes | None) -> None:
-    """Play the latest assistant reply when available.
-
-    Parameters
-    ----------
-    last_reply_wav
-        WAV bytes for the most recent assistant reply, if any.
-    """
-    if last_reply_wav is None:
-        return
-    st.audio(last_reply_wav, format=AUDIO_WAV_MIME, autoplay=True)
+def _render_connection_status(connected: bool, error: str | None) -> None:
+    """Show WebRTC connect state or the latest component error."""
+    if error:
+        st.error(error)
+    elif connected:
+        st.success("Connected — speak naturally; the assistant replies with voice.")
 
 
 def main() -> None:
-    """Render the issue discussion microphone page."""
+    """Render the issue discussion WebRTC voice page."""
     try:
         _ensure_session_state()
     except ValueError as exc:
@@ -166,16 +162,15 @@ def main() -> None:
 
     st.title(PAGE_TITLE)
     st.caption(REALTIME_CAPTION)
-    st.write(RECORDING_INSTRUCTION)
 
-    recording = st.audio_input(AUDIO_INPUT_LABEL, sample_rate=AUDIO_SAMPLE_RATE)
-    if recording is not None:
-        wav_bytes = recording.getvalue()
-        _handle_new_recording(wav_bytes, _fingerprint_audio(wav_bytes))
+    client_secret = _get_client_secret()
+    if client_secret is None:
+        return
 
-    messages: list[dict[str, str]] = st.session_state.get(MESSAGES_KEY, EMPTY_MESSAGES)
-    _render_messages(messages)
-    _render_reply_audio(st.session_state.get(LAST_REPLY_WAV_KEY))
+    result = webrtc_voice(client_secret=client_secret, key=WEBRTC_COMPONENT_KEY)
+    _sync_transcript_persistence(result.transcripts)
+    _render_connection_status(result.connected, result.error)
+    _render_transcripts(result.transcripts)
 
 
 main()
