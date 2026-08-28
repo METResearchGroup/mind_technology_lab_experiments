@@ -117,7 +117,9 @@ def append_chat_lines(chat_path: Path, user_text: str, assistant_text: str) -> N
     chat_path.parent.mkdir(parents=True, exist_ok=True)
     with chat_path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps({"role": "user", "content": user_text}) + "\n")
-        handle.write(json.dumps({"role": "assistant", "content": assistant_text}) + "\n")
+        handle.write(
+            json.dumps({"role": "assistant", "content": assistant_text}) + "\n"
+        )
 
 
 def wav_bytes_to_pcm16(wav_bytes: bytes) -> tuple[npt.NDArray[np.int16], int]:
@@ -231,7 +233,8 @@ class VoiceSession:
         pcm, sample_rate = wav_bytes_to_pcm16(wav_bytes)
         if sample_rate != VOICE_SAMPLE_RATE_HZ:
             raise ValueError(
-                f"Expected sample rate {VOICE_SAMPLE_RATE_HZ} Hz, got {sample_rate} Hz. "
+                f"Expected sample rate {VOICE_SAMPLE_RATE_HZ} Hz, "
+                f"got {sample_rate} Hz. "
                 "Record audio at 24000 Hz."
             )
 

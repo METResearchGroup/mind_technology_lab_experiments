@@ -28,9 +28,7 @@ AUDIO_INPUT_LABEL = "Record a turn"
 HASH_ALGORITHM = "sha256"
 OUTPUTS_ROOT = Path("issue_discussion_platform/outputs")
 PAGE_TITLE = "Issue discussion"
-RECORDING_INSTRUCTION = (
-    "Click the microphone, speak your turn, then stop recording."
-)
+RECORDING_INSTRUCTION = "Click the microphone, speak your turn, then stop recording."
 SESSION_DIR_KEY = "session_dir"
 VOICE_SESSION_KEY = "voice_session"
 MESSAGES_KEY = "messages"
@@ -99,7 +97,9 @@ def _handle_new_recording(wav_bytes: bytes, fingerprint: str) -> None:
     messages.append({"role": "user", "content": result.user_text})
     messages.append({"role": "assistant", "content": result.assistant_text})
     session_dir: Path = st.session_state[SESSION_DIR_KEY]
-    append_chat_lines(session_dir / CHAT_FILENAME, result.user_text, result.assistant_text)
+    append_chat_lines(
+        session_dir / CHAT_FILENAME, result.user_text, result.assistant_text
+    )
     st.session_state[LAST_REPLY_WAV_KEY] = result.reply_wav_bytes
     st.session_state[LAST_AUDIO_FINGERPRINT_KEY] = fingerprint
 
