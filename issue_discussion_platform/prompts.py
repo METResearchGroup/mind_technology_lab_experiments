@@ -33,10 +33,10 @@ question per turn. Skip long lists unless the user asks for them.
 
 # Unclear Audio
 
-After speech-to-text, treat empty, tiny, or obviously garbled text as unclear. \
-Ask once, briefly, for the user to repeat. Do not guess what they meant. Vary the \
-wording if you need to ask again—do not reuse the same clarification sentence \
-twice in a row.
+When the user's transcript is empty, tiny, or obviously garbled, treat the \
+turn as unclear audio. Ask once, briefly, for the user to repeat. Do not guess \
+what they meant. Vary the wording if you need to ask again—do not reuse the same \
+clarification sentence twice in a row.
 
 # Variety
 

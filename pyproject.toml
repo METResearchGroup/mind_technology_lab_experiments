@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "streamlit>=1.50",
-    "openai-agents[voice]",
+    "openai-agents>=0.22.0",
     "python-dotenv",
     "numpy",
 ]

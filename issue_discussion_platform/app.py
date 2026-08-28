@@ -16,6 +16,7 @@ import streamlit as st
 
 from issue_discussion_platform.prompts import SYSTEM_PROMPT
 from issue_discussion_platform.voice_agent import (
+    REALTIME_MODEL,
     VoiceSession,
     append_chat_lines,
     create_session_dir,
@@ -28,7 +29,12 @@ AUDIO_INPUT_LABEL = "Record a turn"
 HASH_ALGORITHM = "sha256"
 OUTPUTS_ROOT = Path("issue_discussion_platform/outputs")
 PAGE_TITLE = "Issue discussion"
-RECORDING_INSTRUCTION = "Click the microphone, speak your turn, then stop recording."
+REALTIME_CAPTION = (
+    f"Realtime voice agent ({REALTIME_MODEL}). Push-to-talk: record one turn at a time."
+)
+RECORDING_INSTRUCTION = (
+    "Click the microphone, speak your turn at 24 kHz, then stop recording."
+)
 SESSION_DIR_KEY = "session_dir"
 VOICE_SESSION_KEY = "voice_session"
 MESSAGES_KEY = "messages"
@@ -53,6 +59,11 @@ def _ensure_session_state() -> None:
     st.session_state[LAST_AUDIO_FINGERPRINT_KEY] = None
     st.session_state[LAST_REPLY_WAV_KEY] = None
     st.session_state[SESSION_INITIALIZED_KEY] = True
+
+
+def _has_transcript(text: str) -> bool:
+    """Return whether ``text`` contains non-whitespace transcript content."""
+    return bool(text.strip())
 
 
 def _fingerprint_audio(wav_bytes: bytes) -> str:
@@ -95,13 +106,24 @@ def _handle_new_recording(wav_bytes: bytes, fingerprint: str) -> None:
         return
 
     messages: list[dict[str, str]] = st.session_state[MESSAGES_KEY]
-    messages.append({"role": "user", "content": result.user_text})
-    messages.append({"role": "assistant", "content": result.assistant_text})
-    session_dir: Path = st.session_state[SESSION_DIR_KEY]
-    append_chat_lines(
-        session_dir / CHAT_FILENAME, result.user_text, result.assistant_text
-    )
-    st.session_state[LAST_REPLY_WAV_KEY] = result.reply_wav_bytes
+    user_text = result.user_text.strip()
+    assistant_text = result.assistant_text.strip()
+
+    if _has_transcript(user_text):
+        messages.append({"role": "user", "content": user_text})
+    if _has_transcript(assistant_text):
+        messages.append({"role": "assistant", "content": assistant_text})
+
+    if _has_transcript(user_text) or _has_transcript(assistant_text):
+        session_dir: Path = st.session_state[SESSION_DIR_KEY]
+        append_chat_lines(
+            session_dir / CHAT_FILENAME,
+            user_text if _has_transcript(user_text) else "",
+            assistant_text if _has_transcript(assistant_text) else "",
+        )
+
+    if _has_transcript(assistant_text) and result.reply_wav_bytes:
+        st.session_state[LAST_REPLY_WAV_KEY] = result.reply_wav_bytes
     st.session_state[LAST_AUDIO_FINGERPRINT_KEY] = fingerprint
 
 
@@ -114,8 +136,11 @@ def _render_messages(messages: list[dict[str, str]]) -> None:
         Ordered user and assistant message dicts with ``role`` and ``content``.
     """
     for message in messages:
+        content = message["content"].strip()
+        if not content:
+            continue
         with st.chat_message(message["role"]):
-            st.write(message["content"])
+            st.write(content)
 
 
 def _render_reply_audio(last_reply_wav: bytes | None) -> None:
@@ -140,6 +165,7 @@ def main() -> None:
         return
 
     st.title(PAGE_TITLE)
+    st.caption(REALTIME_CAPTION)
     st.write(RECORDING_INSTRUCTION)
 
     recording = st.audio_input(AUDIO_INPUT_LABEL, sample_rate=AUDIO_SAMPLE_RATE)

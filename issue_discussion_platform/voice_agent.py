@@ -10,20 +10,21 @@ from __future__ import annotations
 import io
 import json
 import wave
-from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
-from agents import Agent
-from agents.voice import (
-    AudioInput,
-    SingleAgentVoiceWorkflow,
-    VoicePipeline,
-    VoiceWorkflowBase,
+from agents.realtime import RealtimeAgent, RealtimeRunner, RealtimeSession
+from agents.realtime.config import RealtimeRunConfig
+from agents.realtime.items import (
+    AssistantMessageItem,
+    RealtimeItem,
+    UserMessageItem,
 )
+from agents.realtime.model import RealtimeModel
+from agents.realtime.model_inputs import RealtimeModelSendRawMessage
 
 from shared.load_env_vars import EnvVarsContainer
 
@@ -32,8 +33,24 @@ PCM_SAMPLE_WIDTH_BYTES = 2
 MONO_CHANNEL_COUNT = 1
 STEREO_CHANNEL_COUNT = 2
 AGENT_NAME = "Issue discussion"
-AGENT_MODEL = "gpt-4.1-mini"
-VOICE_STREAM_EVENT_AUDIO = "voice_stream_event_audio"
+REALTIME_MODEL = "gpt-realtime-2.1"
+INPUT_TRANSCRIPTION_MODEL = "gpt-live-transcribe"
+OUTPUT_VOICE = "marin"
+
+REALTIME_RUN_CONFIG: RealtimeRunConfig = {
+    "model_settings": {
+        "model_name": REALTIME_MODEL,
+        "reasoning": {"effort": "low"},
+        "audio": {
+            "input": {
+                "format": "pcm16",
+                "transcription": {"model": INPUT_TRANSCRIPTION_MODEL},
+                "turn_detection": None,
+            },
+            "output": {"format": "pcm16", "voice": OUTPUT_VOICE},
+        },
+    },
+}
 
 
 @dataclass(frozen=True)
@@ -51,39 +68,6 @@ class TurnResult:
     user_text: str
     assistant_text: str
     reply_wav_bytes: bytes
-
-
-class CapturingVoiceWorkflow(VoiceWorkflowBase):
-    """Delegates to an inner workflow and captures per-turn transcript text.
-
-    After each ``run`` call, ``last_user_text`` holds the user transcription and
-    ``last_assistant_text`` holds the full assistant reply for that turn.
-    """
-
-    def __init__(self, inner: SingleAgentVoiceWorkflow) -> None:
-        self._inner = inner
-        self.last_user_text = ""
-        self.last_assistant_text = ""
-
-    async def run(self, transcription: str) -> AsyncIterator[str]:
-        """Run the inner workflow and capture transcript text for the turn.
-
-        Parameters
-        ----------
-        transcription
-            Speech-to-text output for the user's audio clip.
-
-        Yields
-        ------
-        str
-            Assistant text chunks passed through to text-to-speech.
-        """
-        self.last_user_text = transcription
-        assistant_chunks: list[str] = []
-        async for chunk in self._inner.run(transcription):
-            assistant_chunks.append(chunk)
-            yield chunk
-        self.last_assistant_text = "".join(assistant_chunks)
 
 
 def create_session_dir(outputs_root: Path, timestamp: str) -> Path:
@@ -185,19 +169,80 @@ def pcm16_to_wav_bytes(pcm: npt.NDArray[np.int16], sample_rate: int) -> bytes:
     return buffer.getvalue()
 
 
-class VoiceSession:
-    """Coordinates one voice discussion session with the OpenAI Agents voice API.
+def _user_message_text(item: UserMessageItem) -> str:
+    parts: list[str] = []
+    for content in item.content:
+        if content.type == "input_audio" and content.transcript:
+            parts.append(content.transcript)
+        elif content.type == "input_text" and content.text:
+            parts.append(content.text)
+    return " ".join(parts).strip()
 
-    Keeps conversation history across turns via a single voice pipeline instance.
+
+def _assistant_message_text(item: AssistantMessageItem) -> str:
+    parts: list[str] = []
+    for content in item.content:
+        if content.type == "audio" and content.transcript:
+            parts.append(content.transcript)
+        elif content.type == "text" and content.text:
+            parts.append(content.text)
+    return " ".join(parts).strip()
+
+
+def _latest_transcripts_from_history(history: list[RealtimeItem]) -> tuple[str, str]:
+    user_text = ""
+    assistant_text = ""
+    for item in history:
+        if item.type != "message":
+            continue
+        if item.role == "user":
+            text = _user_message_text(item)
+            if text:
+                user_text = text
+        elif item.role == "assistant":
+            text = _assistant_message_text(item)
+            if text:
+                assistant_text = text
+    return user_text, assistant_text
+
+
+def _instructions_with_history(
+    base_instructions: str,
+    turn_history: list[ChatLine],
+) -> str:
+    if not turn_history:
+        return base_instructions
+    lines = ["# Conversation so far", ""]
+    for turn in turn_history:
+        label = "User" if turn.role == "user" else "Assistant"
+        lines.append(f"{label}: {turn.content}")
+    return base_instructions + "\n\n" + "\n".join(lines)
+
+
+class VoiceSession:
+    """Coordinates one voice discussion session over the OpenAI Realtime API.
+
+    Each ``handle_turn`` opens a short-lived WebSocket session (Streamlit calls
+    ``asyncio.run`` per turn, so a persistent socket cannot survive across turns).
+    Prior transcript turns are replayed into the agent instructions so multi-turn
+    memory is preserved without a long-lived connection.
     """
 
-    def __init__(self, instructions: str) -> None:
+    def __init__(
+        self,
+        instructions: str,
+        *,
+        model: RealtimeModel | None = None,
+    ) -> None:
         """Configure a voice session with system instructions.
 
         Parameters
         ----------
         instructions
-            System prompt text passed to the voice agent.
+            System prompt text passed to the realtime agent.
+        model
+            Optional realtime transport for tests. Production uses the default
+            OpenAI WebSocket model.
 
         Raises
         ------
@@ -205,14 +250,9 @@ class VoiceSession:
             If ``OPENAI_API_KEY`` is missing or empty.
         """
         EnvVarsContainer.get_env_var("OPENAI_API_KEY", required=True)
-        agent = Agent(
-            name=AGENT_NAME,
-            instructions=instructions,
-            model=AGENT_MODEL,
-        )
-        inner_workflow = SingleAgentVoiceWorkflow(agent)
-        self._workflow = CapturingVoiceWorkflow(inner_workflow)
-        self._pipeline = VoicePipeline(workflow=self._workflow)
+        self._instructions = instructions
+        self._turn_history: list[ChatLine] = []
+        self._model = model
 
     async def handle_turn(self, wav_bytes: bytes) -> TurnResult:
         """Process one user audio turn and return the assistant reply.
@@ -232,8 +272,10 @@ class VoiceSession:
         ValueError
             If ``OPENAI_API_KEY`` is missing or empty, or the WAV sample rate
             is not 24000 Hz.
+        RuntimeError
+            If the realtime session reports an error event.
         """
-        EnvVarsContainer.get_env_var("OPENAI_API_KEY", required=True)
+        api_key = EnvVarsContainer.get_env_var("OPENAI_API_KEY", required=True)
         pcm, sample_rate = wav_bytes_to_pcm16(wav_bytes)
         if sample_rate != VOICE_SAMPLE_RATE_HZ:
             raise ValueError(
@@ -242,22 +284,72 @@ class VoiceSession:
                 "Record audio at 24000 Hz."
             )
 
-        audio_input = AudioInput(buffer=pcm, frame_rate=VOICE_SAMPLE_RATE_HZ)
-        result = await self._pipeline.run(audio_input)
+        pcm_bytes = np.ascontiguousarray(pcm).tobytes()
+        agent = RealtimeAgent(
+            name=AGENT_NAME,
+            instructions=_instructions_with_history(
+                self._instructions,
+                self._turn_history,
+            ),
+        )
+        runner = RealtimeRunner(
+            starting_agent=agent,
+            config=REALTIME_RUN_CONFIG,
+            model=self._model,
+        )
 
-        audio_chunks: list[npt.NDArray[np.int16]] = []
-        async for event in result.stream():
-            if event.type == VOICE_STREAM_EVENT_AUDIO and event.data is not None:
-                audio_chunks.append(event.data.reshape(-1).astype(np.int16))
+        user_text = ""
+        assistant_text = ""
+        audio_chunks: list[bytes] = []
+
+        async with await runner.run(model_config={"api_key": api_key}) as session:
+            await session.send_audio(pcm_bytes, commit=True)
+            await _request_assistant_response(session)
+
+            async for event in session:
+                if event.type == "audio":
+                    audio_chunks.append(event.audio.data)
+                elif event.type == "history_added":
+                    if event.item.type == "message" and event.item.role == "user":
+                        user_text = _user_message_text(event.item) or user_text
+                    elif (
+                        event.item.type == "message" and event.item.role == "assistant"
+                    ):
+                        assistant_text = (
+                            _assistant_message_text(event.item) or assistant_text
+                        )
+                elif event.type == "history_updated":
+                    updated_user, updated_assistant = _latest_transcripts_from_history(
+                        event.history,
+                    )
+                    if updated_user:
+                        user_text = updated_user
+                    if updated_assistant:
+                        assistant_text = updated_assistant
+                elif event.type == "agent_end":
+                    break
+                elif event.type == "error":
+                    raise RuntimeError(f"Realtime session error: {event.error}")
 
         if audio_chunks:
-            reply_pcm = np.concatenate(audio_chunks).astype(np.int16)
+            reply_pcm = np.frombuffer(b"".join(audio_chunks), dtype=np.int16)
         else:
             reply_pcm = np.array([], dtype=np.int16)
 
         reply_wav_bytes = pcm16_to_wav_bytes(reply_pcm, VOICE_SAMPLE_RATE_HZ)
+        self._turn_history.append(ChatLine(role="user", content=user_text))
+        self._turn_history.append(
+            ChatLine(role="assistant", content=assistant_text),
+        )
         return TurnResult(
-            user_text=self._workflow.last_user_text,
-            assistant_text=self._workflow.last_assistant_text,
+            user_text=user_text,
+            assistant_text=assistant_text,
             reply_wav_bytes=reply_wav_bytes,
         )
+
+
+async def _request_assistant_response(session: RealtimeSession) -> None:
+    """Start model inference after a committed push-to-talk audio clip."""
+    await session.model.send_event(
+        RealtimeModelSendRawMessage(message={"type": "response.create"}),
+    )
