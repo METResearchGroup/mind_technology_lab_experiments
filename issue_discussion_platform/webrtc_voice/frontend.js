@@ -21,6 +21,9 @@ const instances = new WeakMap();
  * @property {{ role: string, text: string, partial?: boolean }[]} transcripts
  * @property {string | null} transcriptionModel
  * @property {ReturnType<typeof setTimeout> | 0} transcriptSyncTimer
+ * @property {string | null} activeAssistantResponseId
+ * @property {"legacy" | "ga" | null} assistantDeltaStream
+ * @property {Set<string>} completedAssistantResponseIds
  */
 
 /** @param {HTMLElement} parentElement */
@@ -36,6 +39,9 @@ function getInstance(parentElement) {
       transcripts: [],
       transcriptionModel: null,
       transcriptSyncTimer: 0,
+      activeAssistantResponseId: null,
+      assistantDeltaStream: null,
+      completedAssistantResponseIds: new Set(),
     };
     instances.set(parentElement, inst);
   }
@@ -159,6 +165,112 @@ function finalizeTranscript(inst, setStateValue, role, text) {
 }
 
 /**
+ * @param {unknown} response
+ * @returns {string}
+ */
+function assistantTranscriptFromResponse(response) {
+  if (!response || typeof response !== "object") return "";
+  const output = /** @type {Record<string, unknown>} */ (response).output;
+  if (!Array.isArray(output)) return "";
+  const parts = [];
+  for (const item of output) {
+    if (!item || typeof item !== "object") continue;
+    const message = /** @type {Record<string, unknown>} */ (item);
+    if (message.type !== "message" || !Array.isArray(message.content)) continue;
+    for (const part of message.content) {
+      if (!part || typeof part !== "object") continue;
+      const content = /** @type {Record<string, unknown>} */ (part);
+      if (content.type === "audio" && typeof content.transcript === "string") {
+        parts.push(content.transcript);
+      }
+      if (content.type === "text" && typeof content.text === "string") {
+        parts.push(content.text);
+      }
+    }
+  }
+  return parts.join("").trim();
+}
+
+/**
+ * @param {Record<string, unknown>} msg
+ * @returns {string | null}
+ */
+function responseIdFromEvent(msg) {
+  if (typeof msg.response_id === "string") return msg.response_id;
+  const response = msg.response;
+  if (response && typeof response === "object") {
+    const id = /** @type {Record<string, unknown>} */ (response).id;
+    if (typeof id === "string") return id;
+  }
+  return null;
+}
+
+/**
+ * @param {InstanceState} inst
+ * @param {string | null} responseId
+ */
+function beginAssistantResponse(inst, responseId) {
+  if (!responseId) return;
+  if (inst.activeAssistantResponseId === responseId) return;
+  inst.activeAssistantResponseId = responseId;
+  inst.assistantDeltaStream = null;
+}
+
+/**
+ * @param {InstanceState} inst
+ * @param {string | null} responseId
+ * @returns {boolean}
+ */
+function shouldIgnoreAssistantDelta(inst, responseId) {
+  if (!responseId) return false;
+  if (inst.completedAssistantResponseIds.has(responseId)) return true;
+  return (
+    inst.activeAssistantResponseId !== null &&
+    inst.activeAssistantResponseId !== responseId
+  );
+}
+
+/**
+ * @param {InstanceState} inst
+ * @param {string} type
+ * @param {string | null} responseId
+ * @returns {boolean}
+ */
+function shouldApplyAssistantDelta(inst, type, responseId) {
+  if (!responseId) return true;
+  beginAssistantResponse(inst, responseId);
+  if (shouldIgnoreAssistantDelta(inst, responseId)) return false;
+
+  const stream =
+    type === "response.audio_transcript.delta"
+      ? "legacy"
+      : type === "response.output_audio_transcript.delta"
+        ? "ga"
+        : null;
+  if (!stream) return true;
+
+  if (!inst.assistantDeltaStream) {
+    inst.assistantDeltaStream = stream;
+    return true;
+  }
+  return inst.assistantDeltaStream === stream;
+}
+
+/**
+ * @param {InstanceState} inst
+ * @param {string | null} responseId
+ */
+function completeAssistantResponse(inst, responseId) {
+  if (responseId) {
+    inst.completedAssistantResponseIds.add(responseId);
+  }
+  if (!responseId || inst.activeAssistantResponseId === responseId) {
+    inst.activeAssistantResponseId = null;
+    inst.assistantDeltaStream = null;
+  }
+}
+
+/**
  * @param {unknown} item
  * @returns {string | null}
  */
@@ -204,7 +316,11 @@ function handleRealtimeEvent(msg, inst, setStateValue) {
     type === "response.output_audio_transcript.delta" ||
     type === "response.output_text.delta"
   ) {
-    if (typeof msg.delta === "string") {
+    const responseId = responseIdFromEvent(msg);
+    if (
+      typeof msg.delta === "string" &&
+      shouldApplyAssistantDelta(inst, type, responseId)
+    ) {
       applyTranscriptDelta(inst, setStateValue, "assistant", msg.delta);
     }
     return;
@@ -234,30 +350,26 @@ function handleRealtimeEvent(msg, inst, setStateValue) {
     type === "response.audio_transcript.done" ||
     type === "response.output_audio_transcript.done"
   ) {
-    const transcript = msg.transcript;
-    if (typeof transcript === "string") {
-      finalizeTranscript(inst, setStateValue, "assistant", transcript);
-    }
+    // Per content-part events: keep accumulating via deltas; finalize on response.done.
     return;
   }
 
   if (type === "response.done") {
     const response = msg.response;
-    if (response && typeof response === "object" && Array.isArray(response.output)) {
-      for (const item of response.output) {
-        if (!item || typeof item !== "object") continue;
-        if (item.type === "message" && Array.isArray(item.content)) {
-          for (const part of item.content) {
-            if (part && part.type === "audio" && typeof part.transcript === "string") {
-              finalizeTranscript(inst, setStateValue, "assistant", part.transcript);
-            }
-            if (part && part.type === "text" && typeof part.text === "string") {
-              finalizeTranscript(inst, setStateValue, "assistant", part.text);
-            }
-          }
+    const responseId = responseIdFromEvent(msg);
+    if (response && typeof response === "object") {
+      let transcript = assistantTranscriptFromResponse(response);
+      if (!transcript) {
+        const last = inst.transcripts[inst.transcripts.length - 1];
+        if (last && last.role === "assistant" && last.partial) {
+          transcript = last.text.trim();
         }
       }
+      if (transcript) {
+        finalizeTranscript(inst, setStateValue, "assistant", transcript);
+      }
     }
+    completeAssistantResponse(inst, responseId);
     return;
   }
 
