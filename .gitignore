@@ -23,6 +23,7 @@ htmlcov/
 .nox/
 .hypothesis/
 uv.lock.bak
+issue_discussion_platform/outputs/
 
 # JavaScript / Node
 node_modules/
