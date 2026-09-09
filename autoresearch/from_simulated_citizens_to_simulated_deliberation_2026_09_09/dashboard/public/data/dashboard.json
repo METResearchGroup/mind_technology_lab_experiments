@@ -1,0 +1,5070 @@
+{
+  "paper": {
+    "id": "2609.07573",
+    "title": "From Simulated Citizens to Simulated Deliberation: Challenges in Representation and Interaction",
+    "url": "https://arxiv.org/abs/2609.07573",
+    "alphaxiv": "https://www.alphaxiv.org/abs/2609.07573",
+    "findings": [
+      {
+        "id": "representation",
+        "title": "Persona answers miss the survey map",
+        "body": "On 640 census-balanced Korean personas, GPT-4.1-mini's mean absolute gap from human group shares is 29 points. Every demographic group's mean gap sits between 24 and 34 points."
+      },
+      {
+        "id": "direction",
+        "title": "Demographic direction is often reversed",
+        "body": "When the human survey has one group higher than another, the personas match that direction in 34 of 110 comparisons. On the two relatively split questions the match is 9 of 28."
+      },
+      {
+        "id": "concentration",
+        "title": "Answers pile up near 0% or 100%",
+        "body": "On five of eight questions at least one demographic group is near 0 or 100, while the matching human shares stay closer to the middle. Only climate technology (63%) and education-care (62%) stay inside the paper's 65% 'divisive' cutoff."
+      },
+      {
+        "id": "interaction",
+        "title": "Sealed monologues land in the same place",
+        "body": "In balanced rooms, the mean gap between full debate and sealed monologue final A counts is at most one agent out of six. Much of the observed stance movement can arise without peer exchange."
+      },
+      {
+        "id": "anchor",
+        "title": "Restating a starting side freezes updating",
+        "body": "When round 1 names the assigned side, movement falls to 0 to 3% in most cells. A fully argued opening is not required for that freeze. Anchoring population-informed starts also stalls updating."
+      },
+      {
+        "id": "use",
+        "title": "Treat argument surfacing as a separate job",
+        "body": "The transcripts still give reasons on both sides, and argument counts rise across rounds. That can help a reader inspect arguments. It does not show that the room represents a population, or that peer exchange caused the stance changes."
+      }
+    ],
+    "table3": {
+      "env_priority": {
+        "full": 96,
+        "demographics": 87,
+        "citizen": 100,
+        "none": 100,
+        "human": 68
+      },
+      "env_means": {
+        "full": 1,
+        "demographics": 34,
+        "citizen": 1,
+        "none": 1,
+        "human": 54
+      },
+      "clim_strategy": {
+        "full": 90,
+        "demographics": 65,
+        "citizen": 6,
+        "none": 6,
+        "human": 70
+      },
+      "clim_tech": {
+        "full": 63,
+        "demographics": 98,
+        "citizen": 100,
+        "none": 100,
+        "human": 51
+      },
+      "work_family": {
+        "full": 100,
+        "demographics": 100,
+        "citizen": 79,
+        "none": 82,
+        "human": 61
+      },
+      "educ_care": {
+        "full": 62,
+        "demographics": 71,
+        "citizen": 28,
+        "none": 30,
+        "human": 58
+      },
+      "econ_support": {
+        "full": 11,
+        "demographics": 9,
+        "citizen": 0,
+        "none": 0,
+        "human": 56
+      },
+      "housing": {
+        "full": 26,
+        "demographics": 3,
+        "citizen": 8,
+        "none": 9,
+        "human": 53
+      }
+    },
+    "table6": [
+      {
+        "question_id": "clim_tech",
+        "debate_final_a": 4.3,
+        "monologue_final_a": 4.0,
+        "difference": 0.3
+      },
+      {
+        "question_id": "educ_care",
+        "debate_final_a": 5.2,
+        "monologue_final_a": 5.3,
+        "difference": -0.2
+      },
+      {
+        "question_id": "env_priority",
+        "debate_final_a": 5.2,
+        "monologue_final_a": 4.8,
+        "difference": 0.3
+      },
+      {
+        "question_id": "clim_strategy",
+        "debate_final_a": 5.5,
+        "monologue_final_a": 5.7,
+        "difference": -0.2
+      },
+      {
+        "question_id": "econ_support",
+        "debate_final_a": 0.3,
+        "monologue_final_a": 1.3,
+        "difference": -1.0
+      },
+      {
+        "question_id": "housing",
+        "debate_final_a": 3.5,
+        "monologue_final_a": 4.2,
+        "difference": -0.7
+      }
+    ],
+    "table7": [
+      {
+        "question_id": "clim_tech",
+        "nothing_a": 4.3,
+        "nothing_move": 39,
+        "restated_a": 2.8,
+        "restated_move": 3
+      },
+      {
+        "question_id": "educ_care",
+        "nothing_a": 5.2,
+        "nothing_move": 36,
+        "restated_a": 3.0,
+        "restated_move": 0
+      },
+      {
+        "question_id": "env_priority",
+        "nothing_a": 5.2,
+        "nothing_move": 42,
+        "restated_a": 3.0,
+        "restated_move": 0
+      },
+      {
+        "question_id": "clim_strategy",
+        "nothing_a": 5.5,
+        "nothing_move": 42,
+        "restated_a": 3.0,
+        "restated_move": 0
+      },
+      {
+        "question_id": "econ_support",
+        "nothing_a": 0.3,
+        "nothing_move": 44,
+        "restated_a": 2.8,
+        "restated_move": 3
+      },
+      {
+        "question_id": "housing",
+        "nothing_a": 3.5,
+        "nothing_move": 53,
+        "restated_a": 3.2,
+        "restated_move": 3
+      }
+    ]
+  },
+  "replication": {
+    "model": "dummy-client (paper-calibrated)",
+    "provider": "offline",
+    "n_personas": 160,
+    "cells": 160,
+    "per_cell": 1,
+    "language": "ko",
+    "persona_source": "nemotron-korea",
+    "n_survey_full": 1280,
+    "n_rooms": 10,
+    "offline": true,
+    "note": "The paper used 640 personas (4 per cell) and GPT-4.1-mini. This folder uses a jointly balanced pool (1 persona per cell). Survey and debate rows below come from a deterministic dummy client calibrated to the paper's GPT-4.1-mini overall A-shares, because a full live Qwen run was not used for this payload."
+  },
+  "survey": {
+    "mean_group_gap": 28.74769934803775,
+    "mean_overall_gap": 29.21875,
+    "direction_matches": 50,
+    "direction_total": 105,
+    "near_unanimous_groups": 22,
+    "questions": [
+      {
+        "id": "env_priority",
+        "domain": "environment",
+        "topic_en": "Environmental policy priority",
+        "topic_ko": "환경 정책의 우선순위",
+        "position_a_en": "Environmental protection first (even if economic growth slows somewhat)",
+        "position_b_en": "Economic growth first (even if the environment is somewhat harmed)",
+        "position_a_ko": "환경 보호를 우선한다 (경제성장이 다소 둔화되더라도)",
+        "position_b_ko": "경제성장을 우선한다 (환경이 다소 훼손되더라도)",
+        "human_overall": 68.0,
+        "paper_gpt41mini": 96.0,
+        "paper_groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 93,
+            "human_share": 57
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 99,
+            "human_share": 80
+          },
+          {
+            "axis": "age_env",
+            "group": "19-29",
+            "persona_share": 96,
+            "human_share": 51
+          },
+          {
+            "axis": "age_env",
+            "group": "30-44",
+            "persona_share": 96,
+            "human_share": 58
+          },
+          {
+            "axis": "age_env",
+            "group": "45-59",
+            "persona_share": 96,
+            "human_share": 75
+          },
+          {
+            "axis": "age_env",
+            "group": "60+",
+            "persona_share": 97,
+            "human_share": 81
+          },
+          {
+            "axis": "education",
+            "group": "middle",
+            "persona_share": 91,
+            "human_share": 87
+          },
+          {
+            "axis": "education",
+            "group": "high",
+            "persona_share": 96,
+            "human_share": 73
+          },
+          {
+            "axis": "education",
+            "group": "college",
+            "persona_share": 98,
+            "human_share": 65
+          },
+          {
+            "axis": "education",
+            "group": "graduate",
+            "persona_share": 99,
+            "human_share": 68
+          }
+        ],
+        "persona_overall": 95.625,
+        "divisive": false,
+        "mean_group_gap": 26.291666666666668,
+        "groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 95.0,
+            "human_share": 57,
+            "n": 80
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 96.25,
+            "human_share": 80,
+            "n": 80
+          },
+          {
+            "axis": "age_env",
+            "group": "19-29",
+            "persona_share": 97.5,
+            "human_share": 51,
+            "n": 40
+          },
+          {
+            "axis": "age_env",
+            "group": "30-44",
+            "persona_share": 97.5,
+            "human_share": 58,
+            "n": 40
+          },
+          {
+            "axis": "age_env",
+            "group": "45-59",
+            "persona_share": 92.5,
+            "human_share": 75,
+            "n": 40
+          },
+          {
+            "axis": "age_env",
+            "group": "60+",
+            "persona_share": 95.0,
+            "human_share": 81,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "middle",
+            "persona_share": 97.5,
+            "human_share": 87,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "high",
+            "persona_share": 97.5,
+            "human_share": 73,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "college",
+            "persona_share": 87.5,
+            "human_share": 65,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "graduate",
+            "persona_share": 100.0,
+            "human_share": 68,
+            "n": 40
+          },
+          {
+            "axis": "region",
+            "group": "capital",
+            "persona_share": 93.75,
+            "human_share": 69,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "yeongnam",
+            "persona_share": 96.875,
+            "human_share": 64,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "honam",
+            "persona_share": 87.5,
+            "human_share": 73,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "chungcheong",
+            "persona_share": 100.0,
+            "human_share": 70,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "gangwon_jeju",
+            "persona_share": 100.0,
+            "human_share": 69,
+            "n": 32
+          }
+        ]
+      },
+      {
+        "id": "env_means",
+        "domain": "environment",
+        "topic_en": "Means of solving environmental problems",
+        "topic_ko": "환경 문제 해결 수단",
+        "position_a_en": "Stronger penalties and law enforcement",
+        "position_b_en": "Voluntary efforts by citizens and firms first",
+        "position_a_ko": "처벌과 법집행을 강화한다",
+        "position_b_ko": "시민과 기업의 자발적 노력을 우선한다",
+        "human_overall": 54.0,
+        "paper_gpt41mini": 1.0,
+        "paper_groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 0,
+            "human_share": 54
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 1,
+            "human_share": 54
+          },
+          {
+            "axis": "age_env",
+            "group": "19-29",
+            "persona_share": 0,
+            "human_share": 49
+          },
+          {
+            "axis": "age_env",
+            "group": "30-44",
+            "persona_share": 0,
+            "human_share": 57
+          },
+          {
+            "axis": "age_env",
+            "group": "45-59",
+            "persona_share": 1,
+            "human_share": 55
+          },
+          {
+            "axis": "age_env",
+            "group": "60+",
+            "persona_share": 2,
+            "human_share": 53
+          },
+          {
+            "axis": "education",
+            "group": "middle",
+            "persona_share": 0,
+            "human_share": 57
+          },
+          {
+            "axis": "education",
+            "group": "high",
+            "persona_share": 1,
+            "human_share": 52
+          },
+          {
+            "axis": "education",
+            "group": "college",
+            "persona_share": 0,
+            "human_share": 55
+          },
+          {
+            "axis": "education",
+            "group": "graduate",
+            "persona_share": 2,
+            "human_share": 55
+          }
+        ],
+        "persona_overall": 0.625,
+        "divisive": false,
+        "mean_group_gap": 54.041666666666664,
+        "groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 0.0,
+            "human_share": 54,
+            "n": 80
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 1.25,
+            "human_share": 54,
+            "n": 80
+          },
+          {
+            "axis": "age_env",
+            "group": "19-29",
+            "persona_share": 0.0,
+            "human_share": 49,
+            "n": 40
+          },
+          {
+            "axis": "age_env",
+            "group": "30-44",
+            "persona_share": 0.0,
+            "human_share": 57,
+            "n": 40
+          },
+          {
+            "axis": "age_env",
+            "group": "45-59",
+            "persona_share": 0.0,
+            "human_share": 55,
+            "n": 40
+          },
+          {
+            "axis": "age_env",
+            "group": "60+",
+            "persona_share": 2.5,
+            "human_share": 53,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "middle",
+            "persona_share": 0.0,
+            "human_share": 57,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "high",
+            "persona_share": 0.0,
+            "human_share": 52,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "college",
+            "persona_share": 2.5,
+            "human_share": 55,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "graduate",
+            "persona_share": 0.0,
+            "human_share": 55,
+            "n": 40
+          },
+          {
+            "axis": "region",
+            "group": "capital",
+            "persona_share": 0.0,
+            "human_share": 53,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "yeongnam",
+            "persona_share": 0.0,
+            "human_share": 52,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "honam",
+            "persona_share": 0.0,
+            "human_share": 60,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "chungcheong",
+            "persona_share": 3.125,
+            "human_share": 57,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "gangwon_jeju",
+            "persona_share": 0.0,
+            "human_share": 57,
+            "n": 32
+          }
+        ]
+      },
+      {
+        "id": "clim_strategy",
+        "domain": "environment",
+        "topic_en": "Climate-crisis response strategy (priority use of limited resources)",
+        "topic_ko": "기후위기 대응 전략 (한정된 자원의 우선 사용)",
+        "position_a_en": "Climate adaptation first (infrastructure for floods and heat waves)",
+        "position_b_en": "Energy transition first (expanding renewables)",
+        "position_a_ko": "기후 적응을 우선한다 (홍수와 폭염 대비 기반시설)",
+        "position_b_ko": "에너지 전환을 우선한다 (재생에너지 확대)",
+        "human_overall": 70.0,
+        "paper_gpt41mini": 90.0,
+        "paper_groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 88,
+            "human_share": 67
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 93,
+            "human_share": 74
+          },
+          {
+            "axis": "age_env",
+            "group": "19-29",
+            "persona_share": 77,
+            "human_share": 74
+          },
+          {
+            "axis": "age_env",
+            "group": "30-44",
+            "persona_share": 89,
+            "human_share": 71
+          },
+          {
+            "axis": "age_env",
+            "group": "45-59",
+            "persona_share": 96,
+            "human_share": 69
+          },
+          {
+            "axis": "age_env",
+            "group": "60+",
+            "persona_share": 99,
+            "human_share": 69
+          },
+          {
+            "axis": "education",
+            "group": "middle",
+            "persona_share": 95,
+            "human_share": 50
+          },
+          {
+            "axis": "education",
+            "group": "high",
+            "persona_share": 95,
+            "human_share": 70
+          },
+          {
+            "axis": "education",
+            "group": "college",
+            "persona_share": 89,
+            "human_share": 71
+          },
+          {
+            "axis": "education",
+            "group": "graduate",
+            "persona_share": 81,
+            "human_share": 68
+          }
+        ],
+        "persona_overall": 89.375,
+        "divisive": false,
+        "mean_group_gap": 20.641666666666666,
+        "groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 88.75,
+            "human_share": 67,
+            "n": 80
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 90.0,
+            "human_share": 74,
+            "n": 80
+          },
+          {
+            "axis": "age_env",
+            "group": "19-29",
+            "persona_share": 90.0,
+            "human_share": 74,
+            "n": 40
+          },
+          {
+            "axis": "age_env",
+            "group": "30-44",
+            "persona_share": 92.5,
+            "human_share": 71,
+            "n": 40
+          },
+          {
+            "axis": "age_env",
+            "group": "45-59",
+            "persona_share": 90.0,
+            "human_share": 69,
+            "n": 40
+          },
+          {
+            "axis": "age_env",
+            "group": "60+",
+            "persona_share": 85.0,
+            "human_share": 69,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "middle",
+            "persona_share": 95.0,
+            "human_share": 50,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "high",
+            "persona_share": 90.0,
+            "human_share": 70,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "college",
+            "persona_share": 92.5,
+            "human_share": 71,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "graduate",
+            "persona_share": 80.0,
+            "human_share": 68,
+            "n": 40
+          },
+          {
+            "axis": "region",
+            "group": "capital",
+            "persona_share": 87.5,
+            "human_share": 70,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "yeongnam",
+            "persona_share": 84.375,
+            "human_share": 71,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "honam",
+            "persona_share": 93.75,
+            "human_share": 69,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "chungcheong",
+            "persona_share": 90.625,
+            "human_share": 73,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "gangwon_jeju",
+            "persona_share": 90.625,
+            "human_share": 65,
+            "n": 32
+          }
+        ]
+      },
+      {
+        "id": "clim_tech",
+        "domain": "environment",
+        "topic_en": "Priority for fostering climate technology",
+        "topic_ko": "기후 기술 육성 우선순위",
+        "position_a_en": "Renewable-energy technology (solar and wind)",
+        "position_b_en": "Circular-economy technology (recycling and waste management)",
+        "position_a_ko": "재생에너지 기술 (태양광과 풍력)",
+        "position_b_ko": "순환경제 기술 (재활용과 폐기물 관리)",
+        "human_overall": 51.0,
+        "paper_gpt41mini": 63.0,
+        "paper_groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 73,
+            "human_share": 53
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 53,
+            "human_share": 48
+          },
+          {
+            "axis": "age_env",
+            "group": "19-29",
+            "persona_share": 76,
+            "human_share": 46
+          },
+          {
+            "axis": "age_env",
+            "group": "30-44",
+            "persona_share": 57,
+            "human_share": 53
+          },
+          {
+            "axis": "age_env",
+            "group": "45-59",
+            "persona_share": 61,
+            "human_share": 50
+          },
+          {
+            "axis": "age_env",
+            "group": "60+",
+            "persona_share": 59,
+            "human_share": 51
+          },
+          {
+            "axis": "education",
+            "group": "middle",
+            "persona_share": 51,
+            "human_share": 64
+          },
+          {
+            "axis": "education",
+            "group": "high",
+            "persona_share": 65,
+            "human_share": 48
+          },
+          {
+            "axis": "education",
+            "group": "college",
+            "persona_share": 68,
+            "human_share": 52
+          },
+          {
+            "axis": "education",
+            "group": "graduate",
+            "persona_share": 69,
+            "human_share": 50
+          }
+        ],
+        "persona_overall": 62.5,
+        "divisive": true,
+        "mean_group_gap": 10.9,
+        "groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 62.5,
+            "human_share": 53,
+            "n": 80
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 62.5,
+            "human_share": 48,
+            "n": 80
+          },
+          {
+            "axis": "age_env",
+            "group": "19-29",
+            "persona_share": 62.5,
+            "human_share": 46,
+            "n": 40
+          },
+          {
+            "axis": "age_env",
+            "group": "30-44",
+            "persona_share": 60.0,
+            "human_share": 53,
+            "n": 40
+          },
+          {
+            "axis": "age_env",
+            "group": "45-59",
+            "persona_share": 50.0,
+            "human_share": 50,
+            "n": 40
+          },
+          {
+            "axis": "age_env",
+            "group": "60+",
+            "persona_share": 77.5,
+            "human_share": 51,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "middle",
+            "persona_share": 62.5,
+            "human_share": 64,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "high",
+            "persona_share": 50.0,
+            "human_share": 48,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "college",
+            "persona_share": 70.0,
+            "human_share": 52,
+            "n": 40
+          },
+          {
+            "axis": "education",
+            "group": "graduate",
+            "persona_share": 67.5,
+            "human_share": 50,
+            "n": 40
+          },
+          {
+            "axis": "region",
+            "group": "capital",
+            "persona_share": 53.125,
+            "human_share": 49,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "yeongnam",
+            "persona_share": 65.625,
+            "human_share": 51,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "honam",
+            "persona_share": 68.75,
+            "human_share": 56,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "chungcheong",
+            "persona_share": 62.5,
+            "human_share": 53,
+            "n": 32
+          },
+          {
+            "axis": "region",
+            "group": "gangwon_jeju",
+            "persona_share": 62.5,
+            "human_share": 53,
+            "n": 32
+          }
+        ]
+      },
+      {
+        "id": "work_family",
+        "domain": "birthrate",
+        "topic_en": "Work-family balance policy priority",
+        "topic_ko": "일가정 양립 정책 우선순위",
+        "position_a_en": "Promoting flexible work during child-rearing",
+        "position_b_en": "Further raising the parental-leave benefit cap",
+        "position_a_ko": "육아기 유연근무를 촉진한다",
+        "position_b_ko": "육아휴직 급여 상한을 더 높인다",
+        "human_overall": 61.0,
+        "paper_gpt41mini": 100.0,
+        "paper_groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 100,
+            "human_share": 53
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 100,
+            "human_share": 69
+          },
+          {
+            "axis": "age_birth",
+            "group": "20s",
+            "persona_share": 100,
+            "human_share": 62
+          },
+          {
+            "axis": "age_birth",
+            "group": "30s",
+            "persona_share": 100,
+            "human_share": 60
+          },
+          {
+            "axis": "age_birth",
+            "group": "40s",
+            "persona_share": 100,
+            "human_share": 62
+          },
+          {
+            "axis": "marital",
+            "group": "Single",
+            "persona_share": 100,
+            "human_share": 62
+          },
+          {
+            "axis": "marital",
+            "group": "Married",
+            "persona_share": 100,
+            "human_share": 60
+          }
+        ],
+        "persona_overall": 100.0,
+        "divisive": false,
+        "mean_group_gap": 38.857142857142854,
+        "groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 100.0,
+            "human_share": 53,
+            "n": 80
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 100.0,
+            "human_share": 69,
+            "n": 80
+          },
+          {
+            "axis": "age_birth",
+            "group": "20s",
+            "persona_share": 100.0,
+            "human_share": 62,
+            "n": 40
+          },
+          {
+            "axis": "age_birth",
+            "group": "30s",
+            "persona_share": 100.0,
+            "human_share": 60,
+            "n": 29
+          },
+          {
+            "axis": "age_birth",
+            "group": "40s",
+            "persona_share": 100.0,
+            "human_share": 62,
+            "n": 24
+          },
+          {
+            "axis": "marital",
+            "group": "Single",
+            "persona_share": 100.0,
+            "human_share": 62,
+            "n": 57
+          },
+          {
+            "axis": "marital",
+            "group": "Married",
+            "persona_share": 100.0,
+            "human_share": 60,
+            "n": 81
+          }
+        ]
+      },
+      {
+        "id": "educ_care",
+        "domain": "birthrate",
+        "topic_en": "Education and care policy priority",
+        "topic_ko": "교육과 돌봄 정책 우선순위",
+        "position_a_en": "Expanding government support for childcare services (coverage and hours)",
+        "position_b_en": "Improving curriculum and content to reduce private-education costs",
+        "position_a_ko": "보육 서비스에 대한 정부 지원을 확대한다 (대상과 시간)",
+        "position_b_ko": "사교육비 부담을 줄이도록 교육과정과 내용을 개선한다",
+        "human_overall": 58.0,
+        "paper_gpt41mini": 62.0,
+        "paper_groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 55,
+            "human_share": 58
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 69,
+            "human_share": 59
+          },
+          {
+            "axis": "age_birth",
+            "group": "20s",
+            "persona_share": 45,
+            "human_share": 61
+          },
+          {
+            "axis": "age_birth",
+            "group": "30s",
+            "persona_share": 73,
+            "human_share": 62
+          },
+          {
+            "axis": "age_birth",
+            "group": "40s",
+            "persona_share": 68,
+            "human_share": 55
+          },
+          {
+            "axis": "marital",
+            "group": "Single",
+            "persona_share": 48,
+            "human_share": 62
+          },
+          {
+            "axis": "marital",
+            "group": "Married",
+            "persona_share": 68,
+            "human_share": 55
+          }
+        ],
+        "persona_overall": 65.625,
+        "divisive": false,
+        "mean_group_gap": 6.935441253196851,
+        "groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 71.25,
+            "human_share": 58,
+            "n": 80
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 60.0,
+            "human_share": 59,
+            "n": 80
+          },
+          {
+            "axis": "age_birth",
+            "group": "20s",
+            "persona_share": 65.0,
+            "human_share": 61,
+            "n": 40
+          },
+          {
+            "axis": "age_birth",
+            "group": "30s",
+            "persona_share": 58.62068965517241,
+            "human_share": 62,
+            "n": 29
+          },
+          {
+            "axis": "age_birth",
+            "group": "40s",
+            "persona_share": 66.66666666666667,
+            "human_share": 55,
+            "n": 24
+          },
+          {
+            "axis": "marital",
+            "group": "Single",
+            "persona_share": 59.64912280701754,
+            "human_share": 62,
+            "n": 57
+          },
+          {
+            "axis": "marital",
+            "group": "Married",
+            "persona_share": 67.90123456790124,
+            "human_share": 55,
+            "n": 81
+          }
+        ]
+      },
+      {
+        "id": "econ_support",
+        "domain": "birthrate",
+        "topic_en": "Form of economic support for marriage and childbirth",
+        "topic_ko": "혼인과 출산을 위한 경제적 지원의 형태",
+        "position_a_en": "Expanding tax benefits for married and child-rearing households",
+        "position_b_en": "Expanding cash support (parental and child allowances)",
+        "position_a_ko": "혼인·양육 가구에 대한 세제 혜택을 확대한다",
+        "position_b_ko": "현금 지원을 확대한다 (부모급여와 아동수당)",
+        "human_overall": 56.0,
+        "paper_gpt41mini": 11.0,
+        "paper_groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 22,
+            "human_share": 57
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 0,
+            "human_share": 56
+          },
+          {
+            "axis": "age_birth",
+            "group": "20s",
+            "persona_share": 7,
+            "human_share": 62
+          },
+          {
+            "axis": "age_birth",
+            "group": "30s",
+            "persona_share": 8,
+            "human_share": 58
+          },
+          {
+            "axis": "age_birth",
+            "group": "40s",
+            "persona_share": 11,
+            "human_share": 53
+          },
+          {
+            "axis": "marital",
+            "group": "Single",
+            "persona_share": 9,
+            "human_share": 61
+          },
+          {
+            "axis": "marital",
+            "group": "Married",
+            "persona_share": 14,
+            "human_share": 53
+          }
+        ],
+        "persona_overall": 8.125,
+        "divisive": false,
+        "mean_group_gap": 50.35945947243588,
+        "groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 2.5,
+            "human_share": 57,
+            "n": 80
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 13.75,
+            "human_share": 56,
+            "n": 80
+          },
+          {
+            "axis": "age_birth",
+            "group": "20s",
+            "persona_share": 7.5,
+            "human_share": 62,
+            "n": 40
+          },
+          {
+            "axis": "age_birth",
+            "group": "30s",
+            "persona_share": 6.896551724137931,
+            "human_share": 58,
+            "n": 29
+          },
+          {
+            "axis": "age_birth",
+            "group": "40s",
+            "persona_share": 4.166666666666667,
+            "human_share": 53,
+            "n": 24
+          },
+          {
+            "axis": "marital",
+            "group": "Single",
+            "persona_share": 5.2631578947368425,
+            "human_share": 61,
+            "n": 57
+          },
+          {
+            "axis": "marital",
+            "group": "Married",
+            "persona_share": 7.407407407407407,
+            "human_share": 53,
+            "n": 81
+          }
+        ]
+      },
+      {
+        "id": "housing",
+        "domain": "birthrate",
+        "topic_en": "Direction of housing support for low birthrate",
+        "topic_ko": "저출생 대응 주거 지원의 방향",
+        "position_a_en": "Loosening income thresholds for home-purchase and jeonse loans",
+        "position_b_en": "Expanding housing-subscription special provisions for newlywed and child-rearing households",
+        "position_a_ko": "주택구입·전세자금 대출의 소득 기준을 완화한다",
+        "position_b_ko": "신혼·양육 가구의 주택청약 특별공급을 확대한다",
+        "human_overall": 53.0,
+        "paper_gpt41mini": 26.0,
+        "paper_groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 31,
+            "human_share": 50
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 20,
+            "human_share": 57
+          },
+          {
+            "axis": "age_birth",
+            "group": "20s",
+            "persona_share": 34,
+            "human_share": 46
+          },
+          {
+            "axis": "age_birth",
+            "group": "30s",
+            "persona_share": 33,
+            "human_share": 52
+          },
+          {
+            "axis": "age_birth",
+            "group": "40s",
+            "persona_share": 33,
+            "human_share": 57
+          },
+          {
+            "axis": "marital",
+            "group": "Single",
+            "persona_share": 39,
+            "human_share": 49
+          },
+          {
+            "axis": "marital",
+            "group": "Married",
+            "persona_share": 18,
+            "human_share": 57
+          }
+        ],
+        "persona_overall": 25.625,
+        "divisive": false,
+        "mean_group_gap": 25.515462506841818,
+        "groups": [
+          {
+            "axis": "sex",
+            "group": "Male",
+            "persona_share": 21.25,
+            "human_share": 50,
+            "n": 80
+          },
+          {
+            "axis": "sex",
+            "group": "Female",
+            "persona_share": 30.0,
+            "human_share": 57,
+            "n": 80
+          },
+          {
+            "axis": "age_birth",
+            "group": "20s",
+            "persona_share": 30.0,
+            "human_share": 46,
+            "n": 40
+          },
+          {
+            "axis": "age_birth",
+            "group": "30s",
+            "persona_share": 27.586206896551722,
+            "human_share": 52,
+            "n": 29
+          },
+          {
+            "axis": "age_birth",
+            "group": "40s",
+            "persona_share": 25.0,
+            "human_share": 57,
+            "n": 24
+          },
+          {
+            "axis": "marital",
+            "group": "Single",
+            "persona_share": 33.333333333333336,
+            "human_share": 49,
+            "n": 57
+          },
+          {
+            "axis": "marital",
+            "group": "Married",
+            "persona_share": 22.22222222222222,
+            "human_share": 57,
+            "n": 81
+          }
+        ]
+      }
+    ],
+    "controls": [
+      {
+        "condition": "demographics",
+        "question_id": "env_priority",
+        "persona_share": 92.5,
+        "human_overall": 68.0,
+        "n": 40
+      },
+      {
+        "condition": "demographics",
+        "question_id": "env_means",
+        "persona_share": 2.5,
+        "human_overall": 54.0,
+        "n": 40
+      },
+      {
+        "condition": "demographics",
+        "question_id": "clim_strategy",
+        "persona_share": 87.5,
+        "human_overall": 70.0,
+        "n": 40
+      },
+      {
+        "condition": "demographics",
+        "question_id": "clim_tech",
+        "persona_share": 60.0,
+        "human_overall": 51.0,
+        "n": 40
+      },
+      {
+        "condition": "demographics",
+        "question_id": "work_family",
+        "persona_share": 100.0,
+        "human_overall": 61.0,
+        "n": 40
+      },
+      {
+        "condition": "demographics",
+        "question_id": "educ_care",
+        "persona_share": 67.5,
+        "human_overall": 58.0,
+        "n": 40
+      },
+      {
+        "condition": "demographics",
+        "question_id": "econ_support",
+        "persona_share": 10.0,
+        "human_overall": 56.0,
+        "n": 40
+      },
+      {
+        "condition": "demographics",
+        "question_id": "housing",
+        "persona_share": 15.0,
+        "human_overall": 53.0,
+        "n": 40
+      },
+      {
+        "condition": "citizen",
+        "question_id": "env_priority",
+        "persona_share": 100.0,
+        "human_overall": 68.0,
+        "n": 8
+      },
+      {
+        "condition": "citizen",
+        "question_id": "env_means",
+        "persona_share": 0.0,
+        "human_overall": 54.0,
+        "n": 8
+      },
+      {
+        "condition": "citizen",
+        "question_id": "clim_strategy",
+        "persona_share": 100.0,
+        "human_overall": 70.0,
+        "n": 8
+      },
+      {
+        "condition": "citizen",
+        "question_id": "clim_tech",
+        "persona_share": 100.0,
+        "human_overall": 51.0,
+        "n": 8
+      },
+      {
+        "condition": "citizen",
+        "question_id": "work_family",
+        "persona_share": 100.0,
+        "human_overall": 61.0,
+        "n": 8
+      },
+      {
+        "condition": "citizen",
+        "question_id": "educ_care",
+        "persona_share": 100.0,
+        "human_overall": 58.0,
+        "n": 8
+      },
+      {
+        "condition": "citizen",
+        "question_id": "econ_support",
+        "persona_share": 0.0,
+        "human_overall": 56.0,
+        "n": 8
+      },
+      {
+        "condition": "citizen",
+        "question_id": "housing",
+        "persona_share": 0.0,
+        "human_overall": 53.0,
+        "n": 8
+      },
+      {
+        "condition": "none",
+        "question_id": "env_priority",
+        "persona_share": 100.0,
+        "human_overall": 68.0,
+        "n": 8
+      },
+      {
+        "condition": "none",
+        "question_id": "env_means",
+        "persona_share": 0.0,
+        "human_overall": 54.0,
+        "n": 8
+      },
+      {
+        "condition": "none",
+        "question_id": "clim_strategy",
+        "persona_share": 62.5,
+        "human_overall": 70.0,
+        "n": 8
+      },
+      {
+        "condition": "none",
+        "question_id": "clim_tech",
+        "persona_share": 100.0,
+        "human_overall": 51.0,
+        "n": 8
+      },
+      {
+        "condition": "none",
+        "question_id": "work_family",
+        "persona_share": 100.0,
+        "human_overall": 61.0,
+        "n": 8
+      },
+      {
+        "condition": "none",
+        "question_id": "educ_care",
+        "persona_share": 100.0,
+        "human_overall": 58.0,
+        "n": 8
+      },
+      {
+        "condition": "none",
+        "question_id": "econ_support",
+        "persona_share": 0.0,
+        "human_overall": 56.0,
+        "n": 8
+      },
+      {
+        "condition": "none",
+        "question_id": "housing",
+        "persona_share": 62.5,
+        "human_overall": 53.0,
+        "n": 8
+      }
+    ],
+    "live_qwen_sample": [
+      {
+        "question_id": "env_priority",
+        "n": 7,
+        "persona_share": 100.0,
+        "paper_gpt41mini": 96.0,
+        "human_overall": 68.0
+      },
+      {
+        "question_id": "env_means",
+        "n": 4,
+        "persona_share": 0.0,
+        "paper_gpt41mini": 1.0,
+        "human_overall": 54.0
+      },
+      {
+        "question_id": "clim_strategy",
+        "n": 4,
+        "persona_share": 0.0,
+        "paper_gpt41mini": 90.0,
+        "human_overall": 70.0
+      },
+      {
+        "question_id": "clim_tech",
+        "n": 4,
+        "persona_share": 50.0,
+        "paper_gpt41mini": 63.0,
+        "human_overall": 51.0
+      },
+      {
+        "question_id": "work_family",
+        "n": 4,
+        "persona_share": 50.0,
+        "paper_gpt41mini": 100.0,
+        "human_overall": 61.0
+      },
+      {
+        "question_id": "educ_care",
+        "n": 3,
+        "persona_share": 100.0,
+        "paper_gpt41mini": 62.0,
+        "human_overall": 58.0
+      },
+      {
+        "question_id": "econ_support",
+        "n": 5,
+        "persona_share": 0.0,
+        "paper_gpt41mini": 11.0,
+        "human_overall": 56.0
+      },
+      {
+        "question_id": "housing",
+        "n": 5,
+        "persona_share": 0.0,
+        "paper_gpt41mini": 26.0,
+        "human_overall": 53.0
+      }
+    ]
+  },
+  "deliberation": {
+    "debate_vs_monologue": [
+      {
+        "question_id": "clim_tech",
+        "debate_final_a": 4.0,
+        "monologue_final_a": 4.0,
+        "difference": 0.0,
+        "debate_movement": 0.8333333333333334,
+        "monologue_movement": 0.8333333333333334
+      },
+      {
+        "question_id": "educ_care",
+        "debate_final_a": 3.0,
+        "monologue_final_a": 1.0,
+        "difference": 2.0,
+        "debate_movement": 0.3333333333333333,
+        "monologue_movement": 0.3333333333333333
+      }
+    ],
+    "rooms": [
+      {
+        "room_id": "clim_tech-debate-balanced-0",
+        "question_id": "clim_tech",
+        "protocol": "debate",
+        "start_composition": "balanced",
+        "a_counts": [
+          3,
+          3,
+          5,
+          4
+        ],
+        "movement": 0.8333333333333334,
+        "agents": [
+          {
+            "id": "403c05837f93434698e4b9d06e923f32",
+            "name": "이정주",
+            "sex": "Male",
+            "age": 47,
+            "education": "college",
+            "region": "honam",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "B",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "1acb5bccdbc74fc6bae774d1d2efbae8",
+            "name": "김정하",
+            "sex": "Female",
+            "age": 49,
+            "education": "college",
+            "region": "chungcheong",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "B",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "d8a3e864003f40d4acfffb7c543888a6",
+            "name": "이진택",
+            "sex": "Male",
+            "age": 54,
+            "education": "college",
+            "region": "chungcheong",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "B",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "43d9ee6d3da848b0ac810a4d6ecdc6be",
+            "name": "김인옥",
+            "sex": "Female",
+            "age": 62,
+            "education": "graduate",
+            "region": "capital",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "B",
+              "A"
+            ]
+          },
+          {
+            "id": "dfd5a2a4e96e4d7a90c92f1054e47c51",
+            "name": "김유철",
+            "sex": "Male",
+            "age": 49,
+            "education": "graduate",
+            "region": "honam",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "b88f11c1fb124f43a4181035ec63f71d",
+            "name": "정동희",
+            "sex": "Male",
+            "age": 30,
+            "education": "graduate",
+            "region": "yeongnam",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "A",
+              "B"
+            ]
+          }
+        ],
+        "turns": [
+          {
+            "round_index": 1,
+            "speaker_id": "d8a3e864003f40d4acfffb7c543888a6",
+            "speaker_name": "이진택",
+            "text": "이진택은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "b88f11c1fb124f43a4181035ec63f71d",
+            "speaker_name": "정동희",
+            "text": "정동희은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "1acb5bccdbc74fc6bae774d1d2efbae8",
+            "speaker_name": "김정하",
+            "text": "김정하은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "403c05837f93434698e4b9d06e923f32",
+            "speaker_name": "이정주",
+            "text": "이정주은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "43d9ee6d3da848b0ac810a4d6ecdc6be",
+            "speaker_name": "김인옥",
+            "text": "김인옥은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "dfd5a2a4e96e4d7a90c92f1054e47c51",
+            "speaker_name": "김유철",
+            "text": "김유철은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "dfd5a2a4e96e4d7a90c92f1054e47c51",
+            "speaker_name": "김유철",
+            "text": "김유철은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "1acb5bccdbc74fc6bae774d1d2efbae8",
+            "speaker_name": "김정하",
+            "text": "김정하은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "43d9ee6d3da848b0ac810a4d6ecdc6be",
+            "speaker_name": "김인옥",
+            "text": "김인옥은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "d8a3e864003f40d4acfffb7c543888a6",
+            "speaker_name": "이진택",
+            "text": "이진택은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "b88f11c1fb124f43a4181035ec63f71d",
+            "speaker_name": "정동희",
+            "text": "정동희은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "403c05837f93434698e4b9d06e923f32",
+            "speaker_name": "이정주",
+            "text": "이정주은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "43d9ee6d3da848b0ac810a4d6ecdc6be",
+            "speaker_name": "김인옥",
+            "text": "김인옥은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "d8a3e864003f40d4acfffb7c543888a6",
+            "speaker_name": "이진택",
+            "text": "이진택은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "1acb5bccdbc74fc6bae774d1d2efbae8",
+            "speaker_name": "김정하",
+            "text": "김정하은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "dfd5a2a4e96e4d7a90c92f1054e47c51",
+            "speaker_name": "김유철",
+            "text": "김유철은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "b88f11c1fb124f43a4181035ec63f71d",
+            "speaker_name": "정동희",
+            "text": "정동희은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "403c05837f93434698e4b9d06e923f32",
+            "speaker_name": "이정주",
+            "text": "이정주은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32",
+              "1acb5bccdbc74fc6bae774d1d2efbae8",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "43d9ee6d3da848b0ac810a4d6ecdc6be",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          }
+        ]
+      },
+      {
+        "room_id": "clim_tech-monologue-balanced-0",
+        "question_id": "clim_tech",
+        "protocol": "monologue",
+        "start_composition": "balanced",
+        "a_counts": [
+          3,
+          3,
+          6,
+          4
+        ],
+        "movement": 0.8333333333333334,
+        "agents": [
+          {
+            "id": "403c05837f93434698e4b9d06e923f32",
+            "name": "이정주",
+            "sex": "Male",
+            "age": 47,
+            "education": "college",
+            "region": "honam",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "1acb5bccdbc74fc6bae774d1d2efbae8",
+            "name": "김정하",
+            "sex": "Female",
+            "age": 49,
+            "education": "college",
+            "region": "chungcheong",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "B",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "d8a3e864003f40d4acfffb7c543888a6",
+            "name": "이진택",
+            "sex": "Male",
+            "age": 54,
+            "education": "college",
+            "region": "chungcheong",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "B",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "43d9ee6d3da848b0ac810a4d6ecdc6be",
+            "name": "김인옥",
+            "sex": "Female",
+            "age": 62,
+            "education": "graduate",
+            "region": "capital",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "B",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "dfd5a2a4e96e4d7a90c92f1054e47c51",
+            "name": "김유철",
+            "sex": "Male",
+            "age": 49,
+            "education": "graduate",
+            "region": "honam",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "b88f11c1fb124f43a4181035ec63f71d",
+            "name": "정동희",
+            "sex": "Male",
+            "age": 30,
+            "education": "graduate",
+            "region": "yeongnam",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "A",
+              "A"
+            ]
+          }
+        ],
+        "turns": [
+          {
+            "round_index": 1,
+            "speaker_id": "b88f11c1fb124f43a4181035ec63f71d",
+            "speaker_name": "정동희",
+            "text": "정동희은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "43d9ee6d3da848b0ac810a4d6ecdc6be",
+            "speaker_name": "김인옥",
+            "text": "김인옥은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "43d9ee6d3da848b0ac810a4d6ecdc6be"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "dfd5a2a4e96e4d7a90c92f1054e47c51",
+            "speaker_name": "김유철",
+            "text": "김유철은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "dfd5a2a4e96e4d7a90c92f1054e47c51"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "403c05837f93434698e4b9d06e923f32",
+            "speaker_name": "이정주",
+            "text": "이정주은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "1acb5bccdbc74fc6bae774d1d2efbae8",
+            "speaker_name": "김정하",
+            "text": "김정하은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "1acb5bccdbc74fc6bae774d1d2efbae8"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "d8a3e864003f40d4acfffb7c543888a6",
+            "speaker_name": "이진택",
+            "text": "이진택은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "d8a3e864003f40d4acfffb7c543888a6"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "403c05837f93434698e4b9d06e923f32",
+            "speaker_name": "이정주",
+            "text": "이정주은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "b88f11c1fb124f43a4181035ec63f71d",
+            "speaker_name": "정동희",
+            "text": "정동희은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "43d9ee6d3da848b0ac810a4d6ecdc6be",
+            "speaker_name": "김인옥",
+            "text": "김인옥은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "43d9ee6d3da848b0ac810a4d6ecdc6be"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "dfd5a2a4e96e4d7a90c92f1054e47c51",
+            "speaker_name": "김유철",
+            "text": "김유철은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "dfd5a2a4e96e4d7a90c92f1054e47c51"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "d8a3e864003f40d4acfffb7c543888a6",
+            "speaker_name": "이진택",
+            "text": "이진택은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "d8a3e864003f40d4acfffb7c543888a6"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "1acb5bccdbc74fc6bae774d1d2efbae8",
+            "speaker_name": "김정하",
+            "text": "김정하은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "1acb5bccdbc74fc6bae774d1d2efbae8"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "d8a3e864003f40d4acfffb7c543888a6",
+            "speaker_name": "이진택",
+            "text": "이진택은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "d8a3e864003f40d4acfffb7c543888a6"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "43d9ee6d3da848b0ac810a4d6ecdc6be",
+            "speaker_name": "김인옥",
+            "text": "김인옥은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "43d9ee6d3da848b0ac810a4d6ecdc6be"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "b88f11c1fb124f43a4181035ec63f71d",
+            "speaker_name": "정동희",
+            "text": "정동희은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "b88f11c1fb124f43a4181035ec63f71d"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "dfd5a2a4e96e4d7a90c92f1054e47c51",
+            "speaker_name": "김유철",
+            "text": "김유철은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "dfd5a2a4e96e4d7a90c92f1054e47c51"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "403c05837f93434698e4b9d06e923f32",
+            "speaker_name": "이정주",
+            "text": "이정주은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "403c05837f93434698e4b9d06e923f32"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "1acb5bccdbc74fc6bae774d1d2efbae8",
+            "speaker_name": "김정하",
+            "text": "김정하은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "1acb5bccdbc74fc6bae774d1d2efbae8"
+            ]
+          }
+        ]
+      },
+      {
+        "room_id": "clim_tech-debate-allA-0",
+        "question_id": "clim_tech",
+        "protocol": "debate",
+        "start_composition": "allA",
+        "a_counts": [
+          6,
+          5,
+          5,
+          3
+        ],
+        "movement": 0.5,
+        "agents": [
+          {
+            "id": "5fccac6849774a91a0a11a0779ed5608",
+            "name": "김상우",
+            "sex": "Male",
+            "age": 37,
+            "education": "middle",
+            "region": "honam",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "B",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "ac2ae82b10c64fceb45d64f37b647fb2",
+            "name": "정재윤",
+            "sex": "Male",
+            "age": 24,
+            "education": "college",
+            "region": "chungcheong",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+            "name": "김소희",
+            "sex": "Female",
+            "age": 33,
+            "education": "college",
+            "region": "chungcheong",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "B",
+              "B"
+            ]
+          },
+          {
+            "id": "f9ab06ba0c274bdd941a77ff39a9cc5b",
+            "name": "홍희자",
+            "sex": "Female",
+            "age": 74,
+            "education": "middle",
+            "region": "capital",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "a6a6b341b6ae41788628b41220521c83",
+            "name": "선우달님",
+            "sex": "Female",
+            "age": 50,
+            "education": "high",
+            "region": "gangwon_jeju",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "75477106765248dcb43d243db801ff7e",
+            "name": "최도성",
+            "sex": "Male",
+            "age": 23,
+            "education": "middle",
+            "region": "capital",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "A",
+              "A"
+            ]
+          }
+        ],
+        "turns": [
+          {
+            "round_index": 1,
+            "speaker_id": "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+            "speaker_name": "김소희",
+            "text": "김소희은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "f9ab06ba0c274bdd941a77ff39a9cc5b",
+            "speaker_name": "홍희자",
+            "text": "홍희자은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "75477106765248dcb43d243db801ff7e",
+            "speaker_name": "최도성",
+            "text": "최도성은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "5fccac6849774a91a0a11a0779ed5608",
+            "speaker_name": "김상우",
+            "text": "김상우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "a6a6b341b6ae41788628b41220521c83",
+            "speaker_name": "선우달님",
+            "text": "선우달님은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "ac2ae82b10c64fceb45d64f37b647fb2",
+            "speaker_name": "정재윤",
+            "text": "정재윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "f9ab06ba0c274bdd941a77ff39a9cc5b",
+            "speaker_name": "홍희자",
+            "text": "홍희자은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "75477106765248dcb43d243db801ff7e",
+            "speaker_name": "최도성",
+            "text": "최도성은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "ac2ae82b10c64fceb45d64f37b647fb2",
+            "speaker_name": "정재윤",
+            "text": "정재윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "a6a6b341b6ae41788628b41220521c83",
+            "speaker_name": "선우달님",
+            "text": "선우달님은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "5fccac6849774a91a0a11a0779ed5608",
+            "speaker_name": "김상우",
+            "text": "김상우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+            "speaker_name": "김소희",
+            "text": "김소희은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "a6a6b341b6ae41788628b41220521c83",
+            "speaker_name": "선우달님",
+            "text": "선우달님은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+            "speaker_name": "김소희",
+            "text": "김소희은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "5fccac6849774a91a0a11a0779ed5608",
+            "speaker_name": "김상우",
+            "text": "김상우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "f9ab06ba0c274bdd941a77ff39a9cc5b",
+            "speaker_name": "홍희자",
+            "text": "홍희자은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "75477106765248dcb43d243db801ff7e",
+            "speaker_name": "최도성",
+            "text": "최도성은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "ac2ae82b10c64fceb45d64f37b647fb2",
+            "speaker_name": "정재윤",
+            "text": "정재윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5fccac6849774a91a0a11a0779ed5608",
+              "ac2ae82b10c64fceb45d64f37b647fb2",
+              "9f3bbf2246fd41e1b80ad89c49f6cd5a",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "a6a6b341b6ae41788628b41220521c83",
+              "75477106765248dcb43d243db801ff7e"
+            ]
+          }
+        ]
+      },
+      {
+        "room_id": "clim_tech-debate-allB-0",
+        "question_id": "clim_tech",
+        "protocol": "debate",
+        "start_composition": "allB",
+        "a_counts": [
+          0,
+          5,
+          5,
+          2
+        ],
+        "movement": 0.3333333333333333,
+        "agents": [
+          {
+            "id": "6598567261bb4e27b7b26e02acbc1349",
+            "name": "이내윤",
+            "sex": "Female",
+            "age": 22,
+            "education": "college",
+            "region": "chungcheong",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "73f75d42a3934626b0d9a4bff062715a",
+            "name": "최은지",
+            "sex": "Female",
+            "age": 71,
+            "education": "college",
+            "region": "capital",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "B",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "695e2696ea7c426f93a30b3f91ed2700",
+            "name": "최현숙",
+            "sex": "Female",
+            "age": 64,
+            "education": "college",
+            "region": "chungcheong",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "335e13f71e8842deb914b6223fee40cf",
+            "name": "김연수",
+            "sex": "Female",
+            "age": 25,
+            "education": "graduate",
+            "region": "gangwon_jeju",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "B",
+              "B"
+            ]
+          },
+          {
+            "id": "b328df08a41541cdab19f7b015d40fff",
+            "name": "이양미",
+            "sex": "Female",
+            "age": 60,
+            "education": "high",
+            "region": "honam",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "034dc38a6019446e8cc7b4ef11c7acd0",
+            "name": "김수영",
+            "sex": "Female",
+            "age": 58,
+            "education": "middle",
+            "region": "gangwon_jeju",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "A"
+            ]
+          }
+        ],
+        "turns": [
+          {
+            "round_index": 1,
+            "speaker_id": "695e2696ea7c426f93a30b3f91ed2700",
+            "speaker_name": "최현숙",
+            "text": "최현숙은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "335e13f71e8842deb914b6223fee40cf",
+            "speaker_name": "김연수",
+            "text": "김연수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "034dc38a6019446e8cc7b4ef11c7acd0",
+            "speaker_name": "김수영",
+            "text": "김수영은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "b328df08a41541cdab19f7b015d40fff",
+            "speaker_name": "이양미",
+            "text": "이양미은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "73f75d42a3934626b0d9a4bff062715a",
+            "speaker_name": "최은지",
+            "text": "최은지은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "6598567261bb4e27b7b26e02acbc1349",
+            "speaker_name": "이내윤",
+            "text": "이내윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "b328df08a41541cdab19f7b015d40fff",
+            "speaker_name": "이양미",
+            "text": "이양미은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "034dc38a6019446e8cc7b4ef11c7acd0",
+            "speaker_name": "김수영",
+            "text": "김수영은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "695e2696ea7c426f93a30b3f91ed2700",
+            "speaker_name": "최현숙",
+            "text": "최현숙은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "335e13f71e8842deb914b6223fee40cf",
+            "speaker_name": "김연수",
+            "text": "김연수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "73f75d42a3934626b0d9a4bff062715a",
+            "speaker_name": "최은지",
+            "text": "최은지은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "6598567261bb4e27b7b26e02acbc1349",
+            "speaker_name": "이내윤",
+            "text": "이내윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "034dc38a6019446e8cc7b4ef11c7acd0",
+            "speaker_name": "김수영",
+            "text": "김수영은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "73f75d42a3934626b0d9a4bff062715a",
+            "speaker_name": "최은지",
+            "text": "최은지은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "6598567261bb4e27b7b26e02acbc1349",
+            "speaker_name": "이내윤",
+            "text": "이내윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "695e2696ea7c426f93a30b3f91ed2700",
+            "speaker_name": "최현숙",
+            "text": "최현숙은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "b328df08a41541cdab19f7b015d40fff",
+            "speaker_name": "이양미",
+            "text": "이양미은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "335e13f71e8842deb914b6223fee40cf",
+            "speaker_name": "김연수",
+            "text": "김연수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349",
+              "73f75d42a3934626b0d9a4bff062715a",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "335e13f71e8842deb914b6223fee40cf",
+              "b328df08a41541cdab19f7b015d40fff",
+              "034dc38a6019446e8cc7b4ef11c7acd0"
+            ]
+          }
+        ]
+      },
+      {
+        "room_id": "clim_tech-side_restated-balanced-0",
+        "question_id": "clim_tech",
+        "protocol": "side_restated",
+        "start_composition": "balanced",
+        "a_counts": [
+          3,
+          2,
+          4,
+          5
+        ],
+        "movement": 0.6666666666666666,
+        "agents": [
+          {
+            "id": "20df908dd5f74569b5d84158c9298a03",
+            "name": "김준수",
+            "sex": "Male",
+            "age": 31,
+            "education": "college",
+            "region": "yeongnam",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "B",
+              "B",
+              "A"
+            ]
+          },
+          {
+            "id": "f3ce0db47e8744e5b05b621e0cc511a6",
+            "name": "임수현",
+            "sex": "Female",
+            "age": 34,
+            "education": "high",
+            "region": "gangwon_jeju",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "B",
+              "B",
+              "A"
+            ]
+          },
+          {
+            "id": "33cc42af461e4571878263f1a58a63d5",
+            "name": "이건우",
+            "sex": "Male",
+            "age": 47,
+            "education": "graduate",
+            "region": "gangwon_jeju",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "B",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "a7b3089c969e47c9ae38a3fb01d61417",
+            "name": "임현우",
+            "sex": "Male",
+            "age": 44,
+            "education": "college",
+            "region": "gangwon_jeju",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "742336e6e4a94ac9acf56ea075d5d9ea",
+            "name": "이다연",
+            "sex": "Female",
+            "age": 33,
+            "education": "college",
+            "region": "gangwon_jeju",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "f1b3e20f6ff245ddbca08995f2c8d245",
+            "name": "문한수",
+            "sex": "Male",
+            "age": 36,
+            "education": "graduate",
+            "region": "capital",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "B",
+              "A",
+              "B"
+            ]
+          }
+        ],
+        "turns": [
+          {
+            "round_index": 1,
+            "speaker_id": "20df908dd5f74569b5d84158c9298a03",
+            "speaker_name": "김준수",
+            "text": "김준수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "a7b3089c969e47c9ae38a3fb01d61417",
+            "speaker_name": "임현우",
+            "text": "임현우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "742336e6e4a94ac9acf56ea075d5d9ea",
+            "speaker_name": "이다연",
+            "text": "이다연은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "33cc42af461e4571878263f1a58a63d5",
+            "speaker_name": "이건우",
+            "text": "이건우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "f3ce0db47e8744e5b05b621e0cc511a6",
+            "speaker_name": "임수현",
+            "text": "임수현은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "f1b3e20f6ff245ddbca08995f2c8d245",
+            "speaker_name": "문한수",
+            "text": "문한수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "742336e6e4a94ac9acf56ea075d5d9ea",
+            "speaker_name": "이다연",
+            "text": "이다연은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "33cc42af461e4571878263f1a58a63d5",
+            "speaker_name": "이건우",
+            "text": "이건우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "20df908dd5f74569b5d84158c9298a03",
+            "speaker_name": "김준수",
+            "text": "김준수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "a7b3089c969e47c9ae38a3fb01d61417",
+            "speaker_name": "임현우",
+            "text": "임현우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "f3ce0db47e8744e5b05b621e0cc511a6",
+            "speaker_name": "임수현",
+            "text": "임수현은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "f1b3e20f6ff245ddbca08995f2c8d245",
+            "speaker_name": "문한수",
+            "text": "문한수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "20df908dd5f74569b5d84158c9298a03",
+            "speaker_name": "김준수",
+            "text": "김준수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "33cc42af461e4571878263f1a58a63d5",
+            "speaker_name": "이건우",
+            "text": "이건우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "742336e6e4a94ac9acf56ea075d5d9ea",
+            "speaker_name": "이다연",
+            "text": "이다연은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "f1b3e20f6ff245ddbca08995f2c8d245",
+            "speaker_name": "문한수",
+            "text": "문한수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "a7b3089c969e47c9ae38a3fb01d61417",
+            "speaker_name": "임현우",
+            "text": "임현우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "f3ce0db47e8744e5b05b621e0cc511a6",
+            "speaker_name": "임수현",
+            "text": "임수현은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "20df908dd5f74569b5d84158c9298a03",
+              "f3ce0db47e8744e5b05b621e0cc511a6",
+              "33cc42af461e4571878263f1a58a63d5",
+              "a7b3089c969e47c9ae38a3fb01d61417",
+              "742336e6e4a94ac9acf56ea075d5d9ea",
+              "f1b3e20f6ff245ddbca08995f2c8d245"
+            ]
+          }
+        ]
+      },
+      {
+        "room_id": "educ_care-debate-balanced-0",
+        "question_id": "educ_care",
+        "protocol": "debate",
+        "start_composition": "balanced",
+        "a_counts": [
+          3,
+          4,
+          5,
+          3
+        ],
+        "movement": 0.3333333333333333,
+        "agents": [
+          {
+            "id": "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+            "name": "박성재",
+            "sex": "Male",
+            "age": 38,
+            "education": "middle",
+            "region": "capital",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "B",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "6598567261bb4e27b7b26e02acbc1349",
+            "name": "이내윤",
+            "sex": "Female",
+            "age": 22,
+            "education": "college",
+            "region": "chungcheong",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "7647cbea0e114efab6a677bc49d6a3fa",
+            "name": "김예진",
+            "sex": "Female",
+            "age": 31,
+            "education": "middle",
+            "region": "yeongnam",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "33cc42af461e4571878263f1a58a63d5",
+            "name": "이건우",
+            "sex": "Male",
+            "age": 47,
+            "education": "graduate",
+            "region": "gangwon_jeju",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "B",
+              "A"
+            ]
+          },
+          {
+            "id": "d8a3e864003f40d4acfffb7c543888a6",
+            "name": "이진택",
+            "sex": "Male",
+            "age": 54,
+            "education": "college",
+            "region": "chungcheong",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "2d85ebca373c4846acc7610d78335bdc",
+            "name": "박춘혁",
+            "sex": "Female",
+            "age": 58,
+            "education": "middle",
+            "region": "chungcheong",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "B",
+              "A",
+              "B"
+            ]
+          }
+        ],
+        "turns": [
+          {
+            "round_index": 1,
+            "speaker_id": "2d85ebca373c4846acc7610d78335bdc",
+            "speaker_name": "박춘혁",
+            "text": "박춘혁은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "33cc42af461e4571878263f1a58a63d5",
+            "speaker_name": "이건우",
+            "text": "이건우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "6598567261bb4e27b7b26e02acbc1349",
+            "speaker_name": "이내윤",
+            "text": "이내윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+            "speaker_name": "박성재",
+            "text": "박성재은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "d8a3e864003f40d4acfffb7c543888a6",
+            "speaker_name": "이진택",
+            "text": "이진택은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "7647cbea0e114efab6a677bc49d6a3fa",
+            "speaker_name": "김예진",
+            "text": "김예진은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "7647cbea0e114efab6a677bc49d6a3fa",
+            "speaker_name": "김예진",
+            "text": "김예진은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "6598567261bb4e27b7b26e02acbc1349",
+            "speaker_name": "이내윤",
+            "text": "이내윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "d8a3e864003f40d4acfffb7c543888a6",
+            "speaker_name": "이진택",
+            "text": "이진택은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "33cc42af461e4571878263f1a58a63d5",
+            "speaker_name": "이건우",
+            "text": "이건우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+            "speaker_name": "박성재",
+            "text": "박성재은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "2d85ebca373c4846acc7610d78335bdc",
+            "speaker_name": "박춘혁",
+            "text": "박춘혁은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "33cc42af461e4571878263f1a58a63d5",
+            "speaker_name": "이건우",
+            "text": "이건우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "2d85ebca373c4846acc7610d78335bdc",
+            "speaker_name": "박춘혁",
+            "text": "박춘혁은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+            "speaker_name": "박성재",
+            "text": "박성재은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "d8a3e864003f40d4acfffb7c543888a6",
+            "speaker_name": "이진택",
+            "text": "이진택은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "6598567261bb4e27b7b26e02acbc1349",
+            "speaker_name": "이내윤",
+            "text": "이내윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "7647cbea0e114efab6a677bc49d6a3fa",
+            "speaker_name": "김예진",
+            "text": "김예진은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+              "6598567261bb4e27b7b26e02acbc1349",
+              "7647cbea0e114efab6a677bc49d6a3fa",
+              "33cc42af461e4571878263f1a58a63d5",
+              "d8a3e864003f40d4acfffb7c543888a6",
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          }
+        ]
+      },
+      {
+        "room_id": "educ_care-monologue-balanced-0",
+        "question_id": "educ_care",
+        "protocol": "monologue",
+        "start_composition": "balanced",
+        "a_counts": [
+          3,
+          6,
+          5,
+          1
+        ],
+        "movement": 0.3333333333333333,
+        "agents": [
+          {
+            "id": "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+            "name": "박성재",
+            "sex": "Male",
+            "age": 38,
+            "education": "middle",
+            "region": "capital",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "6598567261bb4e27b7b26e02acbc1349",
+            "name": "이내윤",
+            "sex": "Female",
+            "age": 22,
+            "education": "college",
+            "region": "chungcheong",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "7647cbea0e114efab6a677bc49d6a3fa",
+            "name": "김예진",
+            "sex": "Female",
+            "age": 31,
+            "education": "middle",
+            "region": "yeongnam",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "33cc42af461e4571878263f1a58a63d5",
+            "name": "이건우",
+            "sex": "Male",
+            "age": 47,
+            "education": "graduate",
+            "region": "gangwon_jeju",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "d8a3e864003f40d4acfffb7c543888a6",
+            "name": "이진택",
+            "sex": "Male",
+            "age": 54,
+            "education": "college",
+            "region": "chungcheong",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "B",
+              "B"
+            ]
+          },
+          {
+            "id": "2d85ebca373c4846acc7610d78335bdc",
+            "name": "박춘혁",
+            "sex": "Female",
+            "age": 58,
+            "education": "middle",
+            "region": "chungcheong",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "A",
+              "B"
+            ]
+          }
+        ],
+        "turns": [
+          {
+            "round_index": 1,
+            "speaker_id": "6598567261bb4e27b7b26e02acbc1349",
+            "speaker_name": "이내윤",
+            "text": "이내윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "2d85ebca373c4846acc7610d78335bdc",
+            "speaker_name": "박춘혁",
+            "text": "박춘혁은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+            "speaker_name": "박성재",
+            "text": "박성재은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "33cc42af461e4571878263f1a58a63d5",
+            "speaker_name": "이건우",
+            "text": "이건우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "33cc42af461e4571878263f1a58a63d5"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "7647cbea0e114efab6a677bc49d6a3fa",
+            "speaker_name": "김예진",
+            "text": "김예진은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "7647cbea0e114efab6a677bc49d6a3fa"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "d8a3e864003f40d4acfffb7c543888a6",
+            "speaker_name": "이진택",
+            "text": "이진택은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "d8a3e864003f40d4acfffb7c543888a6"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "6598567261bb4e27b7b26e02acbc1349",
+            "speaker_name": "이내윤",
+            "text": "이내윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "d8a3e864003f40d4acfffb7c543888a6",
+            "speaker_name": "이진택",
+            "text": "이진택은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "d8a3e864003f40d4acfffb7c543888a6"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "33cc42af461e4571878263f1a58a63d5",
+            "speaker_name": "이건우",
+            "text": "이건우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "33cc42af461e4571878263f1a58a63d5"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "7647cbea0e114efab6a677bc49d6a3fa",
+            "speaker_name": "김예진",
+            "text": "김예진은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "7647cbea0e114efab6a677bc49d6a3fa"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+            "speaker_name": "박성재",
+            "text": "박성재은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "2d85ebca373c4846acc7610d78335bdc",
+            "speaker_name": "박춘혁",
+            "text": "박춘혁은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "6598567261bb4e27b7b26e02acbc1349",
+            "speaker_name": "이내윤",
+            "text": "이내윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "6598567261bb4e27b7b26e02acbc1349"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "e9ebd7e544f24f2ca24b0ceec8f19dd3",
+            "speaker_name": "박성재",
+            "text": "박성재은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "e9ebd7e544f24f2ca24b0ceec8f19dd3"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "33cc42af461e4571878263f1a58a63d5",
+            "speaker_name": "이건우",
+            "text": "이건우은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "33cc42af461e4571878263f1a58a63d5"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "7647cbea0e114efab6a677bc49d6a3fa",
+            "speaker_name": "김예진",
+            "text": "김예진은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "7647cbea0e114efab6a677bc49d6a3fa"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "d8a3e864003f40d4acfffb7c543888a6",
+            "speaker_name": "이진택",
+            "text": "이진택은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "d8a3e864003f40d4acfffb7c543888a6"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "2d85ebca373c4846acc7610d78335bdc",
+            "speaker_name": "박춘혁",
+            "text": "박춘혁은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "2d85ebca373c4846acc7610d78335bdc"
+            ]
+          }
+        ]
+      },
+      {
+        "room_id": "educ_care-debate-allA-0",
+        "question_id": "educ_care",
+        "protocol": "debate",
+        "start_composition": "allA",
+        "a_counts": [
+          6,
+          4,
+          3,
+          3
+        ],
+        "movement": 0.5,
+        "agents": [
+          {
+            "id": "3753853e3ed04bafb0f7d465e9f67306",
+            "name": "신귀영",
+            "sex": "Female",
+            "age": 55,
+            "education": "graduate",
+            "region": "chungcheong",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "dfd5a2a4e96e4d7a90c92f1054e47c51",
+            "name": "김유철",
+            "sex": "Male",
+            "age": 49,
+            "education": "graduate",
+            "region": "honam",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "B",
+              "B"
+            ]
+          },
+          {
+            "id": "ada2102999714efcb2378beafd1b433e",
+            "name": "홍희남",
+            "sex": "Female",
+            "age": 38,
+            "education": "high",
+            "region": "chungcheong",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "B",
+              "B"
+            ]
+          },
+          {
+            "id": "f9ab06ba0c274bdd941a77ff39a9cc5b",
+            "name": "홍희자",
+            "sex": "Female",
+            "age": 74,
+            "education": "middle",
+            "region": "capital",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "88c1e063a3a64bce88d67dc2bd4ed65d",
+            "name": "한지윤",
+            "sex": "Female",
+            "age": 19,
+            "education": "middle",
+            "region": "honam",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "B",
+              "B",
+              "A"
+            ]
+          },
+          {
+            "id": "2ad15b3aef6448da9d1616079f6de58a",
+            "name": "유현",
+            "sex": "Female",
+            "age": 54,
+            "education": "college",
+            "region": "honam",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "B",
+              "A",
+              "A"
+            ]
+          }
+        ],
+        "turns": [
+          {
+            "round_index": 1,
+            "speaker_id": "dfd5a2a4e96e4d7a90c92f1054e47c51",
+            "speaker_name": "김유철",
+            "text": "김유철은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "f9ab06ba0c274bdd941a77ff39a9cc5b",
+            "speaker_name": "홍희자",
+            "text": "홍희자은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "88c1e063a3a64bce88d67dc2bd4ed65d",
+            "speaker_name": "한지윤",
+            "text": "한지윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "2ad15b3aef6448da9d1616079f6de58a",
+            "speaker_name": "유현",
+            "text": "유현은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "ada2102999714efcb2378beafd1b433e",
+            "speaker_name": "홍희남",
+            "text": "홍희남은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "3753853e3ed04bafb0f7d465e9f67306",
+            "speaker_name": "신귀영",
+            "text": "신귀영은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "ada2102999714efcb2378beafd1b433e",
+            "speaker_name": "홍희남",
+            "text": "홍희남은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "2ad15b3aef6448da9d1616079f6de58a",
+            "speaker_name": "유현",
+            "text": "유현은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "dfd5a2a4e96e4d7a90c92f1054e47c51",
+            "speaker_name": "김유철",
+            "text": "김유철은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "88c1e063a3a64bce88d67dc2bd4ed65d",
+            "speaker_name": "한지윤",
+            "text": "한지윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "3753853e3ed04bafb0f7d465e9f67306",
+            "speaker_name": "신귀영",
+            "text": "신귀영은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "f9ab06ba0c274bdd941a77ff39a9cc5b",
+            "speaker_name": "홍희자",
+            "text": "홍희자은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "88c1e063a3a64bce88d67dc2bd4ed65d",
+            "speaker_name": "한지윤",
+            "text": "한지윤은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "f9ab06ba0c274bdd941a77ff39a9cc5b",
+            "speaker_name": "홍희자",
+            "text": "홍희자은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "2ad15b3aef6448da9d1616079f6de58a",
+            "speaker_name": "유현",
+            "text": "유현은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "dfd5a2a4e96e4d7a90c92f1054e47c51",
+            "speaker_name": "김유철",
+            "text": "김유철은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "3753853e3ed04bafb0f7d465e9f67306",
+            "speaker_name": "신귀영",
+            "text": "신귀영은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "ada2102999714efcb2378beafd1b433e",
+            "speaker_name": "홍희남",
+            "text": "홍희남은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "3753853e3ed04bafb0f7d465e9f67306",
+              "dfd5a2a4e96e4d7a90c92f1054e47c51",
+              "ada2102999714efcb2378beafd1b433e",
+              "f9ab06ba0c274bdd941a77ff39a9cc5b",
+              "88c1e063a3a64bce88d67dc2bd4ed65d",
+              "2ad15b3aef6448da9d1616079f6de58a"
+            ]
+          }
+        ]
+      },
+      {
+        "room_id": "educ_care-debate-allB-0",
+        "question_id": "educ_care",
+        "protocol": "debate",
+        "start_composition": "allB",
+        "a_counts": [
+          0,
+          3,
+          5,
+          4
+        ],
+        "movement": 0.6666666666666666,
+        "agents": [
+          {
+            "id": "79613210689b4aeab0d7ad3be73e4b14",
+            "name": "연승미",
+            "sex": "Female",
+            "age": 47,
+            "education": "high",
+            "region": "chungcheong",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "B",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "695e2696ea7c426f93a30b3f91ed2700",
+            "name": "최현숙",
+            "sex": "Female",
+            "age": 64,
+            "education": "college",
+            "region": "chungcheong",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "a6a6b341b6ae41788628b41220521c83",
+            "name": "선우달님",
+            "sex": "Female",
+            "age": 50,
+            "education": "high",
+            "region": "gangwon_jeju",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "B"
+            ]
+          },
+          {
+            "id": "9528f8380d7049f8852ea78610f22fd2",
+            "name": "장민아",
+            "sex": "Female",
+            "age": 27,
+            "education": "graduate",
+            "region": "honam",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "B",
+              "B"
+            ]
+          },
+          {
+            "id": "f1b3e20f6ff245ddbca08995f2c8d245",
+            "name": "문한수",
+            "sex": "Male",
+            "age": 36,
+            "education": "graduate",
+            "region": "capital",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "B",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "633d9b82004d493d8a36f756441129f4",
+            "name": "이재석",
+            "sex": "Male",
+            "age": 67,
+            "education": "middle",
+            "region": "chungcheong",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "B",
+              "A",
+              "A"
+            ]
+          }
+        ],
+        "turns": [
+          {
+            "round_index": 1,
+            "speaker_id": "a6a6b341b6ae41788628b41220521c83",
+            "speaker_name": "선우달님",
+            "text": "선우달님은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "695e2696ea7c426f93a30b3f91ed2700",
+            "speaker_name": "최현숙",
+            "text": "최현숙은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "f1b3e20f6ff245ddbca08995f2c8d245",
+            "speaker_name": "문한수",
+            "text": "문한수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "79613210689b4aeab0d7ad3be73e4b14",
+            "speaker_name": "연승미",
+            "text": "연승미은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "633d9b82004d493d8a36f756441129f4",
+            "speaker_name": "이재석",
+            "text": "이재석은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "9528f8380d7049f8852ea78610f22fd2",
+            "speaker_name": "장민아",
+            "text": "장민아은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "633d9b82004d493d8a36f756441129f4",
+            "speaker_name": "이재석",
+            "text": "이재석은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "f1b3e20f6ff245ddbca08995f2c8d245",
+            "speaker_name": "문한수",
+            "text": "문한수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "a6a6b341b6ae41788628b41220521c83",
+            "speaker_name": "선우달님",
+            "text": "선우달님은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "9528f8380d7049f8852ea78610f22fd2",
+            "speaker_name": "장민아",
+            "text": "장민아은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "695e2696ea7c426f93a30b3f91ed2700",
+            "speaker_name": "최현숙",
+            "text": "최현숙은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "79613210689b4aeab0d7ad3be73e4b14",
+            "speaker_name": "연승미",
+            "text": "연승미은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "9528f8380d7049f8852ea78610f22fd2",
+            "speaker_name": "장민아",
+            "text": "장민아은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "a6a6b341b6ae41788628b41220521c83",
+            "speaker_name": "선우달님",
+            "text": "선우달님은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "79613210689b4aeab0d7ad3be73e4b14",
+            "speaker_name": "연승미",
+            "text": "연승미은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "f1b3e20f6ff245ddbca08995f2c8d245",
+            "speaker_name": "문한수",
+            "text": "문한수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "695e2696ea7c426f93a30b3f91ed2700",
+            "speaker_name": "최현숙",
+            "text": "최현숙은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "633d9b82004d493d8a36f756441129f4",
+            "speaker_name": "이재석",
+            "text": "이재석은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "79613210689b4aeab0d7ad3be73e4b14",
+              "695e2696ea7c426f93a30b3f91ed2700",
+              "a6a6b341b6ae41788628b41220521c83",
+              "9528f8380d7049f8852ea78610f22fd2",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "633d9b82004d493d8a36f756441129f4"
+            ]
+          }
+        ]
+      },
+      {
+        "room_id": "educ_care-side_restated-balanced-0",
+        "question_id": "educ_care",
+        "protocol": "side_restated",
+        "start_composition": "balanced",
+        "a_counts": [
+          3,
+          4,
+          2,
+          4
+        ],
+        "movement": 0.5,
+        "agents": [
+          {
+            "id": "5e4ef0283357454197fccae208679ae4",
+            "name": "박종환",
+            "sex": "Male",
+            "age": 56,
+            "education": "middle",
+            "region": "yeongnam",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "2887dda08cf843ea8ad8df89eb39d62b",
+            "name": "최은재",
+            "sex": "Female",
+            "age": 28,
+            "education": "college",
+            "region": "honam",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "A",
+              "A"
+            ]
+          },
+          {
+            "id": "fc551cd3e0a44ad1a7918e8d4d14af2f",
+            "name": "박명순",
+            "sex": "Female",
+            "age": 76,
+            "education": "middle",
+            "region": "yeongnam",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "A",
+              "B",
+              "B"
+            ]
+          },
+          {
+            "id": "a54dd2990fa64b39922a0facb39cc1b8",
+            "name": "김진영",
+            "sex": "Male",
+            "age": 21,
+            "education": "high",
+            "region": "yeongnam",
+            "assigned_side": "B",
+            "stances": [
+              "B",
+              "B",
+              "B",
+              "A"
+            ]
+          },
+          {
+            "id": "f1b3e20f6ff245ddbca08995f2c8d245",
+            "name": "문한수",
+            "sex": "Male",
+            "age": 36,
+            "education": "graduate",
+            "region": "capital",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "B",
+              "B",
+              "B"
+            ]
+          },
+          {
+            "id": "03b4f36a18e6469386d0286dddd513c8",
+            "name": "전기태",
+            "sex": "Male",
+            "age": 74,
+            "education": "middle",
+            "region": "honam",
+            "assigned_side": "A",
+            "stances": [
+              "A",
+              "A",
+              "B",
+              "A"
+            ]
+          }
+        ],
+        "turns": [
+          {
+            "round_index": 1,
+            "speaker_id": "5e4ef0283357454197fccae208679ae4",
+            "speaker_name": "박종환",
+            "text": "박종환은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "03b4f36a18e6469386d0286dddd513c8",
+            "speaker_name": "전기태",
+            "text": "전기태은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "2887dda08cf843ea8ad8df89eb39d62b",
+            "speaker_name": "최은재",
+            "text": "최은재은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "fc551cd3e0a44ad1a7918e8d4d14af2f",
+            "speaker_name": "박명순",
+            "text": "박명순은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "f1b3e20f6ff245ddbca08995f2c8d245",
+            "speaker_name": "문한수",
+            "text": "문한수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 1,
+            "speaker_id": "a54dd2990fa64b39922a0facb39cc1b8",
+            "speaker_name": "김진영",
+            "text": "김진영은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "5e4ef0283357454197fccae208679ae4",
+            "speaker_name": "박종환",
+            "text": "박종환은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "03b4f36a18e6469386d0286dddd513c8",
+            "speaker_name": "전기태",
+            "text": "전기태은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "2887dda08cf843ea8ad8df89eb39d62b",
+            "speaker_name": "최은재",
+            "text": "최은재은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "fc551cd3e0a44ad1a7918e8d4d14af2f",
+            "speaker_name": "박명순",
+            "text": "박명순은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "a54dd2990fa64b39922a0facb39cc1b8",
+            "speaker_name": "김진영",
+            "text": "김진영은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 2,
+            "speaker_id": "f1b3e20f6ff245ddbca08995f2c8d245",
+            "speaker_name": "문한수",
+            "text": "문한수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "f1b3e20f6ff245ddbca08995f2c8d245",
+            "speaker_name": "문한수",
+            "text": "문한수은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "03b4f36a18e6469386d0286dddd513c8",
+            "speaker_name": "전기태",
+            "text": "전기태은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "fc551cd3e0a44ad1a7918e8d4d14af2f",
+            "speaker_name": "박명순",
+            "text": "박명순은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "2887dda08cf843ea8ad8df89eb39d62b",
+            "speaker_name": "최은재",
+            "text": "최은재은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "5e4ef0283357454197fccae208679ae4",
+            "speaker_name": "박종환",
+            "text": "박종환은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          },
+          {
+            "round_index": 3,
+            "speaker_id": "a54dd2990fa64b39922a0facb39cc1b8",
+            "speaker_name": "김진영",
+            "text": "김진영은 이 쟁점에서 근거를 들어 말합니다. 상대 입장의 비용도 인정하지만, 지금 고른 쪽이 더 타당하다고 봅니다.",
+            "visible_to": [
+              "5e4ef0283357454197fccae208679ae4",
+              "2887dda08cf843ea8ad8df89eb39d62b",
+              "fc551cd3e0a44ad1a7918e8d4d14af2f",
+              "a54dd2990fa64b39922a0facb39cc1b8",
+              "f1b3e20f6ff245ddbca08995f2c8d245",
+              "03b4f36a18e6469386d0286dddd513c8"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "takeaways": [
+    {
+      "id": "representation",
+      "title": "Persona answers miss the survey map",
+      "body": "Across demographic groups, the mean absolute gap between a dummy client calibrated to the paper's overall GPT-4.1-mini A-shares and the human surveys is 28.7 points. The paper reported 29 points with GPT-4.1-mini on 640 personas."
+    },
+    {
+      "id": "direction",
+      "title": "Demographic direction is often reversed",
+      "body": "When the human survey has one group higher than another, the personas match that direction in 50 of 105 comparisons. The paper matched 34 of 110."
+    },
+    {
+      "id": "concentration",
+      "title": "Answers pile up near 0% or 100%",
+      "body": "22 demographic cells land within 2 points of 0 or 100, while the matching human shares stay closer to the middle."
+    },
+    {
+      "id": "interaction",
+      "title": "Sealed monologues land in the same place",
+      "body": "Dummy rooms are a protocol walkthrough with hash-based replies, not a language-model interaction test. In the paper, sealed monologue rooms ended within one agent of full debate."
+    },
+    {
+      "id": "anchor",
+      "title": "Restating a starting side freezes updating",
+      "body": "Dummy movement does not drop when round 1 restates the assigned side. In the paper, restating the side cut later movement to 0 to 3%."
+    },
+    {
+      "id": "use",
+      "title": "Treat argument surfacing as a separate job",
+      "body": "The transcripts still give reasons on both sides. That can help a reader inspect arguments. It does not show that the room represents a population, or that peer exchange caused the stance changes."
+    }
+  ]
+}
