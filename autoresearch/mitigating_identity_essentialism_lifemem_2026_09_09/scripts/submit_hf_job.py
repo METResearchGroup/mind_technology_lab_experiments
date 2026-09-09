@@ -64,7 +64,9 @@ def submit(api: HfApi, src_repo: str) -> dict:
         command=[
             "bash",
             "-lc",
-            "pip install -q uv && uv run /src/scripts/hf_job.py",
+            "pip install -q 'transformers>=5.0.0' peft accelerate pillow "
+            "huggingface_hub boto3 torchvision numpy safetensors && "
+            "python /src/scripts/hf_job.py",
         ],
         flavor=FLAVOR,
         timeout=TIMEOUT,

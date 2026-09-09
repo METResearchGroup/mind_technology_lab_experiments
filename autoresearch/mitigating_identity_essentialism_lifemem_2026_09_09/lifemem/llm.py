@@ -50,7 +50,6 @@ class QwenRespondent:
         import torch
         from transformers import (
             AutoModelForImageTextToText,
-            AutoProcessor,
             AutoTokenizer,
         )
 
@@ -62,8 +61,16 @@ class QwenRespondent:
             else torch.float32
         )
         name = self.config.model_name
-        self.processor = AutoProcessor.from_pretrained(name, trust_remote_code=True)
-        self.tokenizer = getattr(self.processor, "tokenizer", None)
+        self.processor = None
+        try:
+            from transformers import AutoProcessor
+
+            self.processor = AutoProcessor.from_pretrained(name, trust_remote_code=True)
+            self.tokenizer = getattr(self.processor, "tokenizer", None)
+        except Exception:
+            # Text-only survey path: Qwen3.5's AutoProcessor pulls torchvision.
+            self.processor = None
+            self.tokenizer = None
         if self.tokenizer is None:
             self.tokenizer = AutoTokenizer.from_pretrained(name, trust_remote_code=True)
         if self.tokenizer.pad_token is None:

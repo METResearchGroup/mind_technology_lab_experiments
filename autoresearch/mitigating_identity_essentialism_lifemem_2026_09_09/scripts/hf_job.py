@@ -15,7 +15,7 @@ the source dataset when it is not already on PYTHONPATH.
 #   "peft>=0.17.0",
 #   "pillow>=10.0.0",
 #   "safetensors>=0.4.0",
-#   "torch>=2.6.0",
+#   "torchvision>=0.21.0",
 #   "transformers>=5.0.0",
 # ]
 # ///
@@ -85,7 +85,18 @@ def main() -> None:
         raise SystemExit(
             "CUDA is required for the Qwen LifeMem job; got CPU-only torch"
         )
-    print(json.dumps({"cuda": torch.cuda.get_device_name(0), "root": str(ROOT)}))
+    os.environ.setdefault("LIFEMEM_PROGRESS", "1")
+    os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+    print(
+        json.dumps(
+            {
+                "cuda": torch.cuda.get_device_name(0),
+                "root": str(ROOT),
+                "torch": torch.__version__,
+            }
+        ),
+        flush=True,
+    )
     config = LifeMemConfig(
         model_name=os.environ.get("LIFEMEM_MODEL", "Qwen/Qwen3.5-4B")
     )
@@ -102,6 +113,7 @@ def main() -> None:
     results["lora"] = lora_config_dict(config)
     results["backbone"] = config.model_name
     results["device"] = torch.cuda.get_device_name(0)
+    results["hardware"] = os.environ.get("LIFEMEM_HARDWARE", "huggingface-jobs")
     out = Path(os.environ.get("LIFEMEM_OUT", "gpu_results.json"))
     urls = push_json(results, "gpu_results.json", out)
     print(json.dumps({"urls": urls}, indent=2))

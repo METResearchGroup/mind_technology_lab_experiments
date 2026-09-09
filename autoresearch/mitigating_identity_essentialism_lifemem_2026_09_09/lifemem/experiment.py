@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import os
 from copy import deepcopy
 from pathlib import Path
 from random import Random
@@ -110,6 +112,11 @@ def run_method(
     train_adapter = getattr(respondent, "train_adapter", None)
     generate_batch = getattr(respondent, "generate_batch", None)
     for wave in panel.waves:
+        if os.environ.get("LIFEMEM_PROGRESS"):
+            print(
+                json.dumps({"progress": "wave", "method": method, "wave": wave}),
+                flush=True,
+            )
         for agent in agents:
             new_events = panel.events_by_wave[(agent.profile.agent_id, wave)]
             replay = _sample_replay(agent.events, config.replay_size, rng)
