@@ -1,33 +1,44 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { ALPHA_KEYS, GOALS, nearestAlphaKey } from "@/lib/goals";
 import { scoreUserLikeness } from "@/lib/style";
 
-function setParam(
-  router: ReturnType<typeof useRouter>,
-  pathname: string,
-  params: URLSearchParams,
-  key: string,
-  value: string,
-) {
-  const next = new URLSearchParams(params.toString());
-  next.set(key, value);
-  router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+function writeParams(goal: string, alpha: string) {
+  const params = new URLSearchParams(window.location.search);
+  params.set("goal", goal);
+  params.set("alpha", alpha);
+  window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
 }
 
 export function SteeringLab() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
-  const goalId = params.get("goal") ?? "furniture";
-  const alpha = Number(params.get("alpha") ?? "0.2");
+  const [goalId, setGoalId] = useState("furniture");
+  const [alpha, setAlpha] = useState(0.2);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const nextGoal = params.get("goal");
+    const nextAlpha = params.get("alpha");
+    if (nextGoal) setGoalId(nextGoal);
+    if (nextAlpha != null && nextAlpha !== "") setAlpha(Number(nextAlpha));
+  }, []);
+
   const goal = GOALS.find((item) => item.id === goalId) ?? GOALS[0];
   const key = nearestAlphaKey(Number.isFinite(alpha) ? alpha : 0.2);
   const message = goal.messages[key];
   const scores = scoreUserLikeness(message);
   const direction =
     Number(key) < 0 ? "assistant direction" : Number(key) === 0 ? "unsteered" : "user direction";
+
+  function selectGoal(id: string) {
+    setGoalId(id);
+    writeParams(id, key);
+  }
+
+  function selectAlpha(nextKey: (typeof ALPHA_KEYS)[number]) {
+    setAlpha(Number(nextKey));
+    writeParams(goal.id, nextKey);
+  }
 
   return (
     <section className="panel p-5 md:p-6" aria-labelledby="lab-title">
@@ -60,9 +71,7 @@ export function SteeringLab() {
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() =>
-                      setParam(router, pathname, params, "goal", item.id)
-                    }
+                    onClick={() => selectGoal(item.id)}
                     className={`rounded-full border px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
                       selected
                         ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--bg)]"
@@ -89,16 +98,11 @@ export function SteeringLab() {
               min={0}
               max={ALPHA_KEYS.length - 1}
               step={1}
-              value={ALPHA_KEYS.indexOf(key)}
-              onChange={(event) =>
-                setParam(
-                  router,
-                  pathname,
-                  params,
-                  "alpha",
-                  ALPHA_KEYS[Number(event.target.value)] ?? "0",
-                )
-              }
+              value={Math.max(0, ALPHA_KEYS.indexOf(key))}
+              onChange={(event) => {
+                const nextKey = ALPHA_KEYS[Number(event.target.value)] ?? "0";
+                selectAlpha(nextKey);
+              }}
               className="mt-3 w-full"
               autoComplete="off"
               aria-valuetext={`alpha ${key}, ${direction}`}

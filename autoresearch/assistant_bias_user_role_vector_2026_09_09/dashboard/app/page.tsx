@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { Charts } from "@/components/Charts";
 import { SteeringLab } from "@/components/SteeringLab";
 import paper from "@/public/data/paper_results.json";
@@ -86,15 +85,7 @@ export default function Page() {
         </div>
       </section>
 
-      <Suspense
-        fallback={
-          <div className="panel h-80 animate-pulse p-6 text-[var(--muted)]">
-            Loading steering lab…
-          </div>
-        }
-      >
-        <SteeringLab />
-      </Suspense>
+      <SteeringLab />
 
       <section className="flex flex-col gap-4">
         <h2 className="text-3xl">Graphs</h2>
