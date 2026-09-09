@@ -41,16 +41,18 @@ Qwen GPU job (needs `HF_TOKEN`; S3 uses `AWS_ACCESS_KEY_ID` plus `AWS_ACCESS_KEY
 
 ```bash
 hf jobs uv run \
-  --flavor l4x1 \
+  --flavor a100-large \
   --timeout 2h \
   --secrets HF_TOKEN \
   --secrets AWS_ACCESS_KEY_ID \
   --secrets AWS_ACCESS_KEY_SECRET \
   --env AWS_DEFAULT_REGION=us-east-2 \
-  --env HF_HUB_ENABLE_HF_TRANSFER=1 \
   --name qwen-user-role-vector \
+  --detach \
   autoresearch/assistant_bias_user_role_vector_2026_09_09/scripts/qwen_role_vector_job.py
 ```
+
+`l4x1` and `a10g-large` sat in scheduling in this environment. `a100-large` started in seconds.
 
 Dashboard:
 
