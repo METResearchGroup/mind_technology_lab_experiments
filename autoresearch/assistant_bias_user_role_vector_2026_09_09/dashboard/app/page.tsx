@@ -2,6 +2,7 @@ import { Charts } from "@/components/Charts";
 import { SteeringLab } from "@/components/SteeringLab";
 import paper from "@/public/data/paper_results.json";
 import mini from "@/public/data/mini_replication.json";
+import { qwen } from "@/lib/qwen";
 
 export default function Page() {
   return (
@@ -56,15 +57,34 @@ export default function Page() {
       <aside className="panel border-[var(--accent)] p-4 md:p-5">
         <h2 className="text-xl">What this replica actually ran</h2>
         <p className="mt-2 max-w-3xl text-[var(--muted)]">
-          There is no local GPU here, so this folder does not load{" "}
-          <span translate="no">{paper.citation.intended_replication_model}</span>.
-          It implements the paper’s difference-in-means formula and contrastive
-          activation addition on 48 planted hidden-state pairs. The recovered
-          direction matches the planted user direction with cosine{" "}
+          Hugging Face Jobs loaded{" "}
+          <span translate="no">{qwen.model}</span> on {qwen.gpu}. It built the
+          three Appendix E.1 reflection prompts on {qwen.n_dialogues} hand-crafted
+          chats, read layer {qwen.layer_index} at the first-response-token
+          position, and steered first messages at five alphas. Mean projection
+          onto the user vector is{" "}
+          <span className="tabular font-mono text-[var(--ink)]">
+            {qwen.user_mean_projection.toFixed(2)}
+          </span>{" "}
+          for user reflections and{" "}
+          <span className="tabular font-mono text-[var(--ink)]">
+            {qwen.assistant_mean_projection.toFixed(2)}
+          </span>{" "}
+          for assistant reflections. Lexical user-likeness peaks at α=0.2. This
+          is not LMSYS-Chat-1M, GPT-5 Mini, or SimulatorArena. A separate CPU
+          check on planted hidden states recovers cosine{" "}
           <span className="tabular font-mono text-[var(--ink)]">
             {mini.recovery_cosine.toFixed(3)}
           </span>
-          . Charts below mix those CPU checks with the paper’s published tables.
+          .
+        </p>
+        <p className="mt-3 text-sm">
+          <a
+            className="underline decoration-[var(--line)] underline-offset-4 hover:decoration-[var(--accent)]"
+            href={qwen.hub_url ?? "https://huggingface.co/datasets/mtorres98/assistant-bias-user-role-vector-qwen-run"}
+          >
+            Qwen run JSON on the Hub
+          </a>
         </p>
       </aside>
 
@@ -90,7 +110,8 @@ export default function Page() {
       <section className="flex flex-col gap-4">
         <h2 className="text-3xl">Graphs</h2>
         <p className="max-w-3xl text-[var(--muted)]">
-          Unless a caption says “mini-replication”, the numbers are from the
+          Charts labeled Qwen 3.5 4B are from the Hugging Face Jobs run. Unless
+          a caption says mini-replication or Qwen, the numbers are from the
           paper. Reconstructed series are labeled as such.
         </p>
         <Charts />
@@ -125,8 +146,8 @@ export default function Page() {
       </section>
 
       <footer className="border-t border-[var(--line)] pt-6 text-sm text-[var(--muted)]">
-        Jeong, Lee, Choi, van der Ben, and Kim, 2026. Mini-replication uses
-        planted activations, not Qwen weights.
+        Jeong, Lee, Choi, van der Ben, and Kim, 2026. Qwen 3.5 4B ran on
+        Hugging Face Jobs. The CPU check uses planted activations.
       </footer>
     </main>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ALPHA_KEYS, GOALS, nearestAlphaKey } from "@/lib/goals";
+import { qwenSteerRow } from "@/lib/qwen";
 import { scoreUserLikeness } from "@/lib/style";
 
 function writeParams(goal: string, alpha: string) {
@@ -25,8 +26,17 @@ export function SteeringLab() {
 
   const goal = GOALS.find((item) => item.id === goalId) ?? GOALS[0];
   const key = nearestAlphaKey(Number.isFinite(alpha) ? alpha : 0.2);
-  const message = goal.messages[key];
-  const scores = scoreUserLikeness(message);
+  const qwenRow = qwenSteerRow(goal.id, Number(key));
+  const message = qwenRow?.text ?? goal.messages[key];
+  const scores = qwenRow
+    ? {
+        brevity: qwenRow.brevity,
+        informality: qwenRow.informality,
+        information_pacing: qwenRow.information_pacing,
+        mean: qwenRow.mean,
+        word_count: qwenRow.word_count,
+      }
+    : scoreUserLikeness(message);
   const direction =
     Number(key) < 0 ? "assistant direction" : Number(key) === 0 ? "unsteered" : "user direction";
 
@@ -55,8 +65,9 @@ export function SteeringLab() {
           <span className="font-mono text-sm text-[var(--ink)]" translate="no">
             h̃ = h + α ∥h∥ v̂
           </span>
-          . This lab does not run Qwen. It swaps in messages written at each
-          steering strength, including the furniture example from Figure 5.
+          . The lab shows first messages from Qwen 3.5 4B after steering layer
+          11. Furniture at α=0.2 is the same goal as Figure 5, not the paper's
+          9B transcript.
         </p>
       </div>
 
@@ -120,7 +131,9 @@ export function SteeringLab() {
             <figcaption className="mb-2 flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
               <span>Generated request</span>
               <span translate="no">{direction}</span>
-              {goal.source === "paper" ? (
+              {qwenRow ? (
+                <span>Qwen 3.5 4B</span>
+              ) : goal.source === "paper" ? (
                 <span>from the paper</span>
               ) : (
                 <span>constructed for this dashboard</span>

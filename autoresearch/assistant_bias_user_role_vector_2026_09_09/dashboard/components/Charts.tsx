@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import paper from "@/public/data/paper_results.json";
 import mini from "@/public/data/mini_replication.json";
+import { qwen } from "@/lib/qwen";
 
 const tooltipStyle = {
   backgroundColor: "#14120e",
@@ -50,6 +51,23 @@ export function Charts() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
+      <ChartCard
+        title="Qwen 3.5 4B user-likeness vs steering"
+        note={`Jobs run on ${qwen.gpu}, layer ${qwen.layer_index}, ${qwen.n_dialogues} chats. Lexical stand-in, not GPT-5 Mini. Mean likeness is highest at α=0.2.`}
+      >
+        <ResponsiveContainer width="100%" height={280}>
+          <LineChart data={qwen.mean_user_likeness_by_alpha}>
+            <CartesianGrid stroke="#2b261f" />
+            <XAxis dataKey="alpha" stroke="#b7ab98" />
+            <YAxis domain={[1, 5]} stroke="#b7ab98" />
+            <Tooltip contentStyle={tooltipStyle} />
+            <Legend />
+            <Line type="monotone" dataKey="mean" stroke="#d9772c" />
+            <Line type="monotone" dataKey="brevity" stroke="#7ec8c0" />
+            <Line type="monotone" dataKey="informality" stroke="#f3eadc" />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartCard>
       <ChartCard
         title="User-likeness by layer"
         note="Layers 10–14 are from Table 10. Other layers are a reconstruction of Figure 4’s mid-layer peak."

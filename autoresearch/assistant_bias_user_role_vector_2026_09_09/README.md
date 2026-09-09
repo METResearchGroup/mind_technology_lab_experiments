@@ -18,6 +18,13 @@ The Jobs script:
 6. Scores first messages with the lexical user-likeness stand-in.
 7. Writes JSON to the Hub and to S3.
 
+Completed Jobs run (`6aa1a13221047bf1b03706b7`, A100 80GB, 125 seconds):
+
+- User-reflection projection onto the vector: 0.37
+- Assistant-reflection projection: -1.09
+- Lexical mean user-likeness: 3.00 at α=-0.3, 3.41 at α=0.2
+- Artifacts: `data/qwen_run.json`, [Hub dataset](https://huggingface.co/datasets/mtorres98/assistant-bias-user-role-vector-qwen-run), `s3://mind-technology-lab-experiments/autoresearch/assistant_bias_user_role_vector_2026_09_09/qwen_run.json`
+
 Style scores are still not GPT-5 Mini. Disengagement and SimulatorArena are not rerun.
 
 ## Commands

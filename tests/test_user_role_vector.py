@@ -288,3 +288,22 @@ def test_qwen_job_script_declares_uv_dependencies() -> None:
     assert "transformers>=5.17.0" in text
     assert "Qwen/Qwen3.5-4B" in text
     assert "enable_thinking" in text
+
+
+def test_qwen_run_json_has_steered_messages() -> None:
+    import json
+    from pathlib import Path
+
+    path = Path(
+        "autoresearch/assistant_bias_user_role_vector_2026_09_09/data/qwen_run.json"
+    )
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["status"] == "ok"
+    assert payload["model"] == "Qwen/Qwen3.5-4B"
+    assert payload["n_pairs"] == 8
+    assert payload["layer_index"] == 11
+    assert payload["user_mean_projection"] > payload["assistant_mean_projection"]
+    assert len(payload["steering"]) == 25
+    summary = payload["mean_user_likeness_by_alpha"]
+    means = {row["alpha"]: row["mean"] for row in summary}
+    assert means[0.2] > means[-0.3]
