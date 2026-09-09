@@ -31,6 +31,14 @@ The first pass never ran Qwen. `--backend hf` probed the Hugging Face Inference 
 
 `--backend hf` now tries the router first, then downloads `unsloth/Qwen3.5-4B-GGUF` (`Q4_K_M`) from the Hub and serves it with `llama-server`. It does **not** fall back to mock unless you pass `--allow-mock-fallback`.
 
+This workspace's live run used that Hub GGUF path (`backend=hf-local`, `Qwen/Qwen3.5-4B`). On the 8-item seed set:
+
+- IRP resistance 100 → 83.3 from base to profile-only (−16.7)
+- Useful-item recall 20 → 10 (−10)
+- Sycophancy resistance 75 → 25 (−50)
+
+Those are heuristic-judge scores on a tiny set, not the paper's 13-model Table 2. Retrieval-only IRP stayed at 100 because the factual queries still do not route to memory.
+
 Recompute:
 
 ```bash

@@ -91,6 +91,11 @@ def ensure_local_qwen_server(
     threads = n_threads or os.cpu_count() or 4
     log_path = Path(os.environ.get("LLAMA_SERVER_LOG", "/tmp/llama-server-qwen.log"))
     log_file = log_path.open("w", encoding="utf-8")
+    env = os.environ.copy()
+    lib_dir = str(binary.resolve().parent)
+    env["LD_LIBRARY_PATH"] = lib_dir + (
+        os.pathsep + env["LD_LIBRARY_PATH"] if env.get("LD_LIBRARY_PATH") else ""
+    )
     cmd = [
         str(binary),
         "--model",
@@ -106,14 +111,16 @@ def ensure_local_qwen_server(
         "--n-gpu-layers",
         "0",
         "--jinja",
-        "--chat-template-kwargs",
-        '{"enable_thinking": false}',
+        "--reasoning",
+        "off",
     ]
     subprocess.Popen(
         cmd,
         stdout=log_file,
         stderr=subprocess.STDOUT,
         start_new_session=True,
+        env=env,
+        cwd=lib_dir,
     )
     wait_healthy(base_url, timeout_s=180)
     return base_url

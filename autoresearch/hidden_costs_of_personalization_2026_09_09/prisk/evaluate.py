@@ -210,6 +210,11 @@ def _build_hf_generator(
     allow_mock_fallback: bool,
 ) -> tuple[Generator, list[str]]:
     notes: list[str] = []
+    if prefer_local:
+        notes.append(
+            "Skipping the Inference Router (--hf-local). Featherless returns "
+            "Cloudflare 1010 here; Hugging Face Jobs returns HTTP 402."
+        )
     router_error: Exception | None = None
     if not prefer_local:
         try:
@@ -231,6 +236,7 @@ def _build_hf_generator(
             model_name=DEFAULT_MODEL_ID,
             base_url=base_url,
             timeout_s=300.0,
+            max_tokens=256,
         )
         _probe_generator(generator)
         notes.append(
@@ -282,6 +288,10 @@ def run_replication(
         for setting, scored in by_setting.items():
             scored_rows.append(scored)
             playground.append(_playground_item(case, setting, scored))
+            print(
+                f"{case.record_id} {setting} chars={len(scored.generation.response)}",
+                flush=True,
+            )
 
     summary = {
         "generated_at_utc": datetime.now(UTC).isoformat(),
