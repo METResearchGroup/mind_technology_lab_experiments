@@ -18,6 +18,9 @@ class LifeMemConfig:
     learning_rate: float = 1e-4
     epochs_per_update: int = 2
     train_batch_size: int = 16
+    max_train_seq_len: int = 768
+    generate_batch_size: int = 1
+    max_generate_seq_len: int = 2048
     replay_size: int = 4
     replay_weight: float = 0.5
     stability_weight: float = 0.01

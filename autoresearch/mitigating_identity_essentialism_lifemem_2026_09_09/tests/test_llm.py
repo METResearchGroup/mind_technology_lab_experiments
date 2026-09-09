@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from lifemem.config import LifeMemConfig
 from lifemem.experiment import run_method, run_suite
+from lifemem.llm import train_label_ids
 from lifemem.panel import build_panel
 from lifemem.parse import parse_option_code, strip_thinking
 from lifemem.types import AgentState, RetrievedEvent, SurveyQuestion
@@ -11,6 +12,17 @@ def test_strip_thinking_and_parse() -> None:
     raw = "<think>I am considering class stereotypes</think>\nAnswer: 4"
     assert strip_thinking(raw).endswith("4")
     assert parse_option_code(raw, ("1", "2", "3", "4", "5")) == "4"
+
+
+def test_train_label_ids_masks_prompt_and_truncates() -> None:
+    prompt = [1, 2, 3, 4]
+    full = [1, 2, 3, 4, 5, 6]
+    ids, labels = train_label_ids(prompt, full, max_len=8)
+    assert ids == full
+    assert labels == [-100, -100, -100, -100, 5, 6]
+    ids, labels = train_label_ids(prompt, full, max_len=3)
+    assert ids == [4, 5, 6]
+    assert labels == [-100, 5, 6]
 
 
 class ScriptedRespondent:

@@ -60,7 +60,11 @@ def submit(api: HfApi, src_repo: str) -> dict:
         "LIFEMEM_MODEL": os.environ.get("LIFEMEM_MODEL", "Qwen/Qwen3.5-4B"),
         "LIFEMEM_HARDWARE": "huggingface-jobs",
         "LIFEMEM_PROGRESS": "1",
+        "LIFEMEM_TRAIN_BATCH_SIZE": os.environ.get("LIFEMEM_TRAIN_BATCH_SIZE", "1"),
+        "LIFEMEM_MAX_TRAIN_SEQ_LEN": os.environ.get("LIFEMEM_MAX_TRAIN_SEQ_LEN", "768"),
+        "LIFEMEM_GEN_BATCH_SIZE": os.environ.get("LIFEMEM_GEN_BATCH_SIZE", "1"),
         "HF_HUB_ENABLE_HF_TRANSFER": "1",
+        "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
     }
     namespace = os.environ.get("LIFEMEM_JOBS_NAMESPACE")
     job = api.run_job(

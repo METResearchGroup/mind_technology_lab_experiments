@@ -40,7 +40,16 @@ INNER_CMD = """
 set -euxo pipefail
 export PYTHONUNBUFFERED=1
 export HF_HUB_ENABLE_HF_TRANSFER=0
-python - <<'PY'
+mkdir -p /root/.ssh
+if [ -n "${PUBLIC_KEY:-}" ]; then
+  echo "$PUBLIC_KEY" >> /root/.ssh/authorized_keys
+  chmod 600 /root/.ssh/authorized_keys
+fi
+if command -v service >/dev/null 2>&1; then
+  service ssh start || true
+fi
+/usr/sbin/sshd || true
+python3 - <<'PY'
 import os
 import urllib.request
 repo = os.environ.get("LIFEMEM_SRC_REPO", "mtorres98/lifemem-replication-src")
@@ -76,7 +85,11 @@ def _env_pairs() -> list[dict[str, str]]:
         "LIFEMEM_MODEL": os.environ.get("LIFEMEM_MODEL", "Qwen/Qwen3.5-4B"),
         "LIFEMEM_HARDWARE": "runpod-gpu",
         "LIFEMEM_PROGRESS": "1",
+        "LIFEMEM_TRAIN_BATCH_SIZE": os.environ.get("LIFEMEM_TRAIN_BATCH_SIZE", "1"),
+        "LIFEMEM_MAX_TRAIN_SEQ_LEN": os.environ.get("LIFEMEM_MAX_TRAIN_SEQ_LEN", "768"),
+        "LIFEMEM_GEN_BATCH_SIZE": os.environ.get("LIFEMEM_GEN_BATCH_SIZE", "1"),
         "TOKENIZERS_PARALLELISM": "false",
+        "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
     }
     public_key = os.environ.get("LIFEMEM_SSH_PUBLIC_KEY")
     if public_key:
@@ -162,7 +175,7 @@ def _graphql_create(src_repo: str, gpu: str, cloud: str) -> tuple[int, dict | st
             "gpuTypeId": gpu,
             "name": "lifemem-qwen-4b",
             "imageName": IMAGE,
-            "dockerArgs": "bash -lc " + json.dumps(INNER_CMD.strip()),
+            "dockerArgs": "bash -c " + json.dumps(INNER_CMD.strip()),
             "volumeMountPath": "/workspace",
             "ports": "22/tcp",
             "startSsh": True,
@@ -190,7 +203,7 @@ def _rest_create(src_repo: str, gpu: str, cloud: str) -> tuple[int, dict | str]:
         "interruptible": False,
         "ports": ["22/tcp"],
         "env": env,
-        "dockerStartCmd": ["bash", "-lc", INNER_CMD.strip()],
+        "dockerStartCmd": ["bash", "-c", INNER_CMD.strip()],
     }
     return _http("POST", RUNPOD_REST, body)
 
@@ -201,7 +214,7 @@ def create_pod(src_repo: str) -> dict:
     # REST sets dockerStartCmd; GraphQL dockerArgs is not returned/applied.
     for gpu in GPU_TYPES:
         for cloud in clouds:
-            for factory in (_rest_create, _graphql_create):
+            for factory in (_rest_create,):
                 status, payload = factory(src_repo, gpu, cloud)
                 if status in {200, 201} and isinstance(payload, dict):
                     pod = (

@@ -79,11 +79,18 @@ class QwenRespondent:
         self.model = AutoModelForImageTextToText.from_pretrained(
             name,
             dtype=dtype,
-            device_map="auto" if torch.cuda.is_available() else None,
             trust_remote_code=True,
         )
-        if not torch.cuda.is_available():
-            self.model = self.model.to("cpu")
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = self.model.to(device)
+        can_checkpoint = hasattr(self.model, "gradient_checkpointing_enable")
+        if torch.cuda.is_available() and can_checkpoint:
+            try:
+                self.model.gradient_checkpointing_enable()
+            except ValueError:
+                pass
+        if hasattr(self.model, "config"):
+            self.model.config.use_cache = False
         self.model.eval()
         self.device = next(self.model.parameters()).device
 
@@ -102,6 +109,7 @@ class QwenRespondent:
         adapter = _adapter_name(method, agent.profile.agent_id)
         self._ensure_adapter(adapter)
         self._fit(adapter, examples)
+        self._release_cuda()
 
     def generate(
         self,
@@ -173,6 +181,8 @@ class QwenRespondent:
     def _fit(self, adapter: str, examples: list[dict[str, str]]) -> None:
         import torch
 
+        if hasattr(self.model, "config"):
+            self.model.config.use_cache = False
         self.model.train()
         self.model.set_adapter(adapter)
         trainable = [param for param in self.model.parameters() if param.requires_grad]
@@ -185,8 +195,11 @@ class QwenRespondent:
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(trainable, self.config.max_grad_norm)
                 optimizer.step()
+                del loss
         del optimizer
         self.model.eval()
+        if hasattr(self.model, "config"):
+            self.model.config.use_cache = True
 
     def _sft_loss(self, batch: list[dict[str, str]]) -> Any:
         import torch
@@ -204,10 +217,10 @@ class QwenRespondent:
                 ],
                 add_generation_prompt=False,
             )
-            label = list(full_ids)
-            prefix = min(len(prompt_ids), len(label))
-            label[:prefix] = [-100] * prefix
-            input_ids.append(full_ids)
+            ids, label = train_label_ids(
+                prompt_ids, full_ids, self.config.max_train_seq_len
+            )
+            input_ids.append(ids)
             labels.append(label)
         padded_ids, attn = _pad_left(input_ids, self.tokenizer.pad_token_id)
         padded_labels, _ = _pad_left(labels, -100)
@@ -215,14 +228,24 @@ class QwenRespondent:
         tensor_labels = torch.tensor(padded_labels, device=self.device)
         tensor_attn = torch.tensor(attn, device=self.device)
         outputs = self.model(
-            input_ids=tensor_ids, attention_mask=tensor_attn, labels=tensor_labels
+            input_ids=tensor_ids,
+            attention_mask=tensor_attn,
+            labels=tensor_labels,
+            use_cache=False,
         )
         return outputs.loss
 
     def _generate_texts(self, prompts: list[str], adapter: str | None) -> list[str]:
+        self.model.eval()
+        size = max(1, self.config.generate_batch_size)
+        decoded: list[str] = []
+        for chunk in _chunk_texts(prompts, size):
+            decoded.extend(self._generate_chunk(chunk, adapter))
+        return decoded
+
+    def _generate_chunk(self, prompts: list[str], adapter: str | None) -> list[str]:
         import torch
 
-        self.model.eval()
         texts = [
             self._apply_chat([user_message(prompt)], add_generation_prompt=True)
             for prompt in prompts
@@ -232,7 +255,7 @@ class QwenRespondent:
             return_tensors="pt",
             padding=True,
             truncation=True,
-            max_length=4096,
+            max_length=self.config.max_generate_seq_len,
         )
         encoded = {key: value.to(self.device) for key, value in encoded.items()}
         generate_kwargs = {
@@ -256,6 +279,15 @@ class QwenRespondent:
             outputs[:, prompt_len:], skip_special_tokens=True
         )
         return [text.strip() for text in decoded]
+
+    def _release_cuda(self) -> None:
+        import gc
+
+        import torch
+
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     def _apply_chat(
         self, messages: list[dict[str, Any]], add_generation_prompt: bool
@@ -282,7 +314,27 @@ def _adapter_name(method: str, agent_id: str) -> str:
     return f"{method}__{agent_id}"
 
 
+def train_label_ids(
+    prompt_ids: list[int], full_ids: list[int], max_len: int
+) -> tuple[list[int], list[int]]:
+    """Keep the last `max_len` tokens and mask the prompt prefix with -100."""
+    prompt_len = len(prompt_ids)
+    ids = list(full_ids)
+    if max_len > 0 and len(ids) > max_len:
+        dropped = len(ids) - max_len
+        ids = ids[-max_len:]
+        prompt_len = max(0, prompt_len - dropped)
+    labels = list(ids)
+    prefix = min(prompt_len, len(labels))
+    labels[:prefix] = [-100] * prefix
+    return ids, labels
+
+
 def _chunk(items: list[dict[str, str]], size: int) -> list[list[dict[str, str]]]:
+    return [items[index : index + size] for index in range(0, len(items), size)]
+
+
+def _chunk_texts(items: list[str], size: int) -> list[list[str]]:
     return [items[index : index + size] for index in range(0, len(items), size)]
 
 

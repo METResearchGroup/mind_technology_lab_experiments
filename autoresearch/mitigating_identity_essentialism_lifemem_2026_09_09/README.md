@@ -53,9 +53,9 @@ Jobs cannot see this git checkout. `scripts/submit_hf_job.py` uploads `lifemem/`
 uv run python autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/scripts/submit_hf_job.py
 ```
 
-Default hardware is `a10g-small` (24 GB), 8 agents × 6 waves, timeout 3h. Results go to `data/gpu_results.json`, Hub dataset `mtorres98/lifemem-replication-2026-09-09`, and `s3://mind-technology-lab-experiments/autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/`.
+Default hardware is `a10g-small` (24 GB), 8 agents × 6 waves, timeout 3h. The GPU job keeps Table 7 LoRA rank/alpha but trains with batch size 1 and a 768-token cap so Qwen3.5-4B linear-attention backward fits in 24 GB. Results go to `data/gpu_results.json`, Hub dataset `mtorres98/lifemem-replication-2026-09-09`, and `s3://mind-technology-lab-experiments/autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/`.
 
-Jobs require a positive credit balance on the submitting namespace. This token currently gets HTTP 402 from Jobs. The same `scripts/hf_job.py` suite can run on a GPU pod until Jobs credits exist:
+Jobs require a positive credit balance on the submitting namespace. This token currently gets HTTP 402 from Jobs (`mtorres98` prepaid empty; `Northwestern` needs a payment method). The same `scripts/hf_job.py` suite can run on a GPU pod until Jobs credits exist. The live Qwen 4B run uses `torch==2.6.0+cu124` so `transformers>=5` will load `Qwen/Qwen3.5-4B`:
 
 ```bash
 uv run python autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/scripts/submit_runpod_job.py
