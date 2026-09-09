@@ -31,6 +31,10 @@ That writes `data/replication_results.json` and `dashboard/public/data/results.j
 
 ## Dashboard
 
+Live Vercel preview: [https://temporary-prompt-birch-7xdekgc.vercel.app](https://temporary-prompt-birch-7xdekgc.vercel.app)
+
+That URL is an anonymous Vercel deploy. Claim it to keep it: [claim deployment](https://vercel.com/claim-deployment?code=81a2f69e-26b4-4b8c-9839-e6ce949a0df1). A durable static mirror is on Hugging Face: [mtorres98/lifemem-identity-dashboard](https://huggingface.co/spaces/mtorres98/lifemem-identity-dashboard).
+
 ```bash
 cd autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/dashboard
 npm install
