@@ -1,10 +1,11 @@
 {
   "status": "submitted",
-  "id": "6aa1b48621047bf1b03708a8",
-  "url": "https://huggingface.co/jobs/mtorres98/6aa1b48621047bf1b03708a8",
+  "id": "6aa1b5f15527934177ebdaa5",
+  "url": "https://huggingface.co/jobs/mtorres98/6aa1b5f15527934177ebdaa5",
   "flavor": "a10g-small",
   "timeout": "8h",
   "src_repo": "mtorres98/lifemem-replication-src",
+  "src_revision": "5352fb862e33bd61727260635da77115c88250d3",
   "n_agents": 8,
   "n_waves": 6,
   "model": "Qwen/Qwen3.5-4B"

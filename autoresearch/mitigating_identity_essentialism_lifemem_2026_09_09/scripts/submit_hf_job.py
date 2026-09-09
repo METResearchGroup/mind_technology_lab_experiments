@@ -137,10 +137,10 @@ def main() -> int:
                 "autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/scripts/submit_hf_job.py"
             ),
         }
-        status_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        status_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(payload, indent=2))
         return 2
-    status_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    status_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(payload, indent=2))
     return 0
 
