@@ -345,7 +345,9 @@ def write_json(data: dict[str, Any], path: Path) -> None:
     import json
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, default=_json_default), encoding="utf-8")
+    path.write_text(
+        json.dumps(data, indent=2, default=_json_default) + "\n", encoding="utf-8"
+    )
 
 
 def _json_default(value: Any) -> Any:

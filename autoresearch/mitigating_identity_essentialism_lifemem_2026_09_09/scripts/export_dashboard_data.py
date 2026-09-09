@@ -175,6 +175,8 @@ def _gpu_payload() -> dict:
             "methods": _compact_methods(data.get("methods", {})),
             "identity": data.get("identity"),
             "device": data.get("device"),
+            "hardware": data.get("hardware"),
+            "lora": data.get("lora"),
             "model": data.get("backbone") or data.get("config", {}).get("model"),
             "n_agents": data.get("config", {}).get("n_agents"),
             "n_waves": data.get("config", {}).get("n_waves"),
@@ -271,15 +273,27 @@ def _takeaways(
     ]
     gpu_methods = (gpu or {}).get("methods") or {}
     if gpu and gpu.get("status") == "completed" and "lifemem" in gpu_methods:
+        gpu_identity = gpu.get("identity") or {}
+        profile_sil = (gpu_identity.get("profile") or {}).get("silhouette")
+        lifemem_sil = (gpu_identity.get("lifemem") or {}).get("silhouette")
+        best = min(gpu_methods, key=lambda name: gpu_methods[name]["kl"])
+        body = (
+            f"{gpu.get('model', 'Qwen/Qwen3.5-4B')} LoRA on "
+            f"{gpu.get('device') or 'Hugging Face Jobs'}. "
+            f"LifeMem KL {gpu_methods['lifemem']['kl']:.3f} vs Profile "
+            f"{gpu_methods['profile']['kl']:.3f}; lowest KL is {best} "
+            f"({gpu_methods[best]['kl']:.3f}). "
+        )
+        if profile_sil is not None and lifemem_sil is not None:
+            body += (
+                f"Last-wave SES silhouette drops from {profile_sil:.2f} (Profile) "
+                f"to {lifemem_sil:.2f} (LifeMem)."
+            )
         rows.append(
             {
                 "id": "gpu",
                 "title": "Qwen 4B on Hugging Face Jobs",
-                "body": (
-                    f"{gpu.get('model', 'Qwen/Qwen3.5-4B')} with per-agent LoRA. "
-                    f"LifeMem KL {gpu_methods['lifemem']['kl']:.3f} vs Profile "
-                    f"{gpu_methods.get('profile', {}).get('kl', float('nan')):.3f}."
-                ),
+                "body": body,
                 "stat": f"{gpu_methods['lifemem']['kl']:.2f}",
                 "stat_label": "Qwen GPU LifeMem KL",
             }

@@ -31137,6 +31137,13 @@
       "body": "On Add Health, LifeMem averages 161.7 ms vs Event RAG 1094.2 ms. Full History is slower and still worse on KL.",
       "stat": "6.8\u00d7",
       "stat_label": "Event RAG / LifeMem latency"
+    },
+    {
+      "id": "gpu",
+      "title": "Qwen 4B on Hugging Face Jobs",
+      "body": "Qwen/Qwen3.5-4B LoRA on NVIDIA A10G. LifeMem KL 9.210 vs Profile 9.310; lowest KL is random_event (7.243). Last-wave SES silhouette drops from 0.39 (Profile) to 0.05 (LifeMem).",
+      "stat": "9.21",
+      "stat_label": "Qwen GPU LifeMem KL"
     }
   ],
   "notes": {
@@ -31147,11 +31154,326 @@
     "gpu": "GPU entry: scripts/submit_hf_job.py uploads sources and runs scripts/hf_job.py on a10g-small. Results land in data/gpu_results.json, the Hub dataset, and S3."
   },
   "gpu": {
-    "status": "blocked",
-    "error": "Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/mtorres98' (Request ID: Root=1-6aa1956d-4fb97dc8656529b10aadf713;4397502e-ff04-4ebb-b3b1-c9ad70a36b04)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs.",
-    "src_repo": "mtorres98/lifemem-replication-src",
-    "flavor": "a10g-small",
+    "status": "completed",
+    "config": {
+      "seed": 42,
+      "n_agents": 8,
+      "n_waves": 6,
+      "events_per_wave": 8,
+      "model": "Qwen/Qwen3.5-4B",
+      "backend": "llm",
+      "top_k": 5,
+      "forgetting_alpha": 0.9
+    },
+    "methods": {
+      "direct": {
+        "kl": 14.559526278964292,
+        "wg_gap": 0.7061237373737375,
+        "entropy_gap": 0.7311354327287335,
+        "transition_js": 0.44618952300934606,
+        "n_records": 384
+      },
+      "profile": {
+        "kl": 9.310381396033975,
+        "wg_gap": 0.46054292929292934,
+        "entropy_gap": 0.20898457037280935,
+        "transition_js": 0.3784380843229456,
+        "n_records": 384
+      },
+      "anti_stereotype": {
+        "kl": 7.841821134380038,
+        "wg_gap": 0.5527146464646465,
+        "entropy_gap": 0.232457325239341,
+        "transition_js": 0.36830327954823094,
+        "n_records": 384
+      },
+      "full_history": {
+        "kl": 7.692033694983587,
+        "wg_gap": 0.3888888888888889,
+        "entropy_gap": 0.29490014204095394,
+        "transition_js": 0.298634488402103,
+        "n_records": 384
+      },
+      "event_rag": {
+        "kl": 8.659391943357031,
+        "wg_gap": 0.3907828282828283,
+        "entropy_gap": 0.2684549890398714,
+        "transition_js": 0.30909980082970867,
+        "n_records": 384
+      },
+      "random_event": {
+        "kl": 7.242525175670951,
+        "wg_gap": 0.3778409090909091,
+        "entropy_gap": 0.2664907563738897,
+        "transition_js": 0.2716006988464994,
+        "n_records": 384
+      },
+      "lifemem": {
+        "kl": 9.210062823947348,
+        "wg_gap": 0.3968253968253968,
+        "entropy_gap": 0.29446368454766997,
+        "transition_js": 0.3258839234465096,
+        "n_records": 384
+      },
+      "lifemem_no_param": {
+        "kl": 8.659391943357031,
+        "wg_gap": 0.3907828282828283,
+        "entropy_gap": 0.2684549890398714,
+        "transition_js": 0.30909980082970867,
+        "n_records": 384
+      },
+      "lifemem_no_struct": {
+        "kl": 7.423302903539891,
+        "wg_gap": 0.4498106060606061,
+        "entropy_gap": 0.22238143109659972,
+        "transition_js": 0.3125383311128648,
+        "n_records": 384
+      }
+    },
+    "identity": {
+      "human": {
+        "silhouette": -0.02719369603074813,
+        "points": [
+          {
+            "agent_id": "A000",
+            "ses": "low",
+            "x": -1.524218607040897,
+            "y": -1.7593397632347079
+          },
+          {
+            "agent_id": "A001",
+            "ses": "middle",
+            "x": 4.089398643677558,
+            "y": 0.07590464048774875
+          },
+          {
+            "agent_id": "A002",
+            "ses": "high",
+            "x": -2.180937099361779,
+            "y": 2.313603072104155
+          },
+          {
+            "agent_id": "A003",
+            "ses": "low",
+            "x": -1.5753581907281429,
+            "y": -0.3516697298524462
+          },
+          {
+            "agent_id": "A004",
+            "ses": "middle",
+            "x": 0.8887523221328062,
+            "y": 4.536088430041113
+          },
+          {
+            "agent_id": "A005",
+            "ses": "high",
+            "x": -2.4954632440390943,
+            "y": 0.11449340586540815
+          },
+          {
+            "agent_id": "A006",
+            "ses": "low",
+            "x": 4.344226548444851,
+            "y": -1.6752515752537742
+          },
+          {
+            "agent_id": "A007",
+            "ses": "middle",
+            "x": -1.5464003730853024,
+            "y": -3.253828480157499
+          }
+        ]
+      },
+      "profile": {
+        "silhouette": 0.3901524876388937,
+        "points": [
+          {
+            "agent_id": "A000",
+            "ses": "low",
+            "x": -4.554454330293126,
+            "y": -0.5742807903094544
+          },
+          {
+            "agent_id": "A001",
+            "ses": "middle",
+            "x": 2.650951360918587,
+            "y": 1.670970390370318
+          },
+          {
+            "agent_id": "A002",
+            "ses": "high",
+            "x": 2.6341835306908252,
+            "y": -2.34267430182521
+          },
+          {
+            "agent_id": "A003",
+            "ses": "low",
+            "x": -4.18580361504359,
+            "y": 0.28689183175488087
+          },
+          {
+            "agent_id": "A004",
+            "ses": "middle",
+            "x": 1.710803744501118,
+            "y": 4.2272919161042575
+          },
+          {
+            "agent_id": "A005",
+            "ses": "high",
+            "x": 3.4930796173423264,
+            "y": -2.855139926152125
+          },
+          {
+            "agent_id": "A006",
+            "ses": "low",
+            "x": -4.554454330293126,
+            "y": -0.5742807903094544
+          },
+          {
+            "agent_id": "A007",
+            "ses": "middle",
+            "x": 2.8056940221769864,
+            "y": 0.16122167036678764
+          }
+        ]
+      },
+      "lifemem": {
+        "silhouette": 0.04535623021359614,
+        "points": [
+          {
+            "agent_id": "A000",
+            "ses": "low",
+            "x": -1.9214791941108047,
+            "y": -0.42520306603607266
+          },
+          {
+            "agent_id": "A001",
+            "ses": "middle",
+            "x": 3.0357081584033563,
+            "y": 2.1328336633065748
+          },
+          {
+            "agent_id": "A002",
+            "ses": "high",
+            "x": -0.2100185726641937,
+            "y": -3.3411156964733246
+          },
+          {
+            "agent_id": "A003",
+            "ses": "low",
+            "x": -2.1950780788087547,
+            "y": 2.53624992039434
+          },
+          {
+            "agent_id": "A004",
+            "ses": "middle",
+            "x": 3.748228536492368,
+            "y": 0.12714634946105127
+          },
+          {
+            "agent_id": "A005",
+            "ses": "high",
+            "x": 1.3761312252524636,
+            "y": -1.7792642614653156
+          },
+          {
+            "agent_id": "A006",
+            "ses": "low",
+            "x": -2.637283097591497,
+            "y": -0.30685533570024404
+          },
+          {
+            "agent_id": "A007",
+            "ses": "middle",
+            "x": -1.1962089769729367,
+            "y": 1.0562084265129903
+          }
+        ]
+      },
+      "direct": {
+        "silhouette": 0.0,
+        "points": [
+          {
+            "agent_id": "A000",
+            "ses": "low",
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "agent_id": "A001",
+            "ses": "middle",
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "agent_id": "A002",
+            "ses": "high",
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "agent_id": "A003",
+            "ses": "low",
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "agent_id": "A004",
+            "ses": "middle",
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "agent_id": "A005",
+            "ses": "high",
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "agent_id": "A006",
+            "ses": "low",
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "agent_id": "A007",
+            "ses": "middle",
+            "x": 0.0,
+            "y": 0.0
+          }
+        ]
+      }
+    },
+    "device": "NVIDIA A10G",
+    "hardware": "huggingface-jobs",
+    "lora": {
+      "rank": 8,
+      "alpha": 16,
+      "dropout": 0.0,
+      "target_modules": [
+        "q_proj",
+        "v_proj",
+        "o_proj",
+        "down_proj"
+      ],
+      "learning_rate": 0.0001,
+      "epochs_per_event": 2,
+      "batch_size": 1,
+      "max_train_seq_len": 768,
+      "generate_batch_size": 4,
+      "max_generate_seq_len": 2048,
+      "replay_size": 4,
+      "replay_weight": 0.5,
+      "stability_weight": 0.01,
+      "max_grad_norm": 1.0,
+      "model_name": "Qwen/Qwen3.5-4B",
+      "disable_thinking": true
+    },
     "model": "Qwen/Qwen3.5-4B",
-    "hint": "Hugging Face Jobs needs a positive credit balance on the submitting namespace. Add credits at https://huggingface.co/settings/billing then re-run: uv run python autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/scripts/submit_hf_job.py"
+    "n_agents": 8,
+    "n_waves": 6,
+    "url": "https://huggingface.co/jobs/mtorres98/6aa1b5f15527934177ebdaa5",
+    "flavor": "a10g-small",
+    "src_repo": "mtorres98/lifemem-replication-src"
   }
 }

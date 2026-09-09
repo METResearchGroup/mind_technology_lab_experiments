@@ -55,11 +55,7 @@ uv run python autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/s
 
 Default hardware is `a10g-small` (24 GB), 8 agents × 6 waves, timeout 8h. The GPU job keeps Table 7 LoRA rank/alpha but trains with batch size 1 and a 768-token cap so Qwen3.5-4B linear-attention backward fits in 24 GB. Results go to `data/gpu_results.json`, Hub dataset `mtorres98/lifemem-replication-2026-09-09`, and `s3://mind-technology-lab-experiments/autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/`.
 
-Jobs require a positive credit balance on the submitting namespace. This token currently gets HTTP 402 from Jobs (`mtorres98` prepaid empty; `Northwestern` needs a payment method). The same `scripts/hf_job.py` suite can run on a GPU pod until Jobs credits exist. The live Qwen 4B run uses `torch==2.6.0+cu124` so `transformers>=5` will load `Qwen/Qwen3.5-4B`:
-
-```bash
-uv run python autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/scripts/submit_runpod_job.py
-```
+Jobs need a credit balance on the submitting namespace. If Jobs returns HTTP 402, `scripts/submit_runpod_job.py` runs the same `scripts/hf_job.py` on a GPU pod.
 
 After a job finishes:
 
@@ -67,3 +63,19 @@ After a job finishes:
 uv run python autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/scripts/fetch_gpu_results.py
 uv run python autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/scripts/export_dashboard_data.py
 ```
+
+Completed Qwen/Qwen3.5-4B run on Hugging Face Jobs (`a10g-small`, NVIDIA A10G, 8 agents × 6 waves): [job](https://huggingface.co/jobs/mtorres98/6aa1b5f15527934177ebdaa5), [gpu_results.json](https://huggingface.co/datasets/mtorres98/lifemem-replication-2026-09-09/blob/main/gpu_results.json).
+
+| Method | KL |
+| --- | --- |
+| Direct | 14.56 |
+| Profile | 9.31 |
+| Event RAG | 8.66 |
+| LifeMem (no param) | 8.66 |
+| Anti-stereotype | 7.84 |
+| Full history | 7.69 |
+| LifeMem (no struct) | 7.42 |
+| Random event | 7.24 |
+| LifeMem | 9.21 |
+
+LifeMem is close to Profile on KL. Last-wave SES silhouette falls from 0.39 (Profile) to 0.05 (LifeMem), near the synthetic humans (−0.03). The paper's KL ranking used 8B/9B instruct models.

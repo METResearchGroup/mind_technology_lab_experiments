@@ -1,5 +1,5 @@
 {
-  "status": "submitted",
+  "status": "completed",
   "id": "6aa1b5f15527934177ebdaa5",
   "url": "https://huggingface.co/jobs/mtorres98/6aa1b5f15527934177ebdaa5",
   "flavor": "a10g-small",
@@ -8,5 +8,11 @@
   "src_revision": "5352fb862e33bd61727260635da77115c88250d3",
   "n_agents": 8,
   "n_waves": 6,
-  "model": "Qwen/Qwen3.5-4B"
+  "model": "Qwen/Qwen3.5-4B",
+  "device": "NVIDIA A10G",
+  "hardware": "huggingface-jobs",
+  "results": {
+    "hub": "https://huggingface.co/datasets/mtorres98/lifemem-replication-2026-09-09/blob/main/gpu_results.json",
+    "s3": "s3://mind-technology-lab-experiments/autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/gpu_results.json"
+  }
 }
