@@ -31147,9 +31147,11 @@
     "gpu": "GPU entry: scripts/submit_hf_job.py uploads sources and runs scripts/hf_job.py on a10g-small. Results land in data/gpu_results.json, the Hub dataset, and S3."
   },
   "gpu": {
-    "status": "pending",
-    "model": "Qwen/Qwen3.5-4B",
+    "status": "blocked",
+    "error": "Client error '402 Payment Required' for url 'https://huggingface.co/api/jobs/mtorres98' (Request ID: Root=1-6aa1956d-4fb97dc8656529b10aadf713;4397502e-ff04-4ebb-b3b1-c9ad70a36b04)\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402\n\nPre-paid credit balance is insufficient - add more credits to your account to use Jobs.",
+    "src_repo": "mtorres98/lifemem-replication-src",
     "flavor": "a10g-small",
-    "hint": "Run scripts/submit_hf_job.py after adding Hugging Face Jobs credits. The runner trains per-agent LoRA on Qwen/Qwen3.5-4B."
+    "model": "Qwen/Qwen3.5-4B",
+    "hint": "Hugging Face Jobs needs a positive credit balance on the submitting namespace. Add credits at https://huggingface.co/settings/billing then re-run: uv run python autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/scripts/submit_hf_job.py"
   }
 }

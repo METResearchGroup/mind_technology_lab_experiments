@@ -67,6 +67,7 @@ name = "autoresearch-mitigating-identity-essentialism-lifemem-2026-09-09"
 version = "0.1.0"
 source = { virtual = "autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09" }
 dependencies = [
+    { name = "huggingface-hub" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
     { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
@@ -87,6 +88,7 @@ llm = [
 requires-dist = [
     { name = "accelerate", marker = "extra == 'llm'", specifier = ">=1.0.0" },
     { name = "boto3", marker = "extra == 'llm'", specifier = ">=1.35.0" },
+    { name = "huggingface-hub", specifier = ">=0.30.0" },
     { name = "numpy", specifier = ">=2.0.0" },
     { name = "peft", marker = "extra == 'llm'", specifier = ">=0.17.0" },
     { name = "pillow", marker = "extra == 'llm'", specifier = ">=10.0.0" },
