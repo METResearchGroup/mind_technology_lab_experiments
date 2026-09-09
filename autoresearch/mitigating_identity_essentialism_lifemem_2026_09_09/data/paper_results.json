@@ -1,0 +1,153 @@
+{
+  "paper": {
+    "id": "2608.19621",
+    "title": "Mitigating Identity Essentialism in LLM Agents with Longitudinal Life Trajectories",
+    "authors": [
+      "Hexi Wang",
+      "Yujia Zhou",
+      "Bangde Du",
+      "Weihang Su",
+      "Xinyuan Cao",
+      "Qingyi Pan",
+      "Qingyao Ai",
+      "Yueyue Wu",
+      "Min Zhang",
+      "Yiqun Liu"
+    ],
+    "venues": "arXiv 2608.19621v2",
+    "code": "https://github.com/halsayxi/LifeMem",
+    "arxiv": "https://arxiv.org/abs/2608.19621"
+  },
+  "wvs_silhouette": {
+    "human": -0.02,
+    "static_profile_llama8b": 0.19,
+    "n": 2000,
+    "groups": ["Lower SES", "Middle SES", "Higher SES"]
+  },
+  "latency_ms": {
+    "Add Health": {
+      "Direct": 13.8,
+      "Profile": 65.2,
+      "Multilingual": 24.5,
+      "Anti-Stereotype": 66.8,
+      "SimVBG": 196.4,
+      "Full History": 334.5,
+      "Event RAG": 1094.2,
+      "Random Event": 73.0,
+      "LifeMem": 161.7
+    },
+    "Understanding Society": {
+      "Direct": 14.4,
+      "Profile": 70.8,
+      "Multilingual": 26.5,
+      "Anti-Stereotype": 72.9,
+      "SimVBG": 196.4,
+      "Full History": 318.1,
+      "Event RAG": 956.2,
+      "Random Event": 79.8,
+      "LifeMem": 154.5
+    }
+  },
+  "table1": {
+    "Llama-3.1-8B-Instruct": {
+      "Direct": {"ah_kl": 14.7551, "ah_wg": 0.5596, "ah_ent": 0.7053, "us_kl": 15.3734, "us_wg": 0.5561, "us_ent": 0.7076, "us_js": 0.458},
+      "Profile": {"ah_kl": 8.6719, "ah_wg": 0.3951, "ah_ent": 0.5112, "us_kl": 7.1522, "us_wg": 0.3835, "us_ent": 0.4972, "us_js": 0.3886},
+      "Multilingual": {"ah_kl": 10.4654, "ah_wg": 0.3733, "ah_ent": 0.5035, "us_kl": 11.7367, "us_wg": 0.3446, "us_ent": 0.4763, "us_js": 0.457},
+      "Anti-Stereotype": {"ah_kl": 9.827, "ah_wg": 0.4163, "ah_ent": 0.5452, "us_kl": 8.1485, "us_wg": 0.4066, "us_ent": 0.512, "us_js": 0.3592},
+      "SimVBG": {"ah_kl": 6.8058, "ah_wg": 0.338, "ah_ent": 0.4345, "us_kl": 6.2912, "us_wg": 0.3544, "us_ent": 0.473, "us_js": 0.3709},
+      "Full History": {"ah_kl": 6.1176, "ah_wg": 0.3079, "ah_ent": 0.3974, "us_kl": 4.9344, "us_wg": 0.3198, "us_ent": 0.4004, "us_js": 0.3633},
+      "Event RAG": {"ah_kl": 5.8264, "ah_wg": 0.2964, "ah_ent": 0.3951, "us_kl": 5.2935, "us_wg": 0.3163, "us_ent": 0.3991, "us_js": 0.3648},
+      "Random Event": {"ah_kl": 6.8821, "ah_wg": 0.3524, "ah_ent": 0.4538, "us_kl": 5.5673, "us_wg": 0.3429, "us_ent": 0.4539, "us_js": 0.3803},
+      "LifeMem": {"ah_kl": 4.0635, "ah_wg": 0.2309, "ah_ent": 0.3207, "us_kl": 3.4529, "us_wg": 0.2886, "us_ent": 0.3742, "us_js": 0.3331}
+    },
+    "Ministral-3-8B-Instruct-2512": {
+      "Direct": {"ah_kl": 15.5952, "ah_wg": 0.5679, "ah_ent": 0.7161, "us_kl": 15.4925, "us_wg": 0.5648, "us_ent": 0.7182, "us_js": 0.5076},
+      "Profile": {"ah_kl": 8.806, "ah_wg": 0.412, "ah_ent": 0.5263, "us_kl": 6.8298, "us_wg": 0.3622, "us_ent": 0.4622, "us_js": 0.3609},
+      "Multilingual": {"ah_kl": 12.7028, "ah_wg": 0.3597, "ah_ent": 0.5129, "us_kl": 13.1824, "us_wg": 0.3942, "us_ent": 0.535, "us_js": 0.4889},
+      "Anti-Stereotype": {"ah_kl": 10.0458, "ah_wg": 0.4339, "ah_ent": 0.5537, "us_kl": 8.766, "us_wg": 0.3946, "us_ent": 0.5066, "us_js": 0.3757},
+      "SimVBG": {"ah_kl": 6.9946, "ah_wg": 0.3427, "ah_ent": 0.4566, "us_kl": 4.8323, "us_wg": 0.3272, "us_ent": 0.4156, "us_js": 0.361},
+      "Full History": {"ah_kl": 4.7175, "ah_wg": 0.2893, "ah_ent": 0.3817, "us_kl": 3.8053, "us_wg": 0.2927, "us_ent": 0.3413, "us_js": 0.3528},
+      "Event RAG": {"ah_kl": 5.4368, "ah_wg": 0.2849, "ah_ent": 0.3895, "us_kl": 4.3342, "us_wg": 0.2887, "us_ent": 0.3413, "us_js": 0.4693},
+      "Random Event": {"ah_kl": 6.1787, "ah_wg": 0.3578, "ah_ent": 0.4647, "us_kl": 4.7275, "us_wg": 0.3156, "us_ent": 0.4048, "us_js": 0.3924},
+      "LifeMem": {"ah_kl": 2.2959, "ah_wg": 0.1928, "ah_ent": 0.2783, "us_kl": 1.9659, "us_wg": 0.2277, "us_ent": 0.2659, "us_js": 0.3399}
+    },
+    "Qwen3.5-9B": {
+      "Direct": {"ah_kl": 13.9957, "ah_wg": 0.5482, "ah_ent": 0.6923, "us_kl": 15.9998, "us_wg": 0.5559, "us_ent": 0.708, "us_js": 0.4452},
+      "Profile": {"ah_kl": 8.0174, "ah_wg": 0.4004, "ah_ent": 0.5093, "us_kl": 5.3214, "us_wg": 0.3463, "us_ent": 0.4325, "us_js": 0.3471},
+      "Multilingual": {"ah_kl": 7.7194, "ah_wg": 0.2211, "ah_ent": 0.3395, "us_kl": 10.9903, "us_wg": 0.3438, "us_ent": 0.4728, "us_js": 0.4405},
+      "Anti-Stereotype": {"ah_kl": 7.7407, "ah_wg": 0.3743, "ah_ent": 0.477, "us_kl": 6.0185, "us_wg": 0.3422, "us_ent": 0.4254, "us_js": 0.3356},
+      "SimVBG": {"ah_kl": 5.709, "ah_wg": 0.3307, "ah_ent": 0.4311, "us_kl": 4.4864, "us_wg": 0.3182, "us_ent": 0.3889, "us_js": 0.3298},
+      "Full History": {"ah_kl": 4.5266, "ah_wg": 0.2599, "ah_ent": 0.3432, "us_kl": 3.7659, "us_wg": 0.2979, "us_ent": 0.3441, "us_js": 0.3203},
+      "Event RAG": {"ah_kl": 4.3701, "ah_wg": 0.2676, "ah_ent": 0.3574, "us_kl": 3.5507, "us_wg": 0.2673, "us_ent": 0.307, "us_js": 0.3394},
+      "Random Event": {"ah_kl": 6.0741, "ah_wg": 0.3625, "ah_ent": 0.4584, "us_kl": 3.7848, "us_wg": 0.3031, "us_ent": 0.3707, "us_js": 0.3466},
+      "LifeMem": {"ah_kl": 4.1177, "ah_wg": 0.2723, "ah_ent": 0.3601, "us_kl": 2.6879, "us_wg": 0.2519, "us_ent": 0.2932, "us_js": 0.306}
+    }
+  },
+  "table2": {
+    "Llama-3.1-8B-Instruct": {
+      "LifeMem": {"ah_kl": 4.0635, "ah_wg": 0.2309, "ah_ent": 0.3207, "us_kl": 3.4529, "us_wg": 0.2886, "us_ent": 0.3742, "us_js": 0.3331},
+      "w/o Param. Mem.": {"ah_kl": 5.3517, "ah_wg": 0.2554, "ah_ent": 0.3436, "us_kl": 5.0874, "us_wg": 0.3259, "us_ent": 0.415, "us_js": 0.3594},
+      "w/o Struct. Mem.": {"ah_kl": 6.2815, "ah_wg": 0.3132, "ah_ent": 0.4164, "us_kl": 4.7555, "us_wg": 0.3379, "us_ent": 0.4318, "us_js": 0.3614}
+    },
+    "Ministral-3-8B-Instruct-2512": {
+      "LifeMem": {"ah_kl": 2.2959, "ah_wg": 0.1928, "ah_ent": 0.2783, "us_kl": 1.9659, "us_wg": 0.2277, "us_ent": 0.2659, "us_js": 0.3399},
+      "w/o Param. Mem.": {"ah_kl": 4.6504, "ah_wg": 0.2516, "ah_ent": 0.3456, "us_kl": 3.8454, "us_wg": 0.281, "us_ent": 0.3389, "us_js": 0.3838},
+      "w/o Struct. Mem.": {"ah_kl": 3.3799, "ah_wg": 0.2627, "ah_ent": 0.3597, "us_kl": 2.441, "us_wg": 0.2483, "us_ent": 0.3093, "us_js": 0.3443}
+    },
+    "Qwen3.5-9B": {
+      "LifeMem": {"ah_kl": 4.1177, "ah_wg": 0.2723, "ah_ent": 0.3601, "us_kl": 2.6879, "us_wg": 0.2519, "us_ent": 0.2932, "us_js": 0.306},
+      "w/o Param. Mem.": {"ah_kl": 4.4295, "ah_wg": 0.2733, "ah_ent": 0.3604, "us_kl": 3.4224, "us_wg": 0.2738, "us_ent": 0.3193, "us_js": 0.3411},
+      "w/o Struct. Mem.": {"ah_kl": 6.0934, "ah_wg": 0.3651, "ah_ent": 0.476, "us_kl": 3.2797, "us_wg": 0.2842, "us_ent": 0.343, "us_js": 0.3235}
+    }
+  },
+  "table12_decay": [
+    {"alpha": 0.5, "kl": 4.394, "wg": 0.228, "ent": 0.351},
+    {"alpha": 0.7, "kl": 4.396, "wg": 0.222, "ent": 0.346},
+    {"alpha": 0.8, "kl": 4.260, "wg": 0.2201, "ent": 0.342},
+    {"alpha": 0.9, "kl": 4.063, "wg": 0.231, "ent": 0.321},
+    {"alpha": 0.95, "kl": 4.487, "wg": 0.2202, "ent": 0.344},
+    {"alpha": 1.0, "kl": 4.414, "wg": 0.224, "ent": 0.349}
+  ],
+  "table13_replay": [
+    {"eta": 0.0, "kl": 4.381, "wg": 0.215, "ent": 0.345},
+    {"eta": 0.25, "kl": 4.353, "wg": 0.218, "ent": 0.342},
+    {"eta": 0.5, "kl": 4.064, "wg": 0.231, "ent": 0.321},
+    {"eta": 0.75, "kl": 4.370, "wg": 0.219, "ent": 0.341},
+    {"eta": 1.0, "kl": 4.329, "wg": 0.218, "ent": 0.343}
+  ],
+  "table15_rank": [
+    {"rank": 4, "kl": 4.876, "wg": 0.227, "ent": 0.356},
+    {"rank": 8, "kl": 4.063, "wg": 0.231, "ent": 0.321},
+    {"rank": 16, "kl": 4.041, "wg": 0.196, "ent": 0.326},
+    {"rank": 32, "kl": 3.289, "wg": 0.165, "ent": 0.298}
+  ],
+  "table14_retriever": [
+    {"method": "Event RAG", "retriever": "BM25", "ah_kl": 5.357, "us_kl": 4.237},
+    {"method": "Event RAG", "retriever": "all-MiniLM-L6-v2", "ah_kl": 4.650, "us_kl": 3.845},
+    {"method": "Event RAG", "retriever": "E5-large-v2", "ah_kl": 5.537, "us_kl": 4.466},
+    {"method": "Event RAG", "retriever": "BGE-M3", "ah_kl": 5.437, "us_kl": 4.334},
+    {"method": "Event RAG", "retriever": "BGE-M3 + rerank", "ah_kl": 5.035, "us_kl": 3.597},
+    {"method": "LifeMem", "retriever": "all-MiniLM-L6-v2", "ah_kl": 2.296, "us_kl": 1.966}
+  ],
+  "hyperparams": {
+    "seed": 42,
+    "n_respondents": 100,
+    "top_k": 5,
+    "lambda_decay": 0.105,
+    "forgetting_alpha": 0.9,
+    "lora_rank": 8,
+    "lora_alpha": 16,
+    "replay_size": 4,
+    "replay_weight": 0.5,
+    "epochs": 2,
+    "lr": 0.0001,
+    "temperature": 0.0,
+    "encoder_lifemem": "sentence-transformers/all-MiniLM-L6-v2",
+    "encoder_event_rag": "BAAI/bge-m3",
+    "backbones": [
+      "Llama-3.1-8B-Instruct",
+      "Ministral-3-8B-Instruct-2512",
+      "Qwen3.5-9B"
+    ]
+  }
+}
