@@ -506,6 +506,28 @@ export function DashboardApp() {
                         {hfJob.missing_keys.join(", ") || "none"}
                       </TableCell>
                     </TableRow>
+                    {"gpu" in hfJob && hfJob.gpu ? (
+                      <TableRow>
+                        <TableCell>GPU</TableCell>
+                        <TableCell>{hfJob.gpu}</TableCell>
+                      </TableRow>
+                    ) : null}
+                    {"sft_metrics" in hfJob ? (
+                      <TableRow>
+                        <TableCell>SFT train loss</TableCell>
+                        <TableCell>
+                          {hfJob.sft_metrics.train_loss.toFixed(3)}
+                        </TableCell>
+                      </TableRow>
+                    ) : null}
+                    {"grpo_metrics" in hfJob ? (
+                      <TableRow>
+                        <TableCell>GRPO train loss</TableCell>
+                        <TableCell>
+                          {hfJob.grpo_metrics.train_loss.toFixed(3)}
+                        </TableCell>
+                      </TableRow>
+                    ) : null}
                   </TableBody>
                 </Table>
                 <div className="flex flex-wrap gap-2">
