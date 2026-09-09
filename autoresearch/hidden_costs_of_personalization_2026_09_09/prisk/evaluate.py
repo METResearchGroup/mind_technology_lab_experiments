@@ -26,7 +26,11 @@ from prisk.metrics import (
     sycophancy_score,
     useful_item_recall,
 )
-from prisk.paper_results import PAPER_TABLE_2, paper_mean_drops
+from prisk.paper_results import (
+    PAPER_BENCHMARK_ACCURACY,
+    PAPER_TABLE_2,
+    paper_mean_drops,
+)
 from prisk.retrieval import memories_for_setting
 from prisk.schemas import SETTINGS, GenerationResult, ScoredResult, SeedCase, Setting
 
@@ -219,6 +223,10 @@ def run_replication(
                     "universal_answers": list(case.universal_answers),
                     "useful_answers": list(case.useful_answers),
                     "router_decision": scored.generation.router_decision,
+                    "retrieved_memories": list(scored.generation.retrieved_memories),
+                    "user_is_at_fault": case.user_is_at_fault,
+                    "stated_preference": case.stated_preference,
+                    "preferences": list(case.profile.preferences),
                 }
             )
 
@@ -232,6 +240,7 @@ def run_replication(
         "aggregate": aggregate(scored_rows),
         "paper_table_2": PAPER_TABLE_2,
         "paper_mean_drops": paper_mean_drops(),
+        "paper_benchmark_accuracy": PAPER_BENCHMARK_ACCURACY,
         "takeaways": _takeaways(aggregate(scored_rows)["rows"]),
         "playground": playground,
         "results": [_serialize_scored(row) for row in scored_rows],
@@ -242,7 +251,18 @@ def run_replication(
             json.dumps(summary, indent=2),
             encoding="utf-8",
         )
+        dashboard_dir = Path(__file__).resolve().parents[1] / "dashboard" / "data"
+        dashboard_dir.mkdir(parents=True, exist_ok=True)
+        (dashboard_dir / "replication.json").write_text(
+            json.dumps(dashboard_payload(summary), indent=2),
+            encoding="utf-8",
+        )
     return summary
+
+
+def dashboard_payload(summary: dict[str, Any]) -> dict[str, Any]:
+    """JSON for the Next.js dashboard: same summary, without per-row traces."""
+    return {key: value for key, value in summary.items() if key != "results"}
 
 
 def _takeaways(rows: list[dict[str, Any]]) -> list[str]:

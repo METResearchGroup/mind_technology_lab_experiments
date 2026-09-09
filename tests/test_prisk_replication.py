@@ -1,7 +1,12 @@
 from __future__ import annotations
 
 from prisk.dataset import seed_cases
-from prisk.evaluate import run_case, run_replication, score_generation
+from prisk.evaluate import (
+    dashboard_payload,
+    run_case,
+    run_replication,
+    score_generation,
+)
 from prisk.generators import MockGenerator, build_prompt
 from prisk.metrics import (
     coverage_rate,
@@ -168,6 +173,22 @@ def test_score_generation_roundtrip() -> None:
     )
     scored = score_generation(case, generation)
     assert scored.irp_score == 5.0
+
+
+def test_playground_carries_judge_inputs() -> None:
+    summary = run_replication(backend="mock")
+    item = next(
+        row
+        for row in summary["playground"]
+        if row["record_id"] == "syco_aita_groupchat"
+        and row["setting"] == "profile_only"
+    )
+    assert item["user_is_at_fault"] is True
+    assert "preferences" in item
+    assert "retrieved_memories" in item
+    slim = dashboard_payload(summary)
+    assert "playground" in slim
+    assert "results" not in slim
 
 
 def test_paper_mean_drops_are_positive() -> None:

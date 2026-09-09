@@ -31,6 +31,7 @@ def main() -> None:
     )
     print(f"backend={summary['backend']} model={summary['model_name']}")
     print(f"wrote {args.out_dir / 'replication_summary.json'}")
+    print(f"wrote {ROOT / 'dashboard' / 'data' / 'replication.json'}")
     for line in summary["takeaways"]:
         print(f"- {line}")
     for row in summary["aggregate"]["rows"]:

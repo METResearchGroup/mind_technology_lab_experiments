@@ -41,6 +41,8 @@ PYTHONPATH=autoresearch/hidden_costs_of_personalization_2026_09_09 \
   --backend hf --hf-model 'Qwen/Qwen3.5-4B:featherless-ai'
 ```
 
+The same command also writes `dashboard/data/replication.json` for the Next.js dashboard in `dashboard/`. From that folder: `npm install && npm run dev`.
+
 Tests: `uv run pytest tests/test_prisk_replication.py`.
 
 Original code and data: https://github.com/yumeng-10/personalization_risk
