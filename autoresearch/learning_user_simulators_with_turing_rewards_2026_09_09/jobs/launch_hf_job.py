@@ -76,6 +76,13 @@ def main() -> None:
         "grpo_repo": f"{username}/turing-rl-qwen3-8b-grpo",
         "trackio_project": "turing-rl-qwen3-8b",
         "trackio_url": f"https://huggingface.co/spaces/{username}/trackio",
+        "previous_job_id": "6aa19f235527934177ebd67c",
+        "previous_job_url": "https://huggingface.co/jobs/mtorres98/6aa19f235527934177ebd67c",
+        "notes": (
+            "Credits are active. A first job loaded Qwen/Qwen3-8B and trained "
+            "through SFT step 12, then died on a Trackio checkpoint upload. "
+            "This resubmit saves adapters locally and uploads them once at the end."
+        ),
         "paper_judge": "Qwen/Qwen3.5-397B-A17B via OpenRouter",
         "job_judge": "gpt-4o-mini via OpenAI",
         "job_judge_reason": "OPENROUTER_API_KEY is missing in this environment",

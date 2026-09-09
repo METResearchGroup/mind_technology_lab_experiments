@@ -453,7 +453,12 @@ export function DashboardApp() {
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   {hfJob.scale_note}
                 </p>
-                {hfJob.billing_error ? (
+                {"notes" in hfJob && hfJob.notes ? (
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {hfJob.notes}
+                  </p>
+                ) : null}
+                {"billing_error" in hfJob && hfJob.billing_error ? (
                   <Alert>
                     <AlertTitle>Job not started</AlertTitle>
                     <AlertDescription>{hfJob.billing_error}</AlertDescription>
@@ -516,6 +521,21 @@ export function DashboardApp() {
                       }
                     >
                       Job logs
+                    </Button>
+                  ) : null}
+                  {"previous_job_url" in hfJob && hfJob.previous_job_url ? (
+                    <Button
+                      variant="outline"
+                      nativeButton={false}
+                      render={
+                        <a
+                          href={hfJob.previous_job_url}
+                          target="_blank"
+                          rel="noreferrer"
+                        />
+                      }
+                    >
+                      First attempt
                     </Button>
                   ) : null}
                   <Button

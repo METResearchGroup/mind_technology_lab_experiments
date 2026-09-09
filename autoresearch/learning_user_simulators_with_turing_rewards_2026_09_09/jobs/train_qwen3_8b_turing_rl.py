@@ -27,7 +27,9 @@ Paper (arXiv:2606.19336 / official turing-rl):
 This job keeps that recipe but is a short LoRA slice, not 1680 GPU hours.
 OPENROUTER_API_KEY is not available here, so the pairwise Likert judge is
 gpt-4o-mini (OpenAI) with the paper's 1-7 mapping. Heuristic fallback if the
-API fails. Weights are pushed to the Hub on every save.
+API fails. Adapters are saved locally and uploaded once at the end.
+Mid-run Hub pushes are disabled: Trackio's checkpoint sync crashes on an
+empty parquet struct (rank_pattern) and previously killed the job at SFT step 12.
 """
 
 from __future__ import annotations
@@ -518,6 +520,27 @@ def maybe_upload_s3(local_path: Path, key: str) -> str | None:
         return None
 
 
+def metrics_backend() -> str:
+    # Trackio checkpoint sync crashes on an empty parquet struct.
+    # Trainer logs still print to the Hugging Face Job log.
+    return "none"
+
+
+def upload_adapter(local_dir: Path, repo_id: str) -> None:
+    """Upload a saved adapter without Trackio's checkpoint-sync callback."""
+    from huggingface_hub import HfApi
+
+    api = HfApi()
+    api.create_repo(repo_id, repo_type="model", exist_ok=True)
+    api.upload_folder(
+        folder_path=str(local_dir),
+        repo_id=repo_id,
+        repo_type="model",
+        commit_message="Upload Turing-RL LoRA adapter",
+    )
+    print(f"[hub] uploaded {local_dir} -> {repo_id}", flush=True)
+
+
 def resolve_hub_user() -> str:
     from huggingface_hub import whoami
 
@@ -658,9 +681,7 @@ def main() -> None:
         "lr_scheduler_type": "cosine",
         "warmup_ratio": 0.03,
         "logging_steps": 1,
-        "save_strategy": "steps",
-        "save_steps": max(args.sft_steps // 2, 1),
-        "save_total_limit": 2,
+        "save_strategy": "no",
         "bf16": True,
         "gradient_checkpointing": True,
         "gradient_checkpointing_kwargs": {"use_reentrant": False},
@@ -669,12 +690,10 @@ def main() -> None:
         "assistant_only_loss": True,
         "chat_template_kwargs": {"enable_thinking": False},
         "dataset_kwargs": {"skip_prepare_dataset": False},
-        "report_to": "trackio",
+        "report_to": metrics_backend(),
         "project": "turing-rl-qwen3-8b",
         "run_name": "sft-qwen3-8b",
-        "push_to_hub": True,
-        "hub_model_id": sft_repo,
-        "hub_strategy": "every_save",
+        "push_to_hub": False,
         "remove_unused_columns": False,
     }
     sft_args = SFTConfig(**filter_supported_kwargs(SFTConfig, sft_kwargs))
@@ -694,7 +713,7 @@ def main() -> None:
     sft_metrics = sft_trainer.train()
     sft_trainer.save_model(str(sft_dir))
     tokenizer.save_pretrained(str(sft_dir))
-    sft_trainer.push_to_hub()
+    upload_adapter(sft_dir, sft_repo)
     print(f"[sft] done metrics={sft_metrics.metrics}", flush=True)
 
     del sft_trainer
@@ -743,19 +762,15 @@ def main() -> None:
         "temperature": 0.6,
         "top_p": 1.0,
         "logging_steps": 1,
-        "save_strategy": "steps",
-        "save_steps": max(args.grpo_steps // 2, 1),
-        "save_total_limit": 2,
+        "save_strategy": "no",
         "bf16": True,
         "gradient_checkpointing": True,
         "gradient_checkpointing_kwargs": {"use_reentrant": False},
         "chat_template_kwargs": {"enable_thinking": False},
-        "report_to": "trackio",
+        "report_to": metrics_backend(),
         "project": "turing-rl-qwen3-8b",
         "run_name": "grpo-qwen3-8b",
-        "push_to_hub": True,
-        "hub_model_id": grpo_repo,
-        "hub_strategy": "every_save",
+        "push_to_hub": False,
         "remove_unused_columns": False,
         "log_completions": True,
         "num_completions_to_print": 1,
@@ -778,7 +793,7 @@ def main() -> None:
     grpo_metrics = grpo_trainer.train()
     grpo_trainer.save_model(str(grpo_dir))
     tokenizer.save_pretrained(str(grpo_dir))
-    grpo_trainer.push_to_hub()
+    upload_adapter(grpo_dir, grpo_repo)
     print(f"[grpo] done metrics={grpo_metrics.metrics}", flush=True)
 
     summary = {
