@@ -33,6 +33,7 @@ def upload_source(api: HfApi, username: str) -> str:
         allow_patterns=[
             "lifemem/*.py",
             "scripts/hf_job.py",
+            "scripts/gpu_bootstrap.sh",
             "pyproject.toml",
             "README.md",
         ],
@@ -57,15 +58,18 @@ def submit(api: HfApi, src_repo: str) -> dict:
         "LIFEMEM_N_WAVES": N_WAVES,
         "LIFEMEM_EVENTS_PER_WAVE": os.environ.get("LIFEMEM_EVENTS_PER_WAVE", "8"),
         "LIFEMEM_MODEL": os.environ.get("LIFEMEM_MODEL", "Qwen/Qwen3.5-4B"),
+        "LIFEMEM_HARDWARE": "huggingface-jobs",
+        "LIFEMEM_PROGRESS": "1",
         "HF_HUB_ENABLE_HF_TRANSFER": "1",
     }
+    namespace = os.environ.get("LIFEMEM_JOBS_NAMESPACE")
     job = api.run_job(
         image="pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel",
         command=[
             "bash",
             "-lc",
             "pip install -q 'transformers>=5.0.0' peft accelerate pillow "
-            "huggingface_hub boto3 torchvision numpy safetensors && "
+            "huggingface_hub boto3 torchvision numpy safetensors hf_transfer && "
             "python /src/scripts/hf_job.py",
         ],
         flavor=FLAVOR,
@@ -74,6 +78,7 @@ def submit(api: HfApi, src_repo: str) -> dict:
         env=env,
         name="lifemem-qwen-4b",
         volumes=[Volume(type="dataset", source=src_repo, mount_path="/src")],
+        namespace=namespace,
     )
     return {
         "status": "submitted",

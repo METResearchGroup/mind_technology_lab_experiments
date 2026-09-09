@@ -15,6 +15,7 @@ the source dataset when it is not already on PYTHONPATH.
 #   "peft>=0.17.0",
 #   "pillow>=10.0.0",
 #   "safetensors>=0.4.0",
+#   "hf_transfer>=0.1.0",
 #   "torchvision>=0.21.0",
 #   "transformers>=5.0.0",
 # ]
@@ -87,16 +88,18 @@ def main() -> None:
         )
     os.environ.setdefault("LIFEMEM_PROGRESS", "1")
     os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
-    print(
-        json.dumps(
-            {
-                "cuda": torch.cuda.get_device_name(0),
-                "root": str(ROOT),
-                "torch": torch.__version__,
-            }
-        ),
-        flush=True,
-    )
+    started = {
+        "status": "running",
+        "cuda": torch.cuda.get_device_name(0),
+        "root": str(ROOT),
+        "torch": torch.__version__,
+        "hardware": os.environ.get("LIFEMEM_HARDWARE", "huggingface-jobs"),
+        "model": os.environ.get("LIFEMEM_MODEL", "Qwen/Qwen3.5-4B"),
+        "n_agents": _int_env("LIFEMEM_N_AGENTS", 8),
+        "n_waves": _int_env("LIFEMEM_N_WAVES", 6),
+    }
+    print(json.dumps(started), flush=True)
+    push_json(started, "gpu_progress.json", Path("gpu_progress.json"))
     config = LifeMemConfig(
         model_name=os.environ.get("LIFEMEM_MODEL", "Qwen/Qwen3.5-4B")
     )
