@@ -198,9 +198,10 @@ def _rest_create(src_repo: str, gpu: str, cloud: str) -> tuple[int, dict | str]:
 def create_pod(src_repo: str) -> dict:
     errors: list[str] = []
     clouds = ["SECURE", "COMMUNITY", "ALL"]
+    # REST sets dockerStartCmd; GraphQL dockerArgs is not returned/applied.
     for gpu in GPU_TYPES:
         for cloud in clouds:
-            for factory in (_graphql_create, _rest_create):
+            for factory in (_rest_create, _graphql_create):
                 status, payload = factory(src_repo, gpu, cloud)
                 if status in {200, 201} and isinstance(payload, dict):
                     pod = (
