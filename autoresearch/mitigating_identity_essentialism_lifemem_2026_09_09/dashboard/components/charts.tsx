@@ -59,8 +59,16 @@ export function PaperMetricChart({
   );
 }
 
-export function ReplicationChart({ data, metric }: { data: DashboardData; metric: string }) {
-  const rows = Object.entries(data.replication.methods).map(([method, row]) => ({
+export function ReplicationChart({
+  data,
+  metric,
+  methods,
+}: {
+  data: DashboardData;
+  metric: string;
+  methods?: DashboardData["replication"]["methods"];
+}) {
+  const rows = Object.entries(methods ?? data.replication.methods).map(([method, row]) => ({
     method: METHOD_LABELS[method] ?? method,
     value: Number(row[metric as keyof typeof row] ?? 0),
     fill: method === "lifemem" ? "#7eafd4" : method === "profile" ? "#d06a4f" : "#c2b8a3",

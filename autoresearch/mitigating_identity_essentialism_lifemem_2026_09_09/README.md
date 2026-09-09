@@ -43,6 +43,21 @@ npm run dev
 
 The UI has the paper takeaways, Table 1 charts, identity PCA, the synthetic ranking, a compose-a-person control, retrieval scores, latency, and hyperparameter sweeps.
 
-## GPU follow-up
+## GPU run (Hugging Face Jobs)
 
-`scripts/hf_job.py` is a Hugging Face Jobs entry that re-runs the suite (still on the synthetic panel) with the lab default model. It does not train 100 real LoRA adapters; that needs the restricted survey files and the official repo.
+The lab default backbone is `Qwen/Qwen3.5-4B`. `scripts/hf_job.py` loads that model, trains a PEFT LoRA adapter per agent for LifeMem / `lifemem_no_struct`, and scores the same nine methods.
+
+Jobs cannot see this git checkout. `scripts/submit_hf_job.py` uploads `lifemem/` to a Hub dataset, then submits:
+
+```bash
+uv run python autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/scripts/submit_hf_job.py
+```
+
+Default hardware is `a10g-small` (24 GB), 8 agents × 6 waves, timeout 3h. Results go to `data/gpu_results.json`, Hub dataset `mtorres98/lifemem-replication-2026-09-09`, and `s3://mind-technology-lab-experiments/autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/`.
+
+Jobs require a positive credit balance on the submitting namespace. After a job finishes:
+
+```bash
+uv run python autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/scripts/fetch_gpu_results.py
+uv run python autoresearch/mitigating_identity_essentialism_lifemem_2026_09_09/scripts/export_dashboard_data.py
+```

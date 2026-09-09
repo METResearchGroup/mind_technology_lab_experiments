@@ -108,6 +108,24 @@ export type DashboardData = {
   };
   takeaways: Takeaway[];
   notes: Record<string, string>;
+  gpu: {
+    status: string;
+    error?: string;
+    hint?: string;
+    id?: string;
+    url?: string;
+    flavor?: string;
+    timeout?: string;
+    src_repo?: string;
+    n_agents?: number;
+    n_waves?: number;
+    model?: string;
+    device?: string;
+    hub_url?: string;
+    config?: Record<string, string | number>;
+    methods?: Record<string, MethodMetrics>;
+    identity?: Record<string, IdentityCloud>;
+  } | null;
 };
 
 export const METHOD_LABELS: Record<string, string> = {

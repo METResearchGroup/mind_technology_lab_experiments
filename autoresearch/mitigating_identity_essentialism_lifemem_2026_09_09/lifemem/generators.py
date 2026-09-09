@@ -65,7 +65,9 @@ class HeuristicRespondent:
         agent: AgentState,
         retrieved: list[RetrievedEvent],
         use_parametric: bool,
+        method: str = "",
     ) -> str:
+        del method
         has_profile = (
             "Demographic profile:" in prompt and "Profile omitted" not in prompt
         )
@@ -111,6 +113,29 @@ class HeuristicRespondent:
             weight = 0.58 if "Do not assume that one demographic" in prompt else 1.0
             value += weight * ses_shift
         return _clip(value, len(question.options))
+
+    def generate_batch(
+        self,
+        prompts: list[str],
+        questions: list[SurveyQuestion],
+        agent: AgentState,
+        retrieved_lists: list[list[RetrievedEvent]],
+        use_parametric: bool,
+        method: str = "",
+    ) -> list[str]:
+        return [
+            self.generate(
+                prompt,
+                question,
+                agent,
+                retrieved,
+                use_parametric,
+                method=method,
+            )
+            for prompt, question, retrieved in zip(
+                prompts, questions, retrieved_lists, strict=True
+            )
+        ]
 
 
 def update_parametric(

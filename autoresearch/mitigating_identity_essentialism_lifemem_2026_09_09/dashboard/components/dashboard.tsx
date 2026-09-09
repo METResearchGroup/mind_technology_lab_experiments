@@ -65,9 +65,9 @@ export function Dashboard() {
         </h1>
         <p className="max-w-3xl text-lg leading-8 text-[var(--muted)]">
           {data.paper.paper.title}. Wang, Zhou, Du, Su, Cao, Pan, Ai, Wu, Zhang, Liu. This
-          dashboard reports the paper’s published tables plus a CPU-faithful replication on a
-          24-person synthetic panel. Restricted Add Health and Understanding Society files are not
-          redistributed.
+          dashboard reports the paper’s published tables, a CPU-faithful replication on a
+          24-person synthetic panel, and a Qwen/Qwen3.5-4B GPU path on Hugging Face Jobs.
+          Restricted Add Health and Understanding Society files are not redistributed.
         </p>
         <div className="flex flex-wrap gap-3">
           <a className="chip" href={data.paper.paper.arxiv}>
@@ -203,6 +203,8 @@ export function Dashboard() {
         <ReplicationTable methods={data.replication.methods} />
       </section>
 
+      <GpuSection data={data} metric={repMetric} />
+
       <section className="flex flex-col gap-5">
         <div>
           <h2 className="text-4xl">Compose a person</h2>
@@ -281,6 +283,49 @@ export function Dashboard() {
         Mind Technology Lab replication · default open model Qwen/Qwen3.5-4B for any GPU follow-up.
       </footer>
     </main>
+  );
+}
+
+function GpuSection({ data, metric }: { data: DashboardData; metric: string }) {
+  const gpu = data.gpu;
+  if (!gpu) return null;
+  const methods = gpu.methods;
+  return (
+    <section className="flex flex-col gap-5">
+      <div>
+        <h2 className="text-4xl">Qwen 4B GPU run</h2>
+        <p className="mt-2 max-w-3xl text-[var(--muted)]">
+          Hugging Face Jobs, {gpu.model ?? "Qwen/Qwen3.5-4B"}, per-agent LoRA rank 8.{" "}
+          {gpu.status === "completed"
+            ? `${gpu.n_agents ?? gpu.config?.n_agents} agents on ${gpu.device ?? gpu.flavor ?? "GPU"}.`
+            : gpu.status === "blocked"
+              ? "The job script is ready; submitting it still needs Jobs credits on the Hugging Face namespace."
+              : "Waiting for gpu_results.json from the Jobs runner."}
+        </p>
+      </div>
+      {methods ? (
+        <>
+          <div className="panel p-4">
+            <ReplicationChart data={data} metric={metric} methods={methods} />
+          </div>
+          <ReplicationTable methods={methods} />
+        </>
+      ) : (
+        <div className="panel p-5 text-sm leading-7 text-[var(--muted)]">
+          <p>Status: {gpu.status}</p>
+          {gpu.url ? (
+            <p>
+              Job:{" "}
+              <a className="text-[var(--gold)]" href={gpu.url}>
+                {gpu.url}
+              </a>
+            </p>
+          ) : null}
+          {gpu.error ? <p>{gpu.error}</p> : null}
+          {gpu.hint ? <p>{gpu.hint}</p> : null}
+        </div>
+      )}
+    </section>
   );
 }
 

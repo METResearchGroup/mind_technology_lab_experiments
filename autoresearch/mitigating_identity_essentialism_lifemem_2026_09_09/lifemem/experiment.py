@@ -8,7 +8,7 @@ from typing import Any
 import numpy as np
 
 from lifemem.config import LifeMemConfig
-from lifemem.generators import HeuristicRespondent, update_parametric
+from lifemem.generators import HeuristicRespondent, parse_generation, update_parametric
 from lifemem.metrics import pca_2d, response_matrix, silhouette, summarize_method
 from lifemem.panel import Panel, build_panel
 from lifemem.prompts import (
@@ -99,20 +99,27 @@ def run_method(
     method: str,
     panel: Panel,
     config: LifeMemConfig,
+    respondent: Any | None = None,
 ) -> list[GenerationRecord]:
     rng = Random(config.seed + sum(ord(ch) for ch in method))
     encoder = HashedEventEncoder(dim=config.hashed_dim)
-    respondent = HeuristicRespondent(seed=config.seed)
+    if respondent is None:
+        respondent = HeuristicRespondent(seed=config.seed)
     agents = [AgentState(profile=deepcopy(agent.profile)) for agent in panel.agents]
     records: list[GenerationRecord] = []
+    train_adapter = getattr(respondent, "train_adapter", None)
+    generate_batch = getattr(respondent, "generate_batch", None)
     for wave in panel.waves:
         for agent in agents:
             new_events = panel.events_by_wave[(agent.profile.agent_id, wave)]
             replay = _sample_replay(agent.events, config.replay_size, rng)
             if _uses_param(method):
                 update_parametric(agent, new_events, replay, encoder)
+                if train_adapter is not None:
+                    train_adapter(method, agent, new_events, replay)
             agent.events.extend(new_events)
         for agent in agents:
+            packed: list[tuple[SurveyQuestion, list[RetrievedEvent], str]] = []
             for question in panel.questions:
                 if method == "random_event":
                     retrieved = [
@@ -137,14 +144,37 @@ def run_method(
                     )
                 else:
                     retrieved = []
-                prompt = build_prompt(method, agent, question, retrieved, config)
-                raw = respondent.generate(
-                    prompt=prompt,
-                    question=question,
-                    agent=agent,
-                    retrieved=retrieved,
-                    use_parametric=_uses_param(method),
+                packed.append(
+                    (
+                        question,
+                        retrieved,
+                        build_prompt(method, agent, question, retrieved, config),
+                    )
                 )
+            if generate_batch is not None:
+                raws = generate_batch(
+                    [row[2] for row in packed],
+                    questions=[row[0] for row in packed],
+                    agent=agent,
+                    retrieved_lists=[row[1] for row in packed],
+                    use_parametric=_uses_param(method),
+                    method=method,
+                )
+            else:
+                raws = [
+                    respondent.generate(
+                        prompt=prompt,
+                        question=question,
+                        agent=agent,
+                        retrieved=retrieved,
+                        use_parametric=_uses_param(method),
+                        method=method,
+                    )
+                    for question, retrieved, prompt in packed
+                ]
+            for (question, retrieved, prompt), raw in zip(packed, raws, strict=True):
+                text = str(raw)
+                parsed = parse_generation(text, question)
                 records.append(
                     GenerationRecord(
                         agent_id=agent.profile.agent_id,
@@ -153,7 +183,7 @@ def run_method(
                         human_answer=panel.humans[
                             (agent.profile.agent_id, wave, question.variable)
                         ],
-                        parsed_answer=raw,
+                        parsed_answer=parsed,
                         valid_options=question.option_codes,
                         method=method,
                         identity_groups=_identity(agent),
@@ -161,8 +191,8 @@ def run_method(
                             item.event.event_id for item in retrieved
                         ),
                         prompt=prompt,
-                        raw_output=raw,
-                        valid=raw in question.option_codes,
+                        raw_output=text,
+                        valid=bool(parsed and parsed in question.option_codes),
                     )
                 )
     return records
@@ -215,6 +245,8 @@ def run_suite(
     n_agents: int = 24,
     n_waves: int = 6,
     events_per_wave: int = 8,
+    backend: str = "heuristic",
+    respondent: Any | None = None,
 ) -> dict[str, Any]:
     config = config or LifeMemConfig()
     panel = build_panel(
@@ -223,16 +255,27 @@ def run_suite(
         events_per_wave=events_per_wave,
         seed=config.seed,
     )
+    if respondent is None:
+        respondent = _make_respondent(backend, config)
     method_records: dict[str, list[GenerationRecord]] = {}
     summaries: dict[str, Any] = {}
     for method in config.methods:
-        records = run_method(method, panel, config)
+        records = run_method(method, panel, config, respondent=respondent)
         method_records[method] = records
         summaries[method] = summarize_method(records, config.group_variables)
     last_wave = panel.waves[-1]
 
     def _last(method: str) -> list[GenerationRecord]:
-        return [row for row in method_records[method] if row.wave == last_wave]
+        return [row for row in method_records.get(method, []) if row.wave == last_wave]
+
+    identity: dict[str, Any] = {}
+    if "profile" in method_records:
+        identity["human"] = identity_pca(_last("profile"), "human_answer")
+        identity["profile"] = identity_pca(_last("profile"), "parsed_answer")
+    if "lifemem" in method_records:
+        identity["lifemem"] = identity_pca(_last("lifemem"), "parsed_answer")
+    if "direct" in method_records:
+        identity["direct"] = identity_pca(_last("direct"), "parsed_answer")
 
     return {
         "config": {
@@ -241,16 +284,12 @@ def run_suite(
             "n_waves": n_waves,
             "events_per_wave": events_per_wave,
             "model": config.model_name,
+            "backend": backend,
             "top_k": config.top_k,
             "forgetting_alpha": config.forgetting_alpha,
         },
         "methods": summaries,
-        "identity": {
-            "human": identity_pca(_last("profile"), "human_answer"),
-            "profile": identity_pca(_last("profile"), "parsed_answer"),
-            "lifemem": identity_pca(_last("lifemem"), "parsed_answer"),
-            "direct": identity_pca(_last("direct"), "parsed_answer"),
-        },
+        "identity": identity,
         "adapter_pca": adapter_pca(panel, config),
         "examples": _examples(method_records, panel),
     }
@@ -285,6 +324,14 @@ def _examples(
             }
         )
     return rows
+
+
+def _make_respondent(backend: str, config: LifeMemConfig) -> Any:
+    if backend in {"llm", "qwen", "gpu"}:
+        from lifemem.llm import QwenRespondent
+
+        return QwenRespondent(config)
+    return HeuristicRespondent(seed=config.seed)
 
 
 def write_json(data: dict[str, Any], path: Path) -> None:

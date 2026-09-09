@@ -5,6 +5,7 @@
     "n_waves": 6,
     "events_per_wave": 8,
     "model": "Qwen/Qwen3.5-4B",
+    "backend": "heuristic",
     "top_k": 5,
     "forgetting_alpha": 0.9
   },

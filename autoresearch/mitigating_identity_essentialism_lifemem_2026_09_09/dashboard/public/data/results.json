@@ -556,6 +556,7 @@
       "n_waves": 6,
       "events_per_wave": 8,
       "model": "Qwen/Qwen3.5-4B",
+      "backend": "heuristic",
       "top_k": 5,
       "forgetting_alpha": 0.9
     },
@@ -31141,7 +31142,14 @@
   "notes": {
     "restricted_data": "Add Health and Understanding Society respondent files are not redistributable. This replication uses a synthetic six-wave panel with the paper's method, metrics, and hyperparameters. The default backbone is Qwen/Qwen3.5-4B.",
     "encoder": "CPU replication uses a deterministic hashed n-gram encoder. The paper uses all-MiniLM-L6-v2 for LifeMem and bge-m3 for Event RAG.",
-    "parametric_memory": "CPU replication stores persistent QA bindings as a stand-in for per-agent LoRA. Paper hyperparameters: rank 8, alpha 16, replay 4, eta 0.5, two epochs per wave.",
-    "decay": "Paper reports lambda=0.105; official configs set forgetting_alpha=0.9."
+    "parametric_memory": "CPU replication stores persistent QA bindings as a stand-in for per-agent LoRA. The Hugging Face Jobs path trains real PEFT adapters (rank 8, alpha 16, replay 4, two epochs per wave) on Qwen/Qwen3.5-4B.",
+    "decay": "Paper reports lambda=0.105; official configs set forgetting_alpha=0.9.",
+    "gpu": "GPU entry: scripts/submit_hf_job.py uploads sources and runs scripts/hf_job.py on a10g-small. Results land in data/gpu_results.json, the Hub dataset, and S3."
+  },
+  "gpu": {
+    "status": "pending",
+    "model": "Qwen/Qwen3.5-4B",
+    "flavor": "a10g-small",
+    "hint": "Run scripts/submit_hf_job.py after adding Hugging Face Jobs credits. The runner trains per-agent LoRA on Qwen/Qwen3.5-4B."
   }
 }

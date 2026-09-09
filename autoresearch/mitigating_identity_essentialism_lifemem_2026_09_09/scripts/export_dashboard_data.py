@@ -114,6 +114,7 @@ def main() -> None:
         }
         for name, row in results["methods"].items()
     }
+    gpu = _gpu_payload()
     bundle = {
         "paper": paper,
         "replication": {
@@ -121,7 +122,7 @@ def main() -> None:
             "methods": compact_methods,
         },
         "playground": retrieval_playground(),
-        "takeaways": _takeaways(paper, compact_methods, results["identity"]),
+        "takeaways": _takeaways(paper, compact_methods, results["identity"], gpu),
         "notes": {
             "restricted_data": (
                 "Add Health and Understanding Society respondent files are not redistributable. "
@@ -134,19 +135,74 @@ def main() -> None:
             ),
             "parametric_memory": (
                 "CPU replication stores persistent QA bindings as a stand-in for per-agent LoRA. "
-                "Paper hyperparameters: rank 8, alpha 16, replay 4, eta 0.5, two epochs per wave."
+                "The Hugging Face Jobs path trains real PEFT adapters (rank 8, alpha 16, replay 4, "
+                "two epochs per wave) on Qwen/Qwen3.5-4B."
             ),
             "decay": "Paper reports lambda=0.105; official configs set forgetting_alpha=0.9.",
+            "gpu": (
+                "GPU entry: scripts/submit_hf_job.py uploads sources and runs scripts/hf_job.py "
+                "on a10g-small. Results land in data/gpu_results.json, the Hub dataset, and S3."
+            ),
         },
+        "gpu": gpu,
     }
     write_json(bundle, DASHBOARD_DATA / "results.json")
     write_json(results, ROOT / "data" / "replication_results.json")
     print(json.dumps(compact_methods, indent=2, default=str))
 
 
-def _takeaways(paper: dict, methods: dict, identity: dict) -> list[dict]:
+def _compact_methods(methods: dict) -> dict:
+    return {
+        name: {
+            "kl": row["kl"],
+            "wg_gap": row["wg_gap"],
+            "entropy_gap": row["entropy_gap"],
+            "transition_js": row["transition_js"],
+            "n_records": row["n_records"],
+        }
+        for name, row in methods.items()
+    }
+
+
+def _gpu_payload() -> dict:
+    results_path = ROOT / "data" / "gpu_results.json"
+    status_path = ROOT / "data" / "gpu_job_status.json"
+    if results_path.exists():
+        data = json.loads(results_path.read_text(encoding="utf-8"))
+        payload = {
+            "status": "completed",
+            "config": data.get("config", {}),
+            "methods": _compact_methods(data.get("methods", {})),
+            "identity": data.get("identity"),
+            "device": data.get("device"),
+            "model": data.get("backbone") or data.get("config", {}).get("model"),
+            "n_agents": data.get("config", {}).get("n_agents"),
+            "n_waves": data.get("config", {}).get("n_waves"),
+        }
+        if status_path.exists():
+            status = json.loads(status_path.read_text(encoding="utf-8"))
+            payload["url"] = status.get("url")
+            payload["flavor"] = status.get("flavor")
+            payload["src_repo"] = status.get("src_repo")
+        return payload
+    if status_path.exists():
+        return json.loads(status_path.read_text(encoding="utf-8"))
+    return {
+        "status": "pending",
+        "model": "Qwen/Qwen3.5-4B",
+        "flavor": "a10g-small",
+        "hint": (
+            "Run scripts/submit_hf_job.py after adding Hugging Face Jobs credits. "
+            "The runner trains per-agent LoRA on Qwen/Qwen3.5-4B."
+        ),
+    }
+
+
+def _takeaways(
+    paper: dict, methods: dict, identity: dict, gpu: dict | None = None
+) -> list[dict]:
     llama = paper["table1"]["Llama-3.1-8B-Instruct"]
-    return [
+    rows = [
         {
             "id": "essentialism",
             "title": "Static profiles cluster by class",
@@ -213,6 +269,22 @@ def _takeaways(paper: dict, methods: dict, identity: dict) -> list[dict]:
             "stat_label": "Event RAG / LifeMem latency",
         },
     ]
+    gpu_methods = (gpu or {}).get("methods") or {}
+    if gpu and gpu.get("status") == "completed" and "lifemem" in gpu_methods:
+        rows.append(
+            {
+                "id": "gpu",
+                "title": "Qwen 4B on Hugging Face Jobs",
+                "body": (
+                    f"{gpu.get('model', 'Qwen/Qwen3.5-4B')} with per-agent LoRA. "
+                    f"LifeMem KL {gpu_methods['lifemem']['kl']:.3f} vs Profile "
+                    f"{gpu_methods.get('profile', {}).get('kl', float('nan')):.3f}."
+                ),
+                "stat": f"{gpu_methods['lifemem']['kl']:.2f}",
+                "stat_label": "Qwen GPU LifeMem KL",
+            }
+        )
+    return rows
 
 
 if __name__ == "__main__":
