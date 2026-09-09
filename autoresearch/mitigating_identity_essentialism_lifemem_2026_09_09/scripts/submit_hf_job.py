@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from huggingface_hub import HfApi, Volume, login
+from huggingface_hub import HfApi, login
 from lifemem.artifacts import DEFAULT_RESULTS_REPO, DEFAULT_SRC_REPO, aws_credentials
 
 FLAVOR = os.environ.get("LIFEMEM_FLAVOR", "a10g-small")
@@ -21,12 +21,12 @@ N_AGENTS = os.environ.get("LIFEMEM_N_AGENTS", "8")
 N_WAVES = os.environ.get("LIFEMEM_N_WAVES", "6")
 
 
-def upload_source(api: HfApi, username: str) -> str:
+def upload_source(api: HfApi, username: str) -> tuple[str, str | None]:
     repo_id = os.environ.get("LIFEMEM_SRC_REPO", DEFAULT_SRC_REPO)
     if repo_id.startswith("mtorres98/") and username != "mtorres98":
         repo_id = f"{username}/lifemem-replication-src"
     api.create_repo(repo_id, repo_type="dataset", exist_ok=True, private=False)
-    api.upload_folder(
+    commit = api.upload_folder(
         folder_path=str(ROOT),
         repo_id=repo_id,
         repo_type="dataset",
@@ -39,10 +39,11 @@ def upload_source(api: HfApi, username: str) -> str:
         ],
         commit_message="LifeMem Qwen GPU job sources",
     )
-    return repo_id
+    revision = getattr(commit, "oid", None) or getattr(commit, "commit_id", None)
+    return repo_id, revision
 
 
-def submit(api: HfApi, src_repo: str) -> dict:
+def submit(api: HfApi, src_repo: str, revision: str | None) -> dict:
     key, secret = aws_credentials()
     secrets = {"HF_TOKEN": os.environ["HF_TOKEN"]}
     if key and secret:
@@ -50,7 +51,6 @@ def submit(api: HfApi, src_repo: str) -> dict:
         secrets["AWS_SECRET_ACCESS_KEY"] = secret
     env = {
         "LIFEMEM_SRC_REPO": src_repo,
-        "LIFEMEM_SRC_MOUNT": "/src",
         "LIFEMEM_RESULTS_REPO": os.environ.get(
             "LIFEMEM_RESULTS_REPO", DEFAULT_RESULTS_REPO
         ),
@@ -66,11 +66,12 @@ def submit(api: HfApi, src_repo: str) -> dict:
         "LIFEMEM_MAX_GENERATE_SEQ_LEN": os.environ.get(
             "LIFEMEM_MAX_GENERATE_SEQ_LEN", "2048"
         ),
-        "HF_HUB_ENABLE_HF_TRANSFER": "1",
         "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
     }
+    if revision:
+        env["LIFEMEM_SRC_REVISION"] = revision
     namespace = os.environ.get("LIFEMEM_JOBS_NAMESPACE")
-    # bash -lc drops PATH on some images and can exit 0 without running python.
+    # Snapshot sources inside the job. Dataset volumes can mix revisions.
     # Do not pip-install torchvision: the PyPI wheel replaces CUDA torch.
     job = api.run_job(
         image="pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel",
@@ -79,20 +80,21 @@ def submit(api: HfApi, src_repo: str) -> dict:
             "-c",
             "set -euxo pipefail; "
             "export PYTHONUNBUFFERED=1; "
-            "command -v python3; "
-            "ls -la /src/scripts; "
             "python3 -c 'import torch; print(torch.__version__, torch.cuda.is_available())'; "
             "python3 -m pip install -q --root-user-action=ignore "
             "'transformers>=5.0.0' peft accelerate pillow huggingface_hub boto3 "
             "numpy safetensors hf_transfer; "
-            "python3 /src/scripts/hf_job.py",
+            'SRC=$(python3 -c "import os; from huggingface_hub import snapshot_download; '
+            "print(snapshot_download(repo_id=os.environ['LIFEMEM_SRC_REPO'], "
+            "repo_type='dataset', token=os.environ.get('HF_TOKEN'), "
+            "revision=os.environ.get('LIFEMEM_SRC_REVISION') or None))\"); "
+            'python3 "$SRC/scripts/hf_job.py"',
         ],
         flavor=FLAVOR,
         timeout=TIMEOUT,
         secrets=secrets,
         env=env,
         name="lifemem-qwen-4b",
-        volumes=[Volume(type="dataset", source=src_repo, mount_path="/src")],
         namespace=namespace,
     )
     return {
@@ -102,6 +104,7 @@ def submit(api: HfApi, src_repo: str) -> dict:
         "flavor": FLAVOR,
         "timeout": TIMEOUT,
         "src_repo": src_repo,
+        "src_revision": revision,
         "n_agents": int(N_AGENTS),
         "n_waves": int(N_WAVES),
         "model": env["LIFEMEM_MODEL"],
@@ -115,11 +118,11 @@ def main() -> int:
     login(token=token)
     api = HfApi(token=token)
     username = api.whoami()["name"]
-    src_repo = upload_source(api, username)
+    src_repo, revision = upload_source(api, username)
     status_path = ROOT / "data" / "gpu_job_status.json"
     status_path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        payload = submit(api, src_repo)
+        payload = submit(api, src_repo, revision)
     except Exception as exc:
         payload = {
             "status": "blocked",

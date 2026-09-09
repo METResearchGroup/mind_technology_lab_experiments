@@ -23,6 +23,7 @@ the source dataset when it is not already on PYTHONPATH.
 
 from __future__ import annotations
 
+import inspect
 import json
 import os
 import sys
@@ -32,10 +33,10 @@ from pathlib import Path
 def _ensure_package() -> Path:
     here = Path(__file__).resolve()
     candidates = [
+        here.parents[1] if here.parent.name == "scripts" else here.parent,
         Path(os.environ["LIFEMEM_SRC_MOUNT"])
         if os.environ.get("LIFEMEM_SRC_MOUNT")
         else None,
-        here.parents[1] if here.parent.name == "scripts" else here.parent,
         Path("/src"),
     ]
     for local in candidates:
@@ -53,6 +54,7 @@ def _ensure_package() -> Path:
             repo_id=repo,
             repo_type="dataset",
             token=os.environ.get("HF_TOKEN"),
+            revision=os.environ.get("LIFEMEM_SRC_REVISION") or None,
         )
     )
     if str(snap) not in sys.path:
@@ -103,6 +105,15 @@ def main() -> None:
     }
     print(json.dumps(started), flush=True)
     push_json(started, "gpu_progress.json", Path("gpu_progress.json"))
+    print(
+        json.dumps(
+            {
+                "config_file": inspect.getfile(LifeMemConfig),
+                "config_fields": list(LifeMemConfig.__dataclass_fields__),
+            }
+        ),
+        flush=True,
+    )
     config_kwargs: dict = {
         "model_name": os.environ.get("LIFEMEM_MODEL", "Qwen/Qwen3.5-4B"),
         "train_batch_size": _int_env("LIFEMEM_TRAIN_BATCH_SIZE", 1),
@@ -115,7 +126,9 @@ def main() -> None:
         config_kwargs["methods"] = tuple(
             item.strip() for item in raw_methods.split(",") if item.strip()
         )
-    config = LifeMemConfig(**config_kwargs)
+    known = set(LifeMemConfig.__dataclass_fields__)
+    filtered = {key: val for key, val in config_kwargs.items() if key in known}
+    config = LifeMemConfig(**filtered)
     n_agents = _int_env("LIFEMEM_N_AGENTS", 8)
     n_waves = _int_env("LIFEMEM_N_WAVES", 6)
     events_per_wave = _int_env("LIFEMEM_EVENTS_PER_WAVE", 8)
