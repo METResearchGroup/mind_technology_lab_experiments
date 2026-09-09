@@ -397,24 +397,30 @@ def _takeaways(
             if room["protocol"] == "debate" and room["movement"] is not None
         )
         if moved is not None and natural is not None:
-            body = (
-                "Dummy movement does not drop when round 1 restates the assigned "
-                "side. In the paper, restating the side cut later movement to "
-                "0 to 3%."
-                if dummy
-                else (
+            if dummy:
+                title = "Restating a starting side freezes updating"
+                body = (
+                    "Dummy movement does not drop when round 1 restates the assigned "
+                    "side. In the paper, restating the side cut later movement to "
+                    "0 to 3%."
+                )
+            elif moved <= 0.05:
+                title = "Restating a starting side freezes updating"
+                body = (
                     f"When round 1 names the assigned side, mean movement is "
                     f"{100 * moved:.0f}% of agents. In the natural debate "
-                    f"protocol it is {100 * natural:.0f}%."
+                    f"protocol it is {100 * natural:.0f}%. The paper saw later "
+                    f"movement drop to 0 to 3%."
                 )
-            )
-            items.append(
-                {
-                    "id": "anchor",
-                    "title": "Restating a starting side freezes updating",
-                    "body": body,
-                }
-            )
+            else:
+                title = "Restating a starting side did not freeze updating"
+                body = (
+                    f"When round 1 names the assigned side, mean movement is "
+                    f"{100 * moved:.0f}% of agents. In the natural debate "
+                    f"protocol it is {100 * natural:.0f}%. The paper saw later "
+                    f"movement drop to 0 to 3%."
+                )
+            items.append({"id": "anchor", "title": title, "body": body})
     items.append(
         {
             "id": "use",

@@ -244,7 +244,10 @@ def cmd_debate(
                 }
             )
     jobs = [item for item in planned if item["room_id"] not in existing_ids]
-    print(f"rooms planned={len(planned)} remaining={len(jobs)}")
+    print(
+        f"rooms planned={len(planned)} remaining={len(jobs)}",
+        flush=True,
+    )
 
     def worker(item: dict[str, Any]) -> dict[str, Any]:
         result = run_room(

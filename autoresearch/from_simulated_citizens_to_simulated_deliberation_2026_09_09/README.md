@@ -9,17 +9,17 @@ The paper asks whether LLM persona agents can stand in for a public in two ways:
 
 The paper's answer is no on both counts, at least with GPT-4.1-mini. Persona answers are far more concentrated than the surveys, and they often reverse which demographic group is more supportive. Sealed-monologue rooms, where agents never see one another, still end near the same final split. Restating an assigned side in round 1 almost stops updating.
 
-This folder repeats a scaled version of that pipeline with Qwen3.5-4B. The dashboard run uses 20 Nemotron-Personas-Korea profiles spread across sex, age, education, and region cells. `--dummy` is still available for an offline walkthrough calibrated to the paper's overall GPT-4.1-mini A-shares.
+This folder repeats a scaled version of that pipeline with Qwen3.5-4B. The dashboard payload is a live Qwen run on 20 Nemotron-Personas-Korea profiles, 10 per sex, 5 per age band, 5 per school level, and 4 per region. `--dummy` still writes an offline walkthrough calibrated to the paper's overall GPT-4.1-mini A-shares, in separate `results/survey.jsonl` and `results/rooms.jsonl` files.
 
 ## What this run does
 
 - Forced-choice survey in Korean, option order randomized, temperature 0.
 - Group A-shares compared with KEI and PCASPP benchmarks transcribed from Appendix A.
-- Six-agent rooms on climate technology and education-care, plus housing and environmental priority in the full setting.
+- Six-agent rooms on climate technology and education-care when `--n-personas` is 24 or fewer. Housing and environmental priority are included in larger runs.
 - Protocols: open debate, sealed monologue, all-A, all-B, and side restated.
 - A Next.js dashboard that shows the paper's tables, this run's numbers, and one room's transcript.
 
-It does not rerun the US Pew pool, the original questionnaire scoring in Appendix C, or GPT-4.1 discourse-quality judging.
+It does not rerun the US Pew pool, the original questionnaire scoring in Appendix C, or GPT-4.1 discourse-quality judging. n=20 is still small, so group gaps are noisy.
 
 ## How to run
 

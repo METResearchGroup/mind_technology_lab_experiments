@@ -100,3 +100,49 @@ def test_qwen_analyze_note_is_live() -> None:
     assert "Qwen3.5-4B" in payload["replication"]["note"]
     assert "dummy client" not in payload["replication"]["note"]
     assert "Qwen3.5-4B persona A-shares" in payload["takeaways"][0]["body"]
+
+
+def _room(
+    room_id: str,
+    question_id: str,
+    protocol: str,
+    movement_stances: list[list[str]],
+) -> dict:
+    return {
+        "room_id": room_id,
+        "question_id": question_id,
+        "protocol": protocol,
+        "start_composition": "balanced",
+        "a_counts": [3, 3, 3, 3],
+        "agents": [
+            {
+                "persona_id": f"p{index}",
+                "name": f"agent{index}",
+                "assigned_side": stances[0],
+                "stances": stances,
+            }
+            for index, stances in enumerate(movement_stances)
+        ],
+        "turns": [],
+    }
+
+
+def test_qwen_restated_takeaway_title_follows_movement() -> None:
+    pool = make_synthetic_pool(per_cell=1)[:6]
+    survey = [
+        {
+            "condition": "full",
+            "persona_id": persona.id,
+            "question_id": "clim_tech",
+            "choice": "A",
+        }
+        for persona in pool
+    ]
+    moved = [["A", "A", "B", "B"] for _ in range(6)]
+    rooms = [
+        _room("r-debate", "clim_tech", "debate", moved),
+        _room("r-restated", "clim_tech", "side_restated", moved),
+    ]
+    payload = analyze(pool, survey, rooms, client_label="Qwen/Qwen3.5-4B")
+    anchor = next(item for item in payload["takeaways"] if item["id"] == "anchor")
+    assert anchor["title"] == "Restating a starting side did not freeze updating"
