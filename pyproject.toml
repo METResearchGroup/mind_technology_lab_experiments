@@ -15,6 +15,16 @@ test = [
     "ruff>=0.9.0",
 ]
 
+# The repository root is a uv workspace. The root itself is not a package; it
+# holds shared tooling and the single shared virtual environment. Each folder
+# matched by the workspace members glob is a workspace member with its own
+# pyproject.toml, and they all share the root .venv and the root uv.lock.
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["autoresearch/*"]
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]

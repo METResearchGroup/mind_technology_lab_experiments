@@ -1,0 +1,12 @@
+[project]
+name = "autoresearch-example-paper-2026-09-09"
+version = "0.1.0"
+description = "Template replication folder. Copy it, rename to {paper_name}_{YYYY_MM_DD}, and edit these dependencies."
+requires-python = ">=3.10"
+dependencies = []
+
+# Replication code is not a distributable package, so uv should not try to build
+# it. Dependencies listed above are still installed into the shared root .venv
+# when you run `uv sync` from the repository root.
+[tool.uv]
+package = false
