@@ -70,14 +70,22 @@ def submit(api: HfApi, src_repo: str) -> dict:
         "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
     }
     namespace = os.environ.get("LIFEMEM_JOBS_NAMESPACE")
+    # bash -lc drops PATH on some images and can exit 0 without running python.
+    # Do not pip-install torchvision: the PyPI wheel replaces CUDA torch.
     job = api.run_job(
         image="pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel",
         command=[
             "bash",
-            "-lc",
-            "pip install -q 'transformers>=5.0.0' peft accelerate pillow "
-            "huggingface_hub boto3 torchvision numpy safetensors hf_transfer && "
-            "python /src/scripts/hf_job.py",
+            "-c",
+            "set -euxo pipefail; "
+            "export PYTHONUNBUFFERED=1; "
+            "command -v python3; "
+            "ls -la /src/scripts; "
+            "python3 -c 'import torch; print(torch.__version__, torch.cuda.is_available())'; "
+            "python3 -m pip install -q --root-user-action=ignore "
+            "'transformers>=5.0.0' peft accelerate pillow huggingface_hub boto3 "
+            "numpy safetensors hf_transfer; "
+            "python3 /src/scripts/hf_job.py",
         ],
         flavor=FLAVOR,
         timeout=TIMEOUT,

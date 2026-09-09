@@ -1,9 +1,9 @@
 {
   "status": "submitted",
-  "id": "6aa1b22a21047bf1b037086a",
-  "url": "https://huggingface.co/jobs/mtorres98/6aa1b22a21047bf1b037086a",
+  "id": "6aa1b2855527934177ebda1a",
+  "url": "https://huggingface.co/jobs/mtorres98/6aa1b2855527934177ebda1a",
   "flavor": "a10g-small",
-  "timeout": "3h",
+  "timeout": "8h",
   "src_repo": "mtorres98/lifemem-replication-src",
   "n_agents": 8,
   "n_waves": 6,
