@@ -26,7 +26,10 @@ package = false
 members = ["autoresearch/*"]
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = [
+    ".",
+    "autoresearch/learning_user_simulators_with_turing_rewards_2026_09_09",
+]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
@@ -54,6 +57,9 @@ indent-style = "space"
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
 include = ["tests"]
+extraPaths = [
+    "autoresearch/learning_user_simulators_with_turing_rewards_2026_09_09",
+]
 exclude = [
     ".cursor",
     ".agents",

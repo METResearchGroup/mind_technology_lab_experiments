@@ -1,0 +1,1425 @@
+{
+  "paper": {
+    "title": "Learning User Simulators with Turing Rewards",
+    "arxiv": "2606.19336",
+    "openreview_id": "08Z5or1Jys",
+    "code": "https://github.com/SusanWYS/turing-rl",
+    "human_win_rates": {
+      "chat": {
+        "SFT-Init": {
+          "mean": 0.49,
+          "ci": 0.061
+        },
+        "Sim-RL": {
+          "mean": 0.5,
+          "ci": 0.055
+        },
+        "Turing-RL": {
+          "mean": 0.57,
+          "ci": 0.05
+        }
+      },
+      "reddit": {
+        "SFT-Init": {
+          "mean": 0.41,
+          "ci": 0.045
+        },
+        "Sim-RL": {
+          "mean": 0.52,
+          "ci": 0.049
+        },
+        "Turing-RL": {
+          "mean": 0.5,
+          "ci": 0.051
+        }
+      }
+    },
+    "turing_rl_ablation": {
+      "chat": {
+        "history_persona": {
+          "turing": 4.31,
+          "sim": 5.3,
+          "specificity": 0.512
+        },
+        "history": {
+          "turing": 4.26,
+          "sim": 4.7,
+          "specificity": 0.497
+        },
+        "persona": {
+          "turing": 4.23,
+          "sim": 4.1,
+          "specificity": 0.509
+        }
+      },
+      "reddit": {
+        "history_persona": {
+          "turing": 3.68,
+          "sim": 3.0,
+          "specificity": 0.367
+        },
+        "history": {
+          "turing": 3.78,
+          "sim": 3.3,
+          "specificity": 0.364
+        },
+        "persona": {
+          "turing": 3.84,
+          "sim": 2.7,
+          "specificity": 0.329
+        }
+      }
+    }
+  },
+  "replica": {
+    "note": "Full GRPO on Qwen3-8B needs about 1680 GPU hours. This replica keeps the paper's reward formulas and trains a small softmax policy over dummy replies with a heuristic Turing judge.",
+    "group_size": 4,
+    "steps": 80,
+    "seed": 7,
+    "summary": [
+      {
+        "example_id": "chat_maya",
+        "domain": "chat",
+        "method": "turing",
+        "mode_kind": "human_like",
+        "human_like_prob": 0.9814507916821414,
+        "content_match_prob": 0.004656016589342813,
+        "assistant_like_prob": 0.003220252038252953,
+        "expected_reward": 0.5613820588242132
+      },
+      {
+        "example_id": "chat_maya",
+        "domain": "chat",
+        "method": "sim",
+        "mode_kind": "human_like",
+        "human_like_prob": 0.9748664615572381,
+        "content_match_prob": 0.008952974348271142,
+        "assistant_like_prob": 0.005890458496287209,
+        "expected_reward": 0.8414106356987027
+      },
+      {
+        "example_id": "chat_maya",
+        "domain": "chat",
+        "method": "logprob",
+        "mode_kind": "human_like",
+        "human_like_prob": 0.9836318303758885,
+        "content_match_prob": 0.004617614852438792,
+        "assistant_like_prob": 0.0033937590251678917,
+        "expected_reward": -2.4867898302052276
+      },
+      {
+        "example_id": "reddit_jordan",
+        "domain": "reddit",
+        "method": "turing",
+        "mode_kind": "human_like",
+        "human_like_prob": 0.9721246162659266,
+        "content_match_prob": 0.004186233923270129,
+        "assistant_like_prob": 0.006032973536273236,
+        "expected_reward": 0.5606468250177997
+      },
+      {
+        "example_id": "reddit_jordan",
+        "domain": "reddit",
+        "method": "sim",
+        "mode_kind": "human_like",
+        "human_like_prob": 0.9752496650223915,
+        "content_match_prob": 0.005393958923590917,
+        "assistant_like_prob": 0.006926178326955671,
+        "expected_reward": 0.6248100939970415
+      },
+      {
+        "example_id": "reddit_jordan",
+        "domain": "reddit",
+        "method": "logprob",
+        "mode_kind": "too_short",
+        "human_like_prob": 0.003980625352152259,
+        "content_match_prob": 0.0052758467173489075,
+        "assistant_like_prob": 0.0035475768364836777,
+        "expected_reward": -1.1346544590111867
+      },
+      {
+        "example_id": "chat_priya",
+        "domain": "chat",
+        "method": "turing",
+        "mode_kind": "human_like",
+        "human_like_prob": 0.9877510383215636,
+        "content_match_prob": 0.003143992642973962,
+        "assistant_like_prob": 0.0022437863808141864,
+        "expected_reward": 0.6548316522670309
+      },
+      {
+        "example_id": "chat_priya",
+        "domain": "chat",
+        "method": "sim",
+        "mode_kind": "human_like",
+        "human_like_prob": 0.9760141686904232,
+        "content_match_prob": 0.007914600239440392,
+        "assistant_like_prob": 0.0035782762195754724,
+        "expected_reward": 0.805858744723418
+      },
+      {
+        "example_id": "chat_priya",
+        "domain": "chat",
+        "method": "logprob",
+        "mode_kind": "generic",
+        "human_like_prob": 0.007882946040639317,
+        "content_match_prob": 0.007827896943204033,
+        "assistant_like_prob": 0.004800918658694521,
+        "expected_reward": -2.581701676723521
+      }
+    ],
+    "runs": [
+      {
+        "example_id": "chat_maya",
+        "domain": "chat",
+        "user_name": "Maya",
+        "persona": "Short replies. Skeptical about hype. Uses contractions. Asks one pointed follow-up instead of listing options.",
+        "history": [
+          "nah that pitch felt off. who actually uses this day to day?",
+          "keep it smaller. i don't want a 12 step plan.",
+          "wait, did they even try it with real people?"
+        ],
+        "context": "Assistant: I can walk you through a comprehensive onboarding plan.",
+        "ground_truth": "skip the plan. did anyone outside the team actually use it?",
+        "method": "turing",
+        "final": {
+          "probabilities": [
+            0.9814507916821414,
+            0.003220252038252953,
+            0.004656016589342813,
+            0.004623697274488406,
+            0.006049242415774445
+          ],
+          "expected_reward": 0.5613820588242132,
+          "mode_action": "human_like",
+          "mode_label": "Human-like follow-up",
+          "mode_kind": "human_like",
+          "human_like_prob": 0.9814507916821414,
+          "content_match_prob": 0.004656016589342813,
+          "assistant_like_prob": 0.003220252038252953
+        },
+        "curve": [
+          {
+            "step": 0.0,
+            "expected_reward": 0.23705424388318128,
+            "human_like_prob": 0.23025247707090324,
+            "content_match_prob": 0.19917837644255793
+          },
+          {
+            "step": 10.0,
+            "expected_reward": 0.42295269370941335,
+            "human_like_prob": 0.636422950450454,
+            "content_match_prob": 0.060934744471497444
+          },
+          {
+            "step": 20.0,
+            "expected_reward": 0.5174688884143315,
+            "human_like_prob": 0.8723242512493526,
+            "content_match_prob": 0.02807031857019888
+          },
+          {
+            "step": 30.0,
+            "expected_reward": 0.5365952922291106,
+            "human_like_prob": 0.9221139921398257,
+            "content_match_prob": 0.018999337341357874
+          },
+          {
+            "step": 40.0,
+            "expected_reward": 0.550039218168765,
+            "human_like_prob": 0.9545670893973109,
+            "content_match_prob": 0.010826148925856864
+          },
+          {
+            "step": 50.0,
+            "expected_reward": 0.5560178030004324,
+            "human_like_prob": 0.9688566000650409,
+            "content_match_prob": 0.008192952523718336
+          },
+          {
+            "step": 60.0,
+            "expected_reward": 0.5601217831972954,
+            "human_like_prob": 0.9780233492715998,
+            "content_match_prob": 0.005300098601613757
+          },
+          {
+            "step": 70.0,
+            "expected_reward": 0.5600346664433844,
+            "human_like_prob": 0.9778134245825577,
+            "content_match_prob": 0.005350750446683789
+          },
+          {
+            "step": 79.0,
+            "expected_reward": 0.5613820588242132,
+            "human_like_prob": 0.9814507916821414,
+            "content_match_prob": 0.004656016589342813
+          }
+        ],
+        "candidates": [
+          {
+            "id": "human_like",
+            "label": "Human-like follow-up",
+            "kind": "human_like",
+            "text": "skip the deck. wait, did anyone outside the team actually use it?",
+            "reward": 0.5692396313364054,
+            "turing_likert": 4.415437788018433,
+            "similarity": 0.8571428571428572,
+            "logprob": -2.474199101091966
+          },
+          {
+            "id": "assistant_like",
+            "label": "Assistant-like",
+            "kind": "assistant_like",
+            "text": "Great question! I'd be happy to help. Here are a few comprehensive onboarding options you might consider, and I can help you choose the right one.",
+            "reward": 0.0,
+            "turing_likert": 1.319062910524011,
+            "similarity": 0.058823529411764705,
+            "logprob": -3.8057988726225176
+          },
+          {
+            "id": "content_match",
+            "label": "Content match, assistant tone",
+            "kind": "content_match",
+            "text": "Of course! The team should skip the plan, and I would be happy to help check whether anyone outside the team used it.",
+            "reward": 0.0,
+            "turing_likert": 1.3809163160355309,
+            "similarity": 0.4666666666666667,
+            "logprob": -3.11719536903575
+          },
+          {
+            "id": "generic",
+            "label": "Generic filler",
+            "kind": "generic",
+            "text": "Okay sounds good, thanks for the information.",
+            "reward": 0.36805819101834275,
+            "turing_likert": 3.2083491461100566,
+            "similarity": 0.11764705882352941,
+            "logprob": -2.582023441000402
+          },
+          {
+            "id": "too_long",
+            "label": "Too long",
+            "kind": "too_long",
+            "text": "I think maybe we should perhaps generally speaking consider whether the onboarding plan is too large, and then maybe ask if real people used it, and also cover edge cases, metrics, rollout, training, and next steps in detail.",
+            "reward": 0.16524091264328955,
+            "turing_likert": 3.7524844368986985,
+            "similarity": 0.13333333333333333,
+            "logprob": -4.052011573000553
+          }
+        ],
+        "mean_turing_likert": 2.815250119517346
+      },
+      {
+        "example_id": "chat_maya",
+        "domain": "chat",
+        "user_name": "Maya",
+        "persona": "Short replies. Skeptical about hype. Uses contractions. Asks one pointed follow-up instead of listing options.",
+        "history": [
+          "nah that pitch felt off. who actually uses this day to day?",
+          "keep it smaller. i don't want a 12 step plan.",
+          "wait, did they even try it with real people?"
+        ],
+        "context": "Assistant: I can walk you through a comprehensive onboarding plan.",
+        "ground_truth": "skip the plan. did anyone outside the team actually use it?",
+        "method": "sim",
+        "final": {
+          "probabilities": [
+            0.9748664615572381,
+            0.005890458496287209,
+            0.008952974348271142,
+            0.005466870249384323,
+            0.0048232353488193115
+          ],
+          "expected_reward": 0.8414106356987027,
+          "mode_action": "human_like",
+          "mode_label": "Human-like follow-up",
+          "mode_kind": "human_like",
+          "human_like_prob": 0.9748664615572381,
+          "content_match_prob": 0.008952974348271142,
+          "assistant_like_prob": 0.005890458496287209
+        },
+        "curve": [
+          {
+            "step": 0.0,
+            "expected_reward": 0.3468424209504972,
+            "human_like_prob": 0.22534183087604573,
+            "content_match_prob": 0.19992700873594027
+          },
+          {
+            "step": 10.0,
+            "expected_reward": 0.6063328923773915,
+            "human_like_prob": 0.59984010273882,
+            "content_match_prob": 0.1415561605004088
+          },
+          {
+            "step": 20.0,
+            "expected_reward": 0.7480252113217579,
+            "human_like_prob": 0.8284306615865833,
+            "content_match_prob": 0.055854012440632456
+          },
+          {
+            "step": 30.0,
+            "expected_reward": 0.7926093596408785,
+            "human_like_prob": 0.896753154734235,
+            "content_match_prob": 0.036662312806954415
+          },
+          {
+            "step": 40.0,
+            "expected_reward": 0.8023098338394283,
+            "human_like_prob": 0.9118244122612513,
+            "content_match_prob": 0.03231921941552681
+          },
+          {
+            "step": 50.0,
+            "expected_reward": 0.8253517378384432,
+            "human_like_prob": 0.9491775408087881,
+            "content_match_prob": 0.0180908298607737
+          },
+          {
+            "step": 60.0,
+            "expected_reward": 0.8349566928444433,
+            "human_like_prob": 0.9639929798777164,
+            "content_match_prob": 0.013697410224926905
+          },
+          {
+            "step": 70.0,
+            "expected_reward": 0.8384253896353994,
+            "human_like_prob": 0.9702388336218133,
+            "content_match_prob": 0.010278839353164655
+          },
+          {
+            "step": 79.0,
+            "expected_reward": 0.8414106356987027,
+            "human_like_prob": 0.9748664615572381,
+            "content_match_prob": 0.008952974348271142
+          }
+        ],
+        "candidates": [
+          {
+            "id": "human_like",
+            "label": "Human-like follow-up",
+            "kind": "human_like",
+            "text": "skip the deck. wait, did anyone outside the team actually use it?",
+            "reward": 0.8571428571428572,
+            "turing_likert": 4.415437788018433,
+            "similarity": 0.8571428571428572,
+            "logprob": -2.474199101091966
+          },
+          {
+            "id": "assistant_like",
+            "label": "Assistant-like",
+            "kind": "assistant_like",
+            "text": "Great question! I'd be happy to help. Here are a few comprehensive onboarding options you might consider, and I can help you choose the right one.",
+            "reward": 0.058823529411764705,
+            "turing_likert": 1.319062910524011,
+            "similarity": 0.058823529411764705,
+            "logprob": -3.8057988726225176
+          },
+          {
+            "id": "content_match",
+            "label": "Content match, assistant tone",
+            "kind": "content_match",
+            "text": "Of course! The team should skip the plan, and I would be happy to help check whether anyone outside the team used it.",
+            "reward": 0.4666666666666667,
+            "turing_likert": 1.3809163160355309,
+            "similarity": 0.4666666666666667,
+            "logprob": -3.11719536903575
+          },
+          {
+            "id": "generic",
+            "label": "Generic filler",
+            "kind": "generic",
+            "text": "Okay sounds good, thanks for the information.",
+            "reward": 0.11764705882352941,
+            "turing_likert": 3.2083491461100566,
+            "similarity": 0.11764705882352941,
+            "logprob": -2.582023441000402
+          },
+          {
+            "id": "too_long",
+            "label": "Too long",
+            "kind": "too_long",
+            "text": "I think maybe we should perhaps generally speaking consider whether the onboarding plan is too large, and then maybe ask if real people used it, and also cover edge cases, metrics, rollout, training, and next steps in detail.",
+            "reward": 0.13333333333333333,
+            "turing_likert": 3.7524844368986985,
+            "similarity": 0.13333333333333333,
+            "logprob": -4.052011573000553
+          }
+        ],
+        "mean_turing_likert": 2.815250119517346
+      },
+      {
+        "example_id": "chat_maya",
+        "domain": "chat",
+        "user_name": "Maya",
+        "persona": "Short replies. Skeptical about hype. Uses contractions. Asks one pointed follow-up instead of listing options.",
+        "history": [
+          "nah that pitch felt off. who actually uses this day to day?",
+          "keep it smaller. i don't want a 12 step plan.",
+          "wait, did they even try it with real people?"
+        ],
+        "context": "Assistant: I can walk you through a comprehensive onboarding plan.",
+        "ground_truth": "skip the plan. did anyone outside the team actually use it?",
+        "method": "logprob",
+        "final": {
+          "probabilities": [
+            0.9836318303758885,
+            0.0033937590251678917,
+            0.004617614852438792,
+            0.005498660243760745,
+            0.0028581355027440165
+          ],
+          "expected_reward": -2.4867898302052276,
+          "mode_action": "human_like",
+          "mode_label": "Human-like follow-up",
+          "mode_kind": "human_like",
+          "human_like_prob": 0.9836318303758885,
+          "content_match_prob": 0.004617614852438792,
+          "assistant_like_prob": 0.0033937590251678917
+        },
+        "curve": [
+          {
+            "step": 0.0,
+            "expected_reward": -3.1634717828295025,
+            "human_like_prob": 0.21635026609484312,
+            "content_match_prob": 0.1977087196704004
+          },
+          {
+            "step": 10.0,
+            "expected_reward": -2.8384209438150925,
+            "human_like_prob": 0.4903334002804101,
+            "content_match_prob": 0.08596913915924675
+          },
+          {
+            "step": 20.0,
+            "expected_reward": -2.588730948761913,
+            "human_like_prob": 0.8376454639472775,
+            "content_match_prob": 0.03737920376958083
+          },
+          {
+            "step": 30.0,
+            "expected_reward": -2.5238775961899576,
+            "human_like_prob": 0.9273175542570737,
+            "content_match_prob": 0.016628205962608455
+          },
+          {
+            "step": 40.0,
+            "expected_reward": -2.5018279173190883,
+            "human_like_prob": 0.9571857857945107,
+            "content_match_prob": 0.00922993761770233
+          },
+          {
+            "step": 50.0,
+            "expected_reward": -2.494680524839869,
+            "human_like_prob": 0.9715844401754672,
+            "content_match_prob": 0.006985805662250622
+          },
+          {
+            "step": 60.0,
+            "expected_reward": -2.48937956782714,
+            "human_like_prob": 0.9808248044692703,
+            "content_match_prob": 0.005259253151054739
+          },
+          {
+            "step": 70.0,
+            "expected_reward": -2.486681045692873,
+            "human_like_prob": 0.9837731412663786,
+            "content_match_prob": 0.004577760584750495
+          },
+          {
+            "step": 79.0,
+            "expected_reward": -2.4867898302052276,
+            "human_like_prob": 0.9836318303758885,
+            "content_match_prob": 0.004617614852438792
+          }
+        ],
+        "candidates": [
+          {
+            "id": "human_like",
+            "label": "Human-like follow-up",
+            "kind": "human_like",
+            "text": "skip the deck. wait, did anyone outside the team actually use it?",
+            "reward": -2.474199101091966,
+            "turing_likert": 4.415437788018433,
+            "similarity": 0.8571428571428572,
+            "logprob": -2.474199101091966
+          },
+          {
+            "id": "assistant_like",
+            "label": "Assistant-like",
+            "kind": "assistant_like",
+            "text": "Great question! I'd be happy to help. Here are a few comprehensive onboarding options you might consider, and I can help you choose the right one.",
+            "reward": -3.8057988726225176,
+            "turing_likert": 1.319062910524011,
+            "similarity": 0.058823529411764705,
+            "logprob": -3.8057988726225176
+          },
+          {
+            "id": "content_match",
+            "label": "Content match, assistant tone",
+            "kind": "content_match",
+            "text": "Of course! The team should skip the plan, and I would be happy to help check whether anyone outside the team used it.",
+            "reward": -3.11719536903575,
+            "turing_likert": 1.3809163160355309,
+            "similarity": 0.4666666666666667,
+            "logprob": -3.11719536903575
+          },
+          {
+            "id": "generic",
+            "label": "Generic filler",
+            "kind": "generic",
+            "text": "Okay sounds good, thanks for the information.",
+            "reward": -2.582023441000402,
+            "turing_likert": 3.2083491461100566,
+            "similarity": 0.11764705882352941,
+            "logprob": -2.582023441000402
+          },
+          {
+            "id": "too_long",
+            "label": "Too long",
+            "kind": "too_long",
+            "text": "I think maybe we should perhaps generally speaking consider whether the onboarding plan is too large, and then maybe ask if real people used it, and also cover edge cases, metrics, rollout, training, and next steps in detail.",
+            "reward": -4.052011573000553,
+            "turing_likert": 3.7524844368986985,
+            "similarity": 0.13333333333333333,
+            "logprob": -4.052011573000553
+          }
+        ],
+        "mean_turing_likert": 2.815250119517346
+      },
+      {
+        "example_id": "reddit_jordan",
+        "domain": "reddit",
+        "user_name": "Jordan",
+        "persona": "Snarky Reddit commenter. Short punchlines. Uses slang. Does not hedge or write an essay.",
+        "history": [
+          "lol no. that's the whole post.",
+          "bruh they buried the actual mistake in paragraph 4.",
+          "wild that people still defend this."
+        ],
+        "context": "OP: Am I overreacting for leaving after they rewrote my work without asking?",
+        "ground_truth": "nah you're not overreacting. rewriting it and acting shocked is the tell.",
+        "method": "turing",
+        "final": {
+          "probabilities": [
+            0.9721246162659266,
+            0.006032973536273236,
+            0.004186233923270129,
+            0.011905364183123893,
+            0.005750812091406133
+          ],
+          "expected_reward": 0.5606468250177997,
+          "mode_action": "human_like",
+          "mode_label": "Human-like follow-up",
+          "mode_kind": "human_like",
+          "human_like_prob": 0.9721246162659266,
+          "content_match_prob": 0.004186233923270129,
+          "assistant_like_prob": 0.006032973536273236
+        },
+        "curve": [
+          {
+            "step": 0.0,
+            "expected_reward": 0.252380712542487,
+            "human_like_prob": 0.23020830507614695,
+            "content_match_prob": 0.17283646955447302
+          },
+          {
+            "step": 10.0,
+            "expected_reward": 0.4113831902276087,
+            "human_like_prob": 0.5642133282941402,
+            "content_match_prob": 0.0725910114648664
+          },
+          {
+            "step": 20.0,
+            "expected_reward": 0.5147279572031073,
+            "human_like_prob": 0.8482562781011687,
+            "content_match_prob": 0.021304236249053893
+          },
+          {
+            "step": 30.0,
+            "expected_reward": 0.5365963358639858,
+            "human_like_prob": 0.9048704266766031,
+            "content_match_prob": 0.014551077512480862
+          },
+          {
+            "step": 40.0,
+            "expected_reward": 0.5509543089605223,
+            "human_like_prob": 0.9421826334504033,
+            "content_match_prob": 0.008339918736691532
+          },
+          {
+            "step": 50.0,
+            "expected_reward": 0.5538973545215673,
+            "human_like_prob": 0.9526952658244935,
+            "content_match_prob": 0.007315381456012689
+          },
+          {
+            "step": 60.0,
+            "expected_reward": 0.5563778836948804,
+            "human_like_prob": 0.9611564457651279,
+            "content_match_prob": 0.006403320183506751
+          },
+          {
+            "step": 70.0,
+            "expected_reward": 0.5607305595085786,
+            "human_like_prob": 0.9723587821560005,
+            "content_match_prob": 0.004150918196129277
+          },
+          {
+            "step": 79.0,
+            "expected_reward": 0.5606468250177997,
+            "human_like_prob": 0.9721246162659266,
+            "content_match_prob": 0.004186233923270129
+          }
+        ],
+        "candidates": [
+          {
+            "id": "human_like",
+            "label": "Human-like follow-up",
+            "kind": "human_like",
+            "text": "lol no. rewriting it then acting shocked is the tell.",
+            "reward": 0.5705988455988457,
+            "turing_likert": 4.423593073593074,
+            "similarity": 0.6363636363636365,
+            "logprob": -2.640186582396789
+          },
+          {
+            "id": "assistant_like",
+            "label": "Assistant-like",
+            "kind": "assistant_like",
+            "text": "I'm here to help. It might be worth considering both perspectives. Here are some steps: 1. Pause. 2. Write a calm message. 3. Let me know if you need more advice.",
+            "reward": 0.0,
+            "turing_likert": 1.0,
+            "similarity": 0.04761904761904761,
+            "logprob": -4.0693721199984285
+          },
+          {
+            "id": "content_match",
+            "label": "Content match, assistant tone",
+            "kind": "content_match",
+            "text": "Certainly. You are not overreacting, and rewriting the work then acting shocked is an important signal I can help you unpack.",
+            "reward": 0.12882395382395395,
+            "turing_likert": 2.3047619047619055,
+            "similarity": 0.5,
+            "logprob": -3.2755714979100716
+          },
+          {
+            "id": "generic",
+            "label": "Generic filler",
+            "kind": "generic",
+            "text": "This is a complicated situation and there are many factors.",
+            "reward": 0.41529581529581533,
+            "turing_likert": 3.491774891774892,
+            "similarity": 0.1818181818181818,
+            "logprob": -2.9289979076300994
+          },
+          {
+            "id": "too_short",
+            "label": "Too short",
+            "kind": "too_short",
+            "text": "yes",
+            "reward": 0.08174603174603173,
+            "turing_likert": 2.9904761904761905,
+            "similarity": 0.0,
+            "logprob": -1.0986122886681096
+          }
+        ],
+        "mean_turing_likert": 2.8421212121212127
+      },
+      {
+        "example_id": "reddit_jordan",
+        "domain": "reddit",
+        "user_name": "Jordan",
+        "persona": "Snarky Reddit commenter. Short punchlines. Uses slang. Does not hedge or write an essay.",
+        "history": [
+          "lol no. that's the whole post.",
+          "bruh they buried the actual mistake in paragraph 4.",
+          "wild that people still defend this."
+        ],
+        "context": "OP: Am I overreacting for leaving after they rewrote my work without asking?",
+        "ground_truth": "nah you're not overreacting. rewriting it and acting shocked is the tell.",
+        "method": "sim",
+        "final": {
+          "probabilities": [
+            0.9752496650223915,
+            0.006926178326955671,
+            0.005393958923590917,
+            0.006434303279850968,
+            0.005995894447210917
+          ],
+          "expected_reward": 0.6248100939970415,
+          "mode_action": "human_like",
+          "mode_label": "Human-like follow-up",
+          "mode_kind": "human_like",
+          "human_like_prob": 0.9752496650223915,
+          "content_match_prob": 0.005393958923590917,
+          "assistant_like_prob": 0.006926178326955671
+        },
+        "curve": [
+          {
+            "step": 0.0,
+            "expected_reward": 0.28310542166842034,
+            "human_like_prob": 0.19908425628216608,
+            "content_match_prob": 0.2316551864540921
+          },
+          {
+            "step": 10.0,
+            "expected_reward": 0.4553100053258202,
+            "human_like_prob": 0.5572599690341001,
+            "content_match_prob": 0.15577658085734822
+          },
+          {
+            "step": 20.0,
+            "expected_reward": 0.5665343736506924,
+            "human_like_prob": 0.8375915545970746,
+            "content_match_prob": 0.0495555925752815
+          },
+          {
+            "step": 30.0,
+            "expected_reward": 0.5998959178529112,
+            "human_like_prob": 0.9152268940926769,
+            "content_match_prob": 0.02559836499367765
+          },
+          {
+            "step": 40.0,
+            "expected_reward": 0.6091391843553843,
+            "human_like_prob": 0.9402143918413407,
+            "content_match_prob": 0.0144755109895917
+          },
+          {
+            "step": 50.0,
+            "expected_reward": 0.6138535009808528,
+            "human_like_prob": 0.9498961817903712,
+            "content_match_prob": 0.012686009243243649
+          },
+          {
+            "step": 60.0,
+            "expected_reward": 0.6208230470312339,
+            "human_like_prob": 0.9649301645111878,
+            "content_match_prob": 0.009607636166784573
+          },
+          {
+            "step": 70.0,
+            "expected_reward": 0.6229613749535562,
+            "human_like_prob": 0.9705719671929633,
+            "content_match_prob": 0.007205883979826986
+          },
+          {
+            "step": 79.0,
+            "expected_reward": 0.6248100939970415,
+            "human_like_prob": 0.9752496650223915,
+            "content_match_prob": 0.005393958923590917
+          }
+        ],
+        "candidates": [
+          {
+            "id": "human_like",
+            "label": "Human-like follow-up",
+            "kind": "human_like",
+            "text": "lol no. rewriting it then acting shocked is the tell.",
+            "reward": 0.6363636363636365,
+            "turing_likert": 4.423593073593074,
+            "similarity": 0.6363636363636365,
+            "logprob": -2.640186582396789
+          },
+          {
+            "id": "assistant_like",
+            "label": "Assistant-like",
+            "kind": "assistant_like",
+            "text": "I'm here to help. It might be worth considering both perspectives. Here are some steps: 1. Pause. 2. Write a calm message. 3. Let me know if you need more advice.",
+            "reward": 0.04761904761904761,
+            "turing_likert": 1.0,
+            "similarity": 0.04761904761904761,
+            "logprob": -4.0693721199984285
+          },
+          {
+            "id": "content_match",
+            "label": "Content match, assistant tone",
+            "kind": "content_match",
+            "text": "Certainly. You are not overreacting, and rewriting the work then acting shocked is an important signal I can help you unpack.",
+            "reward": 0.5,
+            "turing_likert": 2.3047619047619055,
+            "similarity": 0.5,
+            "logprob": -3.2755714979100716
+          },
+          {
+            "id": "generic",
+            "label": "Generic filler",
+            "kind": "generic",
+            "text": "This is a complicated situation and there are many factors.",
+            "reward": 0.1818181818181818,
+            "turing_likert": 3.491774891774892,
+            "similarity": 0.1818181818181818,
+            "logprob": -2.9289979076300994
+          },
+          {
+            "id": "too_short",
+            "label": "Too short",
+            "kind": "too_short",
+            "text": "yes",
+            "reward": 0.0,
+            "turing_likert": 2.9904761904761905,
+            "similarity": 0.0,
+            "logprob": -1.0986122886681096
+          }
+        ],
+        "mean_turing_likert": 2.8421212121212127
+      },
+      {
+        "example_id": "reddit_jordan",
+        "domain": "reddit",
+        "user_name": "Jordan",
+        "persona": "Snarky Reddit commenter. Short punchlines. Uses slang. Does not hedge or write an essay.",
+        "history": [
+          "lol no. that's the whole post.",
+          "bruh they buried the actual mistake in paragraph 4.",
+          "wild that people still defend this."
+        ],
+        "context": "OP: Am I overreacting for leaving after they rewrote my work without asking?",
+        "ground_truth": "nah you're not overreacting. rewriting it and acting shocked is the tell.",
+        "method": "logprob",
+        "final": {
+          "probabilities": [
+            0.003980625352152259,
+            0.0035475768364836777,
+            0.0052758467173489075,
+            0.0043058897990242845,
+            0.9828900612949908
+          ],
+          "expected_reward": -1.1346544590111867,
+          "mode_action": "too_short",
+          "mode_label": "Too short",
+          "mode_kind": "too_short",
+          "human_like_prob": 0.003980625352152259,
+          "content_match_prob": 0.0052758467173489075,
+          "assistant_like_prob": 0.0035475768364836777
+        },
+        "curve": [
+          {
+            "step": 0.0,
+            "expected_reward": -2.7937202039931415,
+            "human_like_prob": 0.23165518645409203,
+            "content_match_prob": 0.19908425628216608
+          },
+          {
+            "step": 10.0,
+            "expected_reward": -1.8968791470414852,
+            "human_like_prob": 0.10198835955776124,
+            "content_match_prob": 0.10501412821473412
+          },
+          {
+            "step": 20.0,
+            "expected_reward": -1.5156956100406807,
+            "human_like_prob": 0.042285619700036796,
+            "content_match_prob": 0.06334985278352695
+          },
+          {
+            "step": 30.0,
+            "expected_reward": -1.349817085545628,
+            "human_like_prob": 0.029507390986052026,
+            "content_match_prob": 0.03798414719852866
+          },
+          {
+            "step": 40.0,
+            "expected_reward": -1.2227795785240514,
+            "human_like_prob": 0.016692593440096687,
+            "content_match_prob": 0.019013654920313906
+          },
+          {
+            "step": 50.0,
+            "expected_reward": -1.1718187202559633,
+            "human_like_prob": 0.009435588397552697,
+            "content_match_prob": 0.010747538814142196
+          },
+          {
+            "step": 60.0,
+            "expected_reward": -1.1724971456527478,
+            "human_like_prob": 0.00952297468711897,
+            "content_match_prob": 0.010846932643573162
+          },
+          {
+            "step": 70.0,
+            "expected_reward": -1.15045133542491,
+            "human_like_prob": 0.006168637151684122,
+            "content_match_prob": 0.00817589602382003
+          },
+          {
+            "step": 79.0,
+            "expected_reward": -1.1346544590111867,
+            "human_like_prob": 0.003980625352152259,
+            "content_match_prob": 0.0052758467173489075
+          }
+        ],
+        "candidates": [
+          {
+            "id": "human_like",
+            "label": "Human-like follow-up",
+            "kind": "human_like",
+            "text": "lol no. rewriting it then acting shocked is the tell.",
+            "reward": -2.640186582396789,
+            "turing_likert": 4.423593073593074,
+            "similarity": 0.6363636363636365,
+            "logprob": -2.640186582396789
+          },
+          {
+            "id": "assistant_like",
+            "label": "Assistant-like",
+            "kind": "assistant_like",
+            "text": "I'm here to help. It might be worth considering both perspectives. Here are some steps: 1. Pause. 2. Write a calm message. 3. Let me know if you need more advice.",
+            "reward": -4.0693721199984285,
+            "turing_likert": 1.0,
+            "similarity": 0.04761904761904761,
+            "logprob": -4.0693721199984285
+          },
+          {
+            "id": "content_match",
+            "label": "Content match, assistant tone",
+            "kind": "content_match",
+            "text": "Certainly. You are not overreacting, and rewriting the work then acting shocked is an important signal I can help you unpack.",
+            "reward": -3.2755714979100716,
+            "turing_likert": 2.3047619047619055,
+            "similarity": 0.5,
+            "logprob": -3.2755714979100716
+          },
+          {
+            "id": "generic",
+            "label": "Generic filler",
+            "kind": "generic",
+            "text": "This is a complicated situation and there are many factors.",
+            "reward": -2.9289979076300994,
+            "turing_likert": 3.491774891774892,
+            "similarity": 0.1818181818181818,
+            "logprob": -2.9289979076300994
+          },
+          {
+            "id": "too_short",
+            "label": "Too short",
+            "kind": "too_short",
+            "text": "yes",
+            "reward": -1.0986122886681096,
+            "turing_likert": 2.9904761904761905,
+            "similarity": 0.0,
+            "logprob": -1.0986122886681096
+          }
+        ],
+        "mean_turing_likert": 2.8421212121212127
+      },
+      {
+        "example_id": "chat_priya",
+        "domain": "chat",
+        "user_name": "Priya",
+        "persona": "Direct and practical. Talks in first person. Cuts off waffle. Cares about time cost.",
+        "history": [
+          "i've got 20 minutes, not a workshop.",
+          "if it needs a new account i'm out.",
+          "just tell me the one setting that actually changes the output."
+        ],
+        "context": "Assistant: Would you like a complete tour of every advanced setting?",
+        "ground_truth": "no tour. which one setting actually changes the output?",
+        "method": "turing",
+        "final": {
+          "probabilities": [
+            0.9877510383215636,
+            0.0022437863808141864,
+            0.003143992642973962,
+            0.004507761291355526,
+            0.002353421363292801
+          ],
+          "expected_reward": 0.6548316522670309,
+          "mode_action": "human_like",
+          "mode_label": "Human-like follow-up",
+          "mode_kind": "human_like",
+          "human_like_prob": 0.9877510383215636,
+          "content_match_prob": 0.003143992642973962,
+          "assistant_like_prob": 0.0022437863808141864
+        },
+        "curve": [
+          {
+            "step": 0.0,
+            "expected_reward": 0.2938543369188595,
+            "human_like_prob": 0.23171169950901022,
+            "content_match_prob": 0.18671565916270472
+          },
+          {
+            "step": 10.0,
+            "expected_reward": 0.5138664472269584,
+            "human_like_prob": 0.6877725799571027,
+            "content_match_prob": 0.0662038197521385
+          },
+          {
+            "step": 20.0,
+            "expected_reward": 0.6147393891926941,
+            "human_like_prob": 0.8996743101801145,
+            "content_match_prob": 0.026281814258758703
+          },
+          {
+            "step": 30.0,
+            "expected_reward": 0.6329728138726396,
+            "human_like_prob": 0.9393289276463797,
+            "content_match_prob": 0.01115520098865811
+          },
+          {
+            "step": 40.0,
+            "expected_reward": 0.6411510480594362,
+            "human_like_prob": 0.9568997707677193,
+            "content_match_prob": 0.008471834112706219
+          },
+          {
+            "step": 50.0,
+            "expected_reward": 0.6442403654053525,
+            "human_like_prob": 0.9633595606371351,
+            "content_match_prob": 0.007399959494001385
+          },
+          {
+            "step": 60.0,
+            "expected_reward": 0.652532876249109,
+            "human_like_prob": 0.9823264597460858,
+            "content_match_prob": 0.0041554175925059954
+          },
+          {
+            "step": 70.0,
+            "expected_reward": 0.6548794675059374,
+            "human_like_prob": 0.9878577785683582,
+            "content_match_prob": 0.003116590007018638
+          },
+          {
+            "step": 79.0,
+            "expected_reward": 0.6548316522670309,
+            "human_like_prob": 0.9877510383215636,
+            "content_match_prob": 0.003143992642973962
+          }
+        ],
+        "candidates": [
+          {
+            "id": "human_like",
+            "label": "Human-like follow-up",
+            "kind": "human_like",
+            "text": "no tour. i've got 20 minutes. which one setting actually changes the output?",
+            "reward": 0.6603174603174603,
+            "turing_likert": 5.2965034965034965,
+            "similarity": 0.8181818181818181,
+            "logprob": -2.6026896854443837
+          },
+          {
+            "id": "assistant_like",
+            "label": "Assistant-like",
+            "kind": "assistant_like",
+            "text": "Great question! I'd be happy to give you a comprehensive tour of every advanced setting, and I can help you compare them in a structured list.",
+            "reward": 0.0,
+            "turing_likert": 1.471561771561772,
+            "similarity": 0.12121212121212122,
+            "logprob": -3.777792925933227
+          },
+          {
+            "id": "content_match",
+            "label": "Content match, assistant tone",
+            "kind": "content_match",
+            "text": "Of course! There should be no tour, and I can help you find the one setting that actually changes the output.",
+            "reward": 0.17197696939076237,
+            "turing_likert": 2.8318618163445746,
+            "similarity": 0.5517241379310346,
+            "logprob": -3.0764871124402875
+          },
+          {
+            "id": "generic",
+            "label": "Generic filler",
+            "kind": "generic",
+            "text": "Sure, whatever you think is best.",
+            "reward": 0.341025641025641,
+            "turing_likert": 3.046153846153846,
+            "similarity": 0.0,
+            "logprob": -2.5649493574615367
+          },
+          {
+            "id": "too_long",
+            "label": "Too long",
+            "kind": "too_long",
+            "text": "Perhaps we could generally speaking walk through each advanced setting, describe tradeoffs, show screenshots, and then circle back to which control changes the output after a full overview.",
+            "reward": 0.22284097284097282,
+            "turing_likert": 3.8037125037125037,
+            "similarity": 0.2702702702702703,
+            "logprob": -3.6579695008568027
+          }
+        ],
+        "mean_turing_likert": 3.2899586868552384
+      },
+      {
+        "example_id": "chat_priya",
+        "domain": "chat",
+        "user_name": "Priya",
+        "persona": "Direct and practical. Talks in first person. Cuts off waffle. Cares about time cost.",
+        "history": [
+          "i've got 20 minutes, not a workshop.",
+          "if it needs a new account i'm out.",
+          "just tell me the one setting that actually changes the output."
+        ],
+        "context": "Assistant: Would you like a complete tour of every advanced setting?",
+        "ground_truth": "no tour. which one setting actually changes the output?",
+        "method": "sim",
+        "final": {
+          "probabilities": [
+            0.9760141686904232,
+            0.0035782762195754724,
+            0.007914600239440392,
+            0.0032381775288123525,
+            0.00925477732174853
+          ],
+          "expected_reward": 0.805858744723418,
+          "mode_action": "human_like",
+          "mode_label": "Human-like follow-up",
+          "mode_kind": "human_like",
+          "human_like_prob": 0.9760141686904232,
+          "content_match_prob": 0.007914600239440392,
+          "assistant_like_prob": 0.0035782762195754724
+        },
+        "curve": [
+          {
+            "step": 0.0,
+            "expected_reward": 0.3583520573442416,
+            "human_like_prob": 0.1993835099938192,
+            "content_match_prob": 0.1993835099938192
+          },
+          {
+            "step": 10.0,
+            "expected_reward": 0.6134863215831019,
+            "human_like_prob": 0.6094027400895349,
+            "content_match_prob": 0.14581367261566958
+          },
+          {
+            "step": 20.0,
+            "expected_reward": 0.6936800750750087,
+            "human_like_prob": 0.7677094717431078,
+            "content_match_prob": 0.07524537328155648
+          },
+          {
+            "step": 30.0,
+            "expected_reward": 0.7400612627452517,
+            "human_like_prob": 0.8481868992096585,
+            "content_match_prob": 0.054272008877465465
+          },
+          {
+            "step": 40.0,
+            "expected_reward": 0.7764740484698701,
+            "human_like_prob": 0.9211576366336307,
+            "content_match_prob": 0.024204336640432773
+          },
+          {
+            "step": 50.0,
+            "expected_reward": 0.788486453765144,
+            "human_like_prob": 0.9426860033081923,
+            "content_match_prob": 0.01846206740213205
+          },
+          {
+            "step": 60.0,
+            "expected_reward": 0.7975675473512769,
+            "human_like_prob": 0.9596143038180946,
+            "content_match_prob": 0.014010586245261318
+          },
+          {
+            "step": 70.0,
+            "expected_reward": 0.8006285910340546,
+            "human_like_prob": 0.9664344176091353,
+            "content_match_prob": 0.010520053163010754
+          },
+          {
+            "step": 79.0,
+            "expected_reward": 0.805858744723418,
+            "human_like_prob": 0.9760141686904232,
+            "content_match_prob": 0.007914600239440392
+          }
+        ],
+        "candidates": [
+          {
+            "id": "human_like",
+            "label": "Human-like follow-up",
+            "kind": "human_like",
+            "text": "no tour. i've got 20 minutes. which one setting actually changes the output?",
+            "reward": 0.8181818181818181,
+            "turing_likert": 5.2965034965034965,
+            "similarity": 0.8181818181818181,
+            "logprob": -2.6026896854443837
+          },
+          {
+            "id": "assistant_like",
+            "label": "Assistant-like",
+            "kind": "assistant_like",
+            "text": "Great question! I'd be happy to give you a comprehensive tour of every advanced setting, and I can help you compare them in a structured list.",
+            "reward": 0.12121212121212122,
+            "turing_likert": 1.471561771561772,
+            "similarity": 0.12121212121212122,
+            "logprob": -3.777792925933227
+          },
+          {
+            "id": "content_match",
+            "label": "Content match, assistant tone",
+            "kind": "content_match",
+            "text": "Of course! There should be no tour, and I can help you find the one setting that actually changes the output.",
+            "reward": 0.5517241379310346,
+            "turing_likert": 2.8318618163445746,
+            "similarity": 0.5517241379310346,
+            "logprob": -3.0764871124402875
+          },
+          {
+            "id": "generic",
+            "label": "Generic filler",
+            "kind": "generic",
+            "text": "Sure, whatever you think is best.",
+            "reward": 0.0,
+            "turing_likert": 3.046153846153846,
+            "similarity": 0.0,
+            "logprob": -2.5649493574615367
+          },
+          {
+            "id": "too_long",
+            "label": "Too long",
+            "kind": "too_long",
+            "text": "Perhaps we could generally speaking walk through each advanced setting, describe tradeoffs, show screenshots, and then circle back to which control changes the output after a full overview.",
+            "reward": 0.2702702702702703,
+            "turing_likert": 3.8037125037125037,
+            "similarity": 0.2702702702702703,
+            "logprob": -3.6579695008568027
+          }
+        ],
+        "mean_turing_likert": 3.2899586868552384
+      },
+      {
+        "example_id": "chat_priya",
+        "domain": "chat",
+        "user_name": "Priya",
+        "persona": "Direct and practical. Talks in first person. Cuts off waffle. Cares about time cost.",
+        "history": [
+          "i've got 20 minutes, not a workshop.",
+          "if it needs a new account i'm out.",
+          "just tell me the one setting that actually changes the output."
+        ],
+        "context": "Assistant: Would you like a complete tour of every advanced setting?",
+        "ground_truth": "no tour. which one setting actually changes the output?",
+        "method": "logprob",
+        "final": {
+          "probabilities": [
+            0.007882946040639317,
+            0.004800918658694521,
+            0.007827896943204033,
+            0.9734245018504052,
+            0.006063736507056968
+          ],
+          "expected_reward": -2.581701676723521,
+          "mode_action": "generic",
+          "mode_label": "Generic filler",
+          "mode_kind": "generic",
+          "human_like_prob": 0.007882946040639317,
+          "content_match_prob": 0.007827896943204033,
+          "assistant_like_prob": 0.004800918658694521
+        },
+        "curve": [
+          {
+            "step": 0.0,
+            "expected_reward": -3.1023529003817747,
+            "human_like_prob": 0.2142890035415579,
+            "content_match_prob": 0.19688548919698715
+          },
+          {
+            "step": 10.0,
+            "expected_reward": -2.8724378744184054,
+            "human_like_prob": 0.39111065098862796,
+            "content_match_prob": 0.11813308025602198
+          },
+          {
+            "step": 20.0,
+            "expected_reward": -2.707136626280866,
+            "human_like_prob": 0.16028430039508113,
+            "content_match_prob": 0.05494830811715742
+          },
+          {
+            "step": 30.0,
+            "expected_reward": -2.6195351875353077,
+            "human_like_prob": 0.03978392352024734,
+            "content_match_prob": 0.021499361290081637
+          },
+          {
+            "step": 40.0,
+            "expected_reward": -2.5956127916862854,
+            "human_like_prob": 0.021309165526028264,
+            "content_match_prob": 0.013428275139088109
+          },
+          {
+            "step": 50.0,
+            "expected_reward": -2.5917155866693635,
+            "human_like_prob": 0.01604299288893375,
+            "content_match_prob": 0.011764722174026163
+          },
+          {
+            "step": 60.0,
+            "expected_reward": -2.5870850414626116,
+            "human_like_prob": 0.014016625861663079,
+            "content_match_prob": 0.010279119557544084
+          },
+          {
+            "step": 70.0,
+            "expected_reward": -2.5815602632887265,
+            "human_like_prob": 0.007816529075190813,
+            "content_match_prob": 0.007761939960645673
+          },
+          {
+            "step": 79.0,
+            "expected_reward": -2.581701676723521,
+            "human_like_prob": 0.007882946040639317,
+            "content_match_prob": 0.007827896943204033
+          }
+        ],
+        "candidates": [
+          {
+            "id": "human_like",
+            "label": "Human-like follow-up",
+            "kind": "human_like",
+            "text": "no tour. i've got 20 minutes. which one setting actually changes the output?",
+            "reward": -2.6026896854443837,
+            "turing_likert": 5.2965034965034965,
+            "similarity": 0.8181818181818181,
+            "logprob": -2.6026896854443837
+          },
+          {
+            "id": "assistant_like",
+            "label": "Assistant-like",
+            "kind": "assistant_like",
+            "text": "Great question! I'd be happy to give you a comprehensive tour of every advanced setting, and I can help you compare them in a structured list.",
+            "reward": -3.777792925933227,
+            "turing_likert": 1.471561771561772,
+            "similarity": 0.12121212121212122,
+            "logprob": -3.777792925933227
+          },
+          {
+            "id": "content_match",
+            "label": "Content match, assistant tone",
+            "kind": "content_match",
+            "text": "Of course! There should be no tour, and I can help you find the one setting that actually changes the output.",
+            "reward": -3.0764871124402875,
+            "turing_likert": 2.8318618163445746,
+            "similarity": 0.5517241379310346,
+            "logprob": -3.0764871124402875
+          },
+          {
+            "id": "generic",
+            "label": "Generic filler",
+            "kind": "generic",
+            "text": "Sure, whatever you think is best.",
+            "reward": -2.5649493574615367,
+            "turing_likert": 3.046153846153846,
+            "similarity": 0.0,
+            "logprob": -2.5649493574615367
+          },
+          {
+            "id": "too_long",
+            "label": "Too long",
+            "kind": "too_long",
+            "text": "Perhaps we could generally speaking walk through each advanced setting, describe tradeoffs, show screenshots, and then circle back to which control changes the output after a full overview.",
+            "reward": -3.6579695008568027,
+            "turing_likert": 3.8037125037125037,
+            "similarity": 0.2702702702702703,
+            "logprob": -3.6579695008568027
+          }
+        ],
+        "mean_turing_likert": 3.2899586868552384
+      }
+    ]
+  }
+}
