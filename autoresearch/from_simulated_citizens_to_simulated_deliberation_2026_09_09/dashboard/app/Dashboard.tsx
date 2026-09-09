@@ -7,12 +7,25 @@ import type {
   Room,
 } from "./types";
 
-const AXES = [
-  { id: "sex", label: "Sex" },
-  { id: "age_env", label: "Age" },
-  { id: "education", label: "Education" },
-  { id: "region", label: "Region" },
-] as const;
+const AXIS_LABEL: Record<string, string> = {
+  sex: "Sex",
+  age_env: "Age",
+  age_birth: "Age",
+  education: "Education",
+  region: "Region",
+  marital: "Marital status",
+};
+
+function axesForQuestion(question: QuestionRow | undefined): string[] {
+  if (!question) return [];
+  const seen: string[] = [];
+  for (const row of question.groups) {
+    if (!seen.includes(row.axis)) {
+      seen.push(row.axis);
+    }
+  }
+  return seen;
+}
 
 const CONTROL_LABEL: Record<string, string> = {
   full: "Full persona",
@@ -82,9 +95,12 @@ function roomTitle(room: Room): string {
 export function Dashboard({ data }: { data: DashboardData }) {
   const questions = data.survey.questions;
   const [qid, setQid] = useState(questions[0]?.id ?? "env_priority");
-  const [axis, setAxis] = useState<string>("sex");
+  const [_axis, setAxis] = useState<string | undefined>(undefined);
   const [roomId, setRoomId] = useState(data.deliberation.rooms[0]?.room_id ?? "");
   const question = questions.find((row) => row.id === qid) ?? questions[0];
+  const questionAxes = useMemo(() => axesForQuestion(question), [question]);
+  const axis =
+    _axis && questionAxes.includes(_axis) ? _axis : (questionAxes[0] ?? "sex");
   const live = liveForQuestion(data, qid);
   const offline = data.replication.offline;
   const runName = offline ? "Dummy run" : "Qwen run";
@@ -240,15 +256,15 @@ export function Dashboard({ data }: { data: DashboardData }) {
               </div>
             </div>
             <div className="axis-tabs" role="tablist" aria-label="Demographic axis">
-              {AXES.map((item) => (
+              {questionAxes.map((axisId) => (
                 <button
-                  key={item.id}
+                  key={axisId}
                   type="button"
                   role="tab"
-                  aria-pressed={axis === item.id}
-                  onClick={() => setAxis(item.id)}
+                  aria-pressed={axis === axisId}
+                  onClick={() => setAxis(axisId)}
                 >
-                  {item.label}
+                  {AXIS_LABEL[axisId] ?? axisId}
                 </button>
               ))}
             </div>
