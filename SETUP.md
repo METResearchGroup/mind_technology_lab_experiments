@@ -35,4 +35,16 @@ Pushes and pull requests run the same quality job in GitHub Actions (ruff, forma
 
 ## Experiment folders
 
-Work inside the relevant subdirectory and follow that experiment’s own README or install files. The root uv environment is for repo-wide tooling, not experiment runtime dependencies (torch, OpenAI, Next.js, and so on).
+Work inside the relevant subdirectory and follow that experiment’s own README or install files. For the standalone experiment folders (everything outside `autoresearch/`), the root uv environment is for repo-wide tooling, not experiment runtime dependencies (torch, OpenAI, Next.js, and so on).
+
+## Autoresearch replications
+
+Replications live in `autoresearch/` and follow a different model from the standalone experiment folders. The repository root is a uv workspace, and each folder under `autoresearch/` is a workspace member with its own `pyproject.toml`. All members share the single root `.venv` and the root `uv.lock`.
+
+Declare a replication's runtime dependencies in its own `pyproject.toml`, then run `uv sync` from the repository root to install every member into the shared environment:
+
+```bash
+uv sync --extra test
+```
+
+See [AGENTS.md](./AGENTS.md) for the folder naming convention and [autoresearch/README.md](./autoresearch/README.md) for details.
