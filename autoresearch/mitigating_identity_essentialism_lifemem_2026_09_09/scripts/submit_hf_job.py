@@ -16,7 +16,7 @@ from huggingface_hub import HfApi, Volume, login
 from lifemem.artifacts import DEFAULT_RESULTS_REPO, DEFAULT_SRC_REPO, aws_credentials
 
 FLAVOR = os.environ.get("LIFEMEM_FLAVOR", "a10g-small")
-TIMEOUT = os.environ.get("LIFEMEM_TIMEOUT", "3h")
+TIMEOUT = os.environ.get("LIFEMEM_TIMEOUT", "8h")
 N_AGENTS = os.environ.get("LIFEMEM_N_AGENTS", "8")
 N_WAVES = os.environ.get("LIFEMEM_N_WAVES", "6")
 
@@ -62,7 +62,10 @@ def submit(api: HfApi, src_repo: str) -> dict:
         "LIFEMEM_PROGRESS": "1",
         "LIFEMEM_TRAIN_BATCH_SIZE": os.environ.get("LIFEMEM_TRAIN_BATCH_SIZE", "1"),
         "LIFEMEM_MAX_TRAIN_SEQ_LEN": os.environ.get("LIFEMEM_MAX_TRAIN_SEQ_LEN", "768"),
-        "LIFEMEM_GEN_BATCH_SIZE": os.environ.get("LIFEMEM_GEN_BATCH_SIZE", "1"),
+        "LIFEMEM_GEN_BATCH_SIZE": os.environ.get("LIFEMEM_GEN_BATCH_SIZE", "4"),
+        "LIFEMEM_MAX_GENERATE_SEQ_LEN": os.environ.get(
+            "LIFEMEM_MAX_GENERATE_SEQ_LEN", "2048"
+        ),
         "HF_HUB_ENABLE_HF_TRANSFER": "1",
         "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
     }

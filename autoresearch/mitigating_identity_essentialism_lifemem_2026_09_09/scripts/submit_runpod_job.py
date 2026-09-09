@@ -87,7 +87,7 @@ def _env_pairs() -> list[dict[str, str]]:
         "LIFEMEM_PROGRESS": "1",
         "LIFEMEM_TRAIN_BATCH_SIZE": os.environ.get("LIFEMEM_TRAIN_BATCH_SIZE", "1"),
         "LIFEMEM_MAX_TRAIN_SEQ_LEN": os.environ.get("LIFEMEM_MAX_TRAIN_SEQ_LEN", "768"),
-        "LIFEMEM_GEN_BATCH_SIZE": os.environ.get("LIFEMEM_GEN_BATCH_SIZE", "1"),
+        "LIFEMEM_GEN_BATCH_SIZE": os.environ.get("LIFEMEM_GEN_BATCH_SIZE", "4"),
         "TOKENIZERS_PARALLELISM": "false",
         "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
     }

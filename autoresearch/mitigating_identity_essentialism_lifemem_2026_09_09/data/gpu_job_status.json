@@ -1,21 +1,11 @@
 {
-  "status": "running",
-  "provider": "runpod",
-  "id": "bksaqrjt4hs602",
-  "url": "https://www.runpod.io/console/pods/bksaqrjt4hs602",
-  "flavor": "NVIDIA L4",
-  "timeout": "until-exit",
+  "status": "submitted",
+  "id": "6aa1b22a21047bf1b037086a",
+  "url": "https://huggingface.co/jobs/mtorres98/6aa1b22a21047bf1b037086a",
+  "flavor": "a10g-small",
+  "timeout": "3h",
   "src_repo": "mtorres98/lifemem-replication-src",
   "n_agents": 8,
   "n_waves": 6,
-  "model": "Qwen/Qwen3.5-4B",
-  "image": "runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04",
-  "torch": "2.6.0+cu124",
-  "hint": "Hugging Face Jobs still returns HTTP 402 on this token. The same scripts/hf_job.py Qwen LoRA suite is running on NVIDIA L4. Progress is in /workspace/lifemem.log on the pod and gpu_progress.json on the Hub.",
-  "pod": {
-    "desiredStatus": "RUNNING",
-    "image": "runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04",
-    "ssh": "root@213.173.105.26:36766",
-    "cloud": "SECURE"
-  }
+  "model": "Qwen/Qwen3.5-4B"
 }

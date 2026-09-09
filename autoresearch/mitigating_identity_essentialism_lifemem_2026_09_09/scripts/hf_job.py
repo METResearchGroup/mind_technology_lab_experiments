@@ -107,7 +107,7 @@ def main() -> None:
         "model_name": os.environ.get("LIFEMEM_MODEL", "Qwen/Qwen3.5-4B"),
         "train_batch_size": _int_env("LIFEMEM_TRAIN_BATCH_SIZE", 1),
         "max_train_seq_len": _int_env("LIFEMEM_MAX_TRAIN_SEQ_LEN", 768),
-        "generate_batch_size": _int_env("LIFEMEM_GEN_BATCH_SIZE", 1),
+        "generate_batch_size": _int_env("LIFEMEM_GEN_BATCH_SIZE", 4),
         "max_generate_seq_len": _int_env("LIFEMEM_MAX_GENERATE_SEQ_LEN", 2048),
     }
     raw_methods = os.environ.get("LIFEMEM_METHODS")
