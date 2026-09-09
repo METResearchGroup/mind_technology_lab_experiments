@@ -43,6 +43,15 @@ PYTHONPATH=autoresearch/hidden_costs_of_personalization_2026_09_09 \
 
 The same command also writes `dashboard/data/replication.json` for the Next.js dashboard in `dashboard/`. From that folder: `npm install && npm run dev`.
 
+A claimable Vercel preview is created with:
+
+```bash
+cd autoresearch/hidden_costs_of_personalization_2026_09_09/dashboard
+npx vercel deploy --temporary -y
+```
+
+If you import this GitHub repo into Vercel, set the root directory to `autoresearch/hidden_costs_of_personalization_2026_09_09/dashboard`.
+
 Tests: `uv run pytest tests/test_prisk_replication.py`.
 
 Original code and data: https://github.com/yumeng-10/personalization_risk
