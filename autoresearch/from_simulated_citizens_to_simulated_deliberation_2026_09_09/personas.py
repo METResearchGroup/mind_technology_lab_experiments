@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import random
 import re
-from collections.abc import Iterator
+from collections import Counter
+from collections.abc import Iterator, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -239,3 +241,42 @@ def save_personas(path: Path, personas: list[Persona]) -> None:
 def load_personas(path: Path) -> list[Persona]:
     raw = json.loads(path.read_text(encoding="utf-8"))
     return [Persona(**item) for item in raw]
+
+
+def select_spread_subset(
+    personas: Sequence[Persona],
+    n: int,
+    seed: int = 20260909,
+) -> list[Persona]:
+    """Pick n personas that spread sex, age, education, and region.
+
+    Each selected persona still occupies a distinct census cell. The greedy
+    step prefers the axis levels that currently have the fewest picks, so a
+    20-person slice is not clustered in one sex, age band, school level, or
+    region.
+    """
+    if n >= len(personas):
+        return list(personas)
+    if n <= 0:
+        return []
+    rng = random.Random(seed)
+    remaining = list(personas)
+    rng.shuffle(remaining)
+    chosen: list[Persona] = []
+    while remaining and len(chosen) < n:
+        sex_n = Counter(item.sex for item in chosen)
+        age_n = Counter(item.age_env for item in chosen)
+        edu_n = Counter(item.education for item in chosen)
+        region_n = Counter(item.region for item in chosen)
+
+        remaining.sort(
+            key=lambda persona, sn=sex_n, an=age_n, en=edu_n, rn=region_n: (
+                sn[persona.sex],
+                an[persona.age_env],
+                en[persona.education],
+                rn[persona.region],
+                persona.id,
+            )
+        )
+        chosen.append(remaining.pop(0))
+    return sorted(chosen, key=lambda persona: (*persona.cell, persona.id))

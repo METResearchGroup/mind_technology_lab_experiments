@@ -70,7 +70,7 @@ class QwenClient:
             extra_body["seed"] = seed
         started = time.monotonic()
         last_error: Exception | None = None
-        for attempt in range(6):
+        for attempt in range(8):
             try:
                 response = self.client.chat.completions.create(
                     model=self.model,
@@ -91,7 +91,7 @@ class QwenClient:
                 )
             except Exception as error:
                 last_error = error
-                sleep_for = min(2**attempt, 20) + random.random()
+                sleep_for = min(2**attempt, 45) + random.random()
                 time.sleep(sleep_for)
         raise RuntimeError(f"Qwen chat failed after retries: {last_error}")
 

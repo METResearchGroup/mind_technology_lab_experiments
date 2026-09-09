@@ -15,7 +15,13 @@ from analyze import analyze, write_dashboard_payload
 from client import ChatClient, QwenClient, map_parallel
 from debate import pick_assigned, pick_balanced_agents, run_room
 from dummy import DummyClient, make_synthetic_pool
-from personas import Persona, load_personas, sample_balanced_pool, save_personas
+from personas import (
+    Persona,
+    load_personas,
+    sample_balanced_pool,
+    save_personas,
+    select_spread_subset,
+)
 from questions import QUESTION_BY_ID, QUESTIONS
 from survey import run_survey_item
 
@@ -52,6 +58,12 @@ def _survey_key(row: dict[str, Any]) -> tuple[str, str, str]:
     )
 
 
+def _result_paths(dummy: bool) -> tuple[Path, Path]:
+    if dummy:
+        return RESULTS / "survey.jsonl", RESULTS / "rooms.jsonl"
+    return RESULTS / "survey_qwen.jsonl", RESULTS / "rooms_qwen.jsonl"
+
+
 def cmd_sample(per_cell: int, *, allow_synthetic: bool) -> list[Persona]:
     path = DATA / "personas.json"
     if path.exists():
@@ -76,8 +88,8 @@ def cmd_survey(
     *,
     workers: int,
     control_repeats: int,
+    path: Path,
 ) -> list[dict[str, Any]]:
-    path = RESULTS / "survey.jsonl"
     existing = {_survey_key(row): row for row in _load_jsonl(path)}
     jobs: list[tuple[str, Persona | None, str]] = []
     for persona in personas:
@@ -85,38 +97,43 @@ def cmd_survey(
             key = ("full", persona.id, question.id)
             if key not in existing:
                 jobs.append(("full", persona, question.id))
-    demo_subset = personas[:: max(1, len(personas) // 40)][:40]
-    for persona in demo_subset:
-        for question in QUESTIONS:
-            key = ("demographics", persona.id, question.id)
-            if key not in existing:
-                jobs.append(("demographics", persona, question.id))
-    for index in range(control_repeats):
-        dummy = Persona(
-            id=f"control-{index:02d}",
-            name=f"시민{index:02d}",
-            sex="Female",
-            sex_ko="여자",
-            age=35,
-            age_env="30-44",
-            age_birth="30s",
-            education="college",
-            education_ko="대학교",
-            region="capital",
-            region_ko="서울",
-            marital="Married",
-            marital_ko="배우자있음",
-            occupation="사무직",
-            household="부부와 거주",
-            narrative="",
-        )
-        for question in QUESTIONS:
-            for condition in ("citizen", "none"):
-                key = (condition, dummy.id, question.id)
+    if control_repeats > 0:
+        step = max(1, len(personas) // 40)
+        demo_subset = personas[::step][:40]
+        for persona in demo_subset:
+            for question in QUESTIONS:
+                key = ("demographics", persona.id, question.id)
                 if key not in existing:
-                    jobs.append((condition, dummy, question.id))
+                    jobs.append(("demographics", persona, question.id))
+        for index in range(control_repeats):
+            dummy = Persona(
+                id=f"control-{index:02d}",
+                name=f"시민{index:02d}",
+                sex="Female",
+                sex_ko="여자",
+                age=35,
+                age_env="30-44",
+                age_birth="30s",
+                education="college",
+                education_ko="대학교",
+                region="capital",
+                region_ko="서울",
+                marital="Married",
+                marital_ko="배우자있음",
+                occupation="사무직",
+                household="부부와 거주",
+                narrative="",
+            )
+            for question in QUESTIONS:
+                for condition in ("citizen", "none"):
+                    key = (condition, dummy.id, question.id)
+                    if key not in existing:
+                        jobs.append((condition, dummy, question.id))
+
+    done = 0
 
     def worker(job: tuple[str, Persona | None, str]) -> dict[str, Any]:
+        nonlocal done
         condition, persona, question_id = job
         record = run_survey_item(
             client,
@@ -126,6 +143,14 @@ def cmd_survey(
         )
         row = asdict(record)
         _append_jsonl(path, row)
+        with _WRITE_LOCK:
+            done += 1
+            persona_id = persona.id if persona else "none"
+            print(
+                f"survey {done}/{len(jobs)} {condition} {question_id} "
+                f"{persona_id} choice={record.choice}",
+                flush=True,
+            )
         return row
 
     print(f"survey jobs remaining: {len(jobs)}")
@@ -152,8 +177,8 @@ def cmd_debate(
     workers: int,
     debate_questions: list[str],
     replicas: int,
+    path: Path,
 ) -> list[dict[str, Any]]:
-    path = RESULTS / "rooms.jsonl"
     existing_ids = {row["room_id"] for row in _load_jsonl(path)}
     choices = _choice_map(survey_rows)
     rng = random.Random(20260909)
@@ -259,6 +284,7 @@ def cmd_debate(
             ],
         }
         _append_jsonl(path, row)
+        print(f"room done {result.room_id} a_counts={result.a_counts}", flush=True)
         return row
 
     map_parallel(jobs, worker, workers=max(1, min(workers, 6)))
@@ -271,13 +297,14 @@ def cmd_analyze(
     rooms: list[dict[str, Any]],
     *,
     client_label: str,
+    live_records: list[dict[str, Any]] | None = None,
 ) -> None:
     payload = analyze(
         personas,
         survey_rows,
         rooms,
         client_label=client_label,
-        live_records=_load_jsonl(RESULTS / "live_sample.jsonl"),
+        live_records=live_records or [],
     )
     RESULTS.mkdir(parents=True, exist_ok=True)
     write_dashboard_payload(RESULTS / "dashboard.json", payload)
@@ -296,22 +323,34 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--per-cell", type=int, default=1)
     parser.add_argument("--control-repeats", type=int, default=24)
+    parser.add_argument("--n-personas", type=int, default=None)
     parser.add_argument("--dummy", action="store_true")
     parser.add_argument("--mini", action="store_true")
+    parser.add_argument("--no-controls", action="store_true")
     parser.add_argument("--no-synthetic", action="store_true")
     args = parser.parse_args()
 
     debate_questions = ["clim_tech", "educ_care", "housing", "env_priority"]
     replicas = 2
-    control_repeats = args.control_repeats
-    personas = cmd_sample(args.per_cell, allow_synthetic=not args.no_synthetic)
+    control_repeats = 0 if args.no_controls else args.control_repeats
+    pool = cmd_sample(args.per_cell, allow_synthetic=not args.no_synthetic)
+    personas = pool
+    if args.n_personas is not None:
+        personas = select_spread_subset(pool, args.n_personas)
+        slice_path = DATA / f"personas_n{len(personas)}.json"
+        save_personas(slice_path, personas)
+        print(f"using {len(personas)} personas spread across cells; wrote {slice_path}")
     survey_personas = personas
     if args.mini:
         debate_questions = ["clim_tech", "educ_care"]
         replicas = 1
-        control_repeats = min(control_repeats, 8)
-        if not args.dummy:
-            survey_personas = personas[::4]
+        if not args.no_controls:
+            control_repeats = min(control_repeats, 8)
+        if args.n_personas is None and not args.dummy:
+            survey_personas = select_spread_subset(pool, 40)
+    if args.n_personas is not None and args.n_personas <= 24:
+        debate_questions = ["clim_tech", "educ_care"]
+        replicas = 1
     if args.stage == "sample":
         return
     client: ChatClient
@@ -322,14 +361,16 @@ def main() -> None:
     else:
         client = QwenClient()
         client_label = "Qwen/Qwen3.5-4B"
-    survey_rows: list[dict[str, Any]] = _load_jsonl(RESULTS / "survey.jsonl")
-    rooms: list[dict[str, Any]] = _load_jsonl(RESULTS / "rooms.jsonl")
+    survey_path, rooms_path = _result_paths(args.dummy)
+    survey_rows: list[dict[str, Any]] = _load_jsonl(survey_path)
+    rooms: list[dict[str, Any]] = _load_jsonl(rooms_path)
     if args.stage in {"survey", "all"}:
         survey_rows = cmd_survey(
             client,
             survey_personas,
             workers=args.workers,
             control_repeats=control_repeats,
+            path=survey_path,
         )
     if args.stage in {"debate", "all"}:
         rooms = cmd_debate(
@@ -339,9 +380,17 @@ def main() -> None:
             workers=args.workers,
             debate_questions=debate_questions,
             replicas=replicas,
+            path=rooms_path,
         )
     if args.stage in {"analyze", "all"}:
-        cmd_analyze(personas, survey_rows, rooms, client_label=client_label)
+        live_records = _load_jsonl(RESULTS / "live_sample.jsonl") if args.dummy else []
+        cmd_analyze(
+            survey_personas,
+            survey_rows,
+            rooms,
+            client_label=client_label,
+            live_records=live_records,
+        )
 
 
 if __name__ == "__main__":

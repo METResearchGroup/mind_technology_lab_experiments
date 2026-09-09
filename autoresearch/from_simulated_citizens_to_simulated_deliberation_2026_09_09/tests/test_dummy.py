@@ -80,3 +80,23 @@ def test_dummy_takeaways_do_not_claim_qwen() -> None:
     body = payload["takeaways"][0]["body"]
     assert "dummy client" in body
     assert "Qwen3.5-4B" not in body
+
+
+def test_qwen_analyze_note_is_live() -> None:
+    pool = make_synthetic_pool(per_cell=1)[:20]
+    survey = [
+        {
+            "condition": "full",
+            "persona_id": persona.id,
+            "question_id": "clim_tech",
+            "choice": "B" if index % 2 else "A",
+        }
+        for index, persona in enumerate(pool)
+    ]
+    payload = analyze(pool, survey, [], client_label="Qwen/Qwen3.5-4B")
+    assert payload["replication"]["offline"] is False
+    assert payload["replication"]["n_personas"] == 20
+    assert payload["replication"]["cells"] == 20
+    assert "Qwen3.5-4B" in payload["replication"]["note"]
+    assert "dummy client" not in payload["replication"]["note"]
+    assert "Qwen3.5-4B persona A-shares" in payload["takeaways"][0]["body"]

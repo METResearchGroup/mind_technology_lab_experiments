@@ -224,6 +224,7 @@ def analyze(
 
     mag = mean_absolute_gap(all_group_rows)
     synthetic = any(persona.id.startswith("synth-") for persona in personas)
+    n_cells = len({persona.cell for persona in personas})
     takeaways = _takeaways(
         mag=mag,
         overall_gap=mean(overall_gaps),
@@ -253,8 +254,8 @@ def analyze(
             "model": client_label,
             "provider": "featherless-ai" if "Qwen" in client_label else "offline",
             "n_personas": len(personas),
-            "cells": 160,
-            "per_cell": max(1, len(personas) // 160) if personas else 0,
+            "cells": n_cells,
+            "per_cell": 1,
             "language": "ko",
             "persona_source": "synthetic" if synthetic else "nemotron-korea",
             "n_survey_full": sum(
@@ -264,7 +265,8 @@ def analyze(
             "offline": "dummy" in client_label.lower(),
             "note": (
                 "The paper used 640 personas (4 per cell) and GPT-4.1-mini. "
-                "This folder uses a jointly balanced pool (1 persona per cell). "
+                f"This run uses {len(personas)} personas spread across "
+                f"{n_cells} sex x age x education x region cells. "
                 + (
                     "Survey and debate rows below come from a deterministic "
                     "dummy client calibrated to the paper's GPT-4.1-mini "
@@ -273,7 +275,8 @@ def analyze(
                     if "dummy" in client_label.lower()
                     else (
                         "Survey and debate rows below come from Qwen3.5-4B, "
-                        "the lab default open model."
+                        "the lab default open model. Group shares are noisy "
+                        f"at n={len(personas)}."
                     )
                 )
             ),

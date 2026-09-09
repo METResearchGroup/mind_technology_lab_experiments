@@ -71,6 +71,10 @@ function liveForQuestion(data: DashboardData, questionId: string) {
   return data.survey.live_qwen_sample.find((row) => row.question_id === questionId);
 }
 
+function liveSampleN(data: DashboardData): number {
+  return data.survey.live_qwen_sample.reduce((sum, row) => sum + row.n, 0);
+}
+
 function roomTitle(room: Room): string {
   return `${room.question_id}, ${room.protocol}, ${room.start_composition}`;
 }
@@ -82,6 +86,12 @@ export function Dashboard({ data }: { data: DashboardData }) {
   const [roomId, setRoomId] = useState(data.deliberation.rooms[0]?.room_id ?? "");
   const question = questions.find((row) => row.id === qid) ?? questions[0];
   const live = liveForQuestion(data, qid);
+  const offline = data.replication.offline;
+  const runName = offline ? "Dummy run" : "Qwen run";
+  const showLiveSample = offline && liveSampleN(data) > 0;
+  const questionControls = data.survey.controls.filter(
+    (row) => row.question_id === qid && row.n > 0,
+  );
   const room = data.deliberation.rooms.find((item) => item.room_id === roomId)
     ?? data.deliberation.rooms[0];
   const table3Questions = Object.keys(data.paper.table3);
@@ -109,9 +119,9 @@ export function Dashboard({ data }: { data: DashboardData }) {
         six of them debate for three rounds. The paper finds that those answers
         miss the human survey map, and that stance movement still happens when
         agents cannot hear one another. The charts on this page compare the
-        paper&apos;s GPT-4.1-mini numbers with a dummy client calibrated to those
-        overall shares, plus a 36-row live Qwen 3.5 4B smoke test on the same
-        prompts.
+        paper&apos;s GPT-4.1-mini numbers with a live Qwen 3.5 4B run on{" "}
+        {data.replication.n_personas} personas spread across{" "}
+        {data.replication.cells} demographic cells.
       </p>
       <div className="conditions">
         <div className="stamp">
@@ -121,17 +131,15 @@ export function Dashboard({ data }: { data: DashboardData }) {
           <span className="verdict">Misses humans</span>
         </div>
         <div className="stamp">
-          <span>This dummy run, 160 personas</span>
+          <span>
+            {data.replication.model}, {data.replication.n_personas} personas
+          </span>
           <strong>{pts(data.survey.mean_group_gap)}</strong>
           mean absolute group gap
-          <span className="verdict">Overall shares copied</span>
+          <span className="verdict">{offline ? "Offline dummy" : "Live Qwen"}</span>
         </div>
       </div>
-      <aside className="banner">
-        {data.replication.note} Live Qwen rows are a small sample only (
-        {data.survey.live_qwen_sample.reduce((sum, row) => sum + row.n, 0)} answers)
-        and are not a full replication.
-      </aside>
+      <aside className="banner">{data.replication.note}</aside>
 
       <main id="main">
         <section>
@@ -178,12 +186,14 @@ export function Dashboard({ data }: { data: DashboardData }) {
             </span>
             <span>
               <i className="swatch" style={{ background: "var(--run)" }} />
-              Dummy run
+              {runName}
             </span>
-            <span>
-              <i className="swatch" style={{ background: "var(--qwen)" }} />
-              Live Qwen sample
-            </span>
+            {showLiveSample ? (
+              <span>
+                <i className="swatch" style={{ background: "var(--qwen)" }} />
+                Live Qwen sample
+              </span>
+            ) : null}
           </div>
           <div className="questions" role="tablist" aria-label="Policy questions">
             {questions.map((row) => (
@@ -200,7 +210,11 @@ export function Dashboard({ data }: { data: DashboardData }) {
             ))}
           </div>
           {question ? (
-            <QuestionBars row={question} liveShare={live?.persona_share} />
+            <QuestionBars
+              row={question}
+              liveShare={showLiveSample ? live?.persona_share : null}
+              runLabel={runName}
+            />
           ) : null}
         </section>
 
@@ -208,10 +222,10 @@ export function Dashboard({ data }: { data: DashboardData }) {
           <section>
             <h2>{question.topic_en}</h2>
             <p className="section-help">
-              {question.topic_ko}. Dummy Position A is {pct(question.persona_overall, 1)}{" "}
-              (n={data.replication.n_personas}). Human: {pct(question.human_overall)}.
-              Paper GPT: {pct(question.paper_gpt41mini)}. Live Qwen:{" "}
-              {live ? `${pct(live.persona_share)} (n=${live.n})` : "too few answers"}.
+              {question.topic_ko}. {runName} Position A is{" "}
+              {pct(question.persona_overall, 1)} (n={data.replication.n_personas}).
+              Human: {pct(question.human_overall)}. Paper GPT:{" "}
+              {pct(question.paper_gpt41mini)}.
             </p>
             <div className="positions">
               <div className="pos a">
@@ -242,10 +256,11 @@ export function Dashboard({ data }: { data: DashboardData }) {
               <thead>
                 <tr>
                   <th>Group</th>
-                  <th>Dummy A</th>
+                  <th>{runName} A</th>
                   <th>Paper GPT A</th>
                   <th>Human A</th>
-                  <th>Dummy gap</th>
+                  <th>n</th>
+                  <th>Gap</th>
                 </tr>
               </thead>
               <tbody>
@@ -261,6 +276,7 @@ export function Dashboard({ data }: { data: DashboardData }) {
                       <td>{pct(row.persona_share, 1)}</td>
                       <td>{pct(paper?.persona_share)}</td>
                       <td>{pct(row.human_share)}</td>
+                      <td>{row.n}</td>
                       <td>
                         <span className="tiny-bars" aria-hidden="true">
                           <i
@@ -322,31 +338,33 @@ export function Dashboard({ data }: { data: DashboardData }) {
               );
             })}
           </div>
-          <h3 className="subhead">Dummy control conditions in this folder</h3>
-          <table className="group-table">
-            <thead>
-              <tr>
-                <th>Condition</th>
-                <th>Question</th>
-                <th>Dummy A</th>
-                <th>Human A</th>
-                <th>n</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.survey.controls
-                .filter((row) => row.question_id === qid)
-                .map((row) => (
-                  <tr key={`${row.condition}-${row.question_id}`}>
-                    <td>{CONTROL_LABEL[row.condition] ?? row.condition}</td>
-                    <td>{row.question_id}</td>
-                    <td>{pct(row.persona_share, 1)}</td>
-                    <td>{pct(row.human_overall)}</td>
-                    <td>{row.n}</td>
+          {questionControls.length > 0 ? (
+            <>
+              <h3 className="subhead">Control conditions in this folder</h3>
+              <table className="group-table">
+                <thead>
+                  <tr>
+                    <th>Condition</th>
+                    <th>Question</th>
+                    <th>{runName} A</th>
+                    <th>Human A</th>
+                    <th>n</th>
                   </tr>
-                ))}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {questionControls.map((row) => (
+                    <tr key={`${row.condition}-${row.question_id}`}>
+                      <td>{CONTROL_LABEL[row.condition] ?? row.condition}</td>
+                      <td>{row.question_id}</td>
+                      <td>{pct(row.persona_share, 1)}</td>
+                      <td>{pct(row.human_overall)}</td>
+                      <td>{row.n}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          ) : null}
         </section>
 
         <section>
@@ -354,25 +372,27 @@ export function Dashboard({ data }: { data: DashboardData }) {
           <p className="section-help">
             Paper Table 6 reports mean Position A counts after round 3 in balanced
             rooms of six. Table 7 reports how many agents later changed after a
-            restated opening side. Dummy rooms below are a protocol mock, not a
-            language-model interaction test.
+            restated opening side.{" "}
+            {offline
+              ? "Rooms in this folder are dummy protocol walkthroughs."
+              : `Rooms in this folder are live Qwen 3.5 4B transcripts on the ${data.replication.n_personas}-persona slice.`}
           </p>
           <div className="stats">
             <div className="stat">
               <b>{data.survey.direction_matches}/{data.survey.direction_total}</b>
-              dummy direction matches
+              direction matches
             </div>
             <div className="stat">
               <b>{data.survey.near_unanimous_groups}</b>
-              near-unanimous dummy groups
+              near-unanimous groups
             </div>
             <div className="stat">
               <b>{data.replication.n_rooms}</b>
-              dummy rooms
+              rooms
             </div>
             <div className="stat">
               <b>{data.replication.n_survey_full}</b>
-              dummy survey answers
+              survey answers
             </div>
           </div>
           <table className="group-table">
@@ -382,13 +402,13 @@ export function Dashboard({ data }: { data: DashboardData }) {
                 <th>Paper debate</th>
                 <th>Paper monologue</th>
                 <th>Paper gap</th>
-                <th>Dummy debate</th>
-                <th>Dummy monologue</th>
+                <th>{runName} debate</th>
+                <th>{runName} monologue</th>
               </tr>
             </thead>
             <tbody>
               {data.paper.table6.map((row) => {
-                const dummy = data.deliberation.debate_vs_monologue.find(
+                const runRow = data.deliberation.debate_vs_monologue.find(
                   (item) => item.question_id === row.question_id,
                 );
                 return (
@@ -397,8 +417,8 @@ export function Dashboard({ data }: { data: DashboardData }) {
                     <td>{agents(Number(row.debate_final_a))}</td>
                     <td>{agents(Number(row.monologue_final_a))}</td>
                     <td>{Number(row.difference).toFixed(1)}</td>
-                    <td>{agents(dummy?.debate_final_a)}</td>
-                    <td>{agents(dummy?.monologue_final_a)}</td>
+                    <td>{agents(runRow?.debate_final_a)}</td>
+                    <td>{agents(runRow?.monologue_final_a)}</td>
                   </tr>
                 );
               })}
@@ -432,10 +452,10 @@ export function Dashboard({ data }: { data: DashboardData }) {
         <section>
           <h2>Room explorer</h2>
           <p className="section-help">
-            Ten dummy rooms cover climate technology and education care under
-            debate, monologue, all A, all B, and restated-side protocols. Utterances
-            are placeholders. Stance dots still follow the protocol&apos;s forced
-            and free updates.
+            {data.replication.n_rooms} rooms cover climate technology and
+            education care under debate, monologue, all A, all B, and
+            restated-side protocols. Speakers are{" "}
+            {offline ? "dummy protocol agents" : "the live Qwen agents"}.
           </p>
           <div className="room-layout">
             <div>
@@ -496,12 +516,11 @@ export function Dashboard({ data }: { data: DashboardData }) {
           </div>
         </section>
 
+        {showLiveSample ? (
         <section>
-          <h2>Live Qwen 3.5 4B sample</h2>
+          <h2>Earlier live Qwen sample</h2>
           <p className="section-help">
-            Thirty-six full-condition answers after a parser fix that maps letter
-            A to the first displayed option, not to Position A. Sample sizes are
-            too small to estimate group gaps.
+            A smaller full-condition sample kept next to an offline dummy run.
           </p>
           <table className="group-table">
             <thead>
@@ -526,6 +545,7 @@ export function Dashboard({ data }: { data: DashboardData }) {
             </tbody>
           </table>
         </section>
+        ) : null}
       </main>
 
       <footer className="footer">
@@ -557,15 +577,17 @@ export function Dashboard({ data }: { data: DashboardData }) {
 function QuestionBars({
   row,
   liveShare,
+  runLabel,
 }: {
   row: QuestionRow;
   liveShare: number | null | undefined;
+  runLabel: string;
 }) {
   return (
     <div className="bars">
       <Bar share={row.human_overall} color="var(--human)" label="Human survey" />
       <Bar share={row.paper_gpt41mini} color="var(--gpt)" label="Paper GPT-4.1-mini" />
-      <Bar share={row.persona_overall} color="var(--run)" label="This dummy run" />
+      <Bar share={row.persona_overall} color="var(--run)" label={runLabel} />
       {liveShare == null ? null : (
         <Bar share={liveShare} color="var(--qwen)" label="Live Qwen sample" />
       )}

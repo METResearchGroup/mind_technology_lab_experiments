@@ -9,7 +9,7 @@ The paper asks whether LLM persona agents can stand in for a public in two ways:
 
 The paper's answer is no on both counts, at least with GPT-4.1-mini. Persona answers are far more concentrated than the surveys, and they often reverse which demographic group is more supportive. Sealed-monologue rooms, where agents never see one another, still end near the same final split. Restating an assigned side in round 1 almost stops updating.
 
-This folder repeats a scaled version of that pipeline. It uses 160 jointly balanced personas (one per sex x age x education x region cell) instead of 640. Personas are real draws from nvidia/Nemotron-Personas-Korea. The full survey and debate rows in `results/` come from a dummy client calibrated to the paper's GPT-4.1-mini overall A-shares. A 36-row live Qwen3.5-4B sample sits beside those numbers. If the Nemotron download fails, the sampler can fill the same cells with synthetic profiles. `--dummy` writes the calibrated JSON without calling a model.
+This folder repeats a scaled version of that pipeline with Qwen3.5-4B. The dashboard run uses 20 Nemotron-Personas-Korea profiles spread across sex, age, education, and region cells. `--dummy` is still available for an offline walkthrough calibrated to the paper's overall GPT-4.1-mini A-shares.
 
 ## What this run does
 
@@ -28,12 +28,14 @@ From the repository root:
 ```bash
 uv sync --all-packages --extra test
 export HF_TOKEN=...
-uv run python autoresearch/from_simulated_citizens_to_simulated_deliberation_2026_09_09/run_experiment.py --mini
+uv run python autoresearch/from_simulated_citizens_to_simulated_deliberation_2026_09_09/run_experiment.py --n-personas 20 --no-controls --workers 4
 ```
 
 Useful flags:
 
-- `--mini` uses one debate replica and, for a live model, a 40-persona survey slice.
+- `--n-personas 20` picks 20 profiles spread across demographic cells.
+- `--no-controls` skips demographics-only, citizen, and no-persona ablations.
+- `--mini` uses one debate replica and, for a live model without `--n-personas`, a 40-persona survey slice.
 - `--dummy` skips the model and writes paper-calibrated choices.
 - `--no-synthetic` fails if Nemotron-Personas-Korea cannot fill every cell.
 
