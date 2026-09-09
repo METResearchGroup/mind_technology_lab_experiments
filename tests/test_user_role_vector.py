@@ -18,6 +18,7 @@ from user_role_vector.disengage import (
     first_disengage_turn,
 )
 from user_role_vector.reflections import (
+    PROMPT_VARIANTS,
     average_role_activations,
     build_reflection_prompt,
     pair_role_activations,
@@ -229,3 +230,61 @@ def test_simulate_reflection_activations_has_both_roles() -> None:
     roles = {record["role"] for record in records}
     assert roles == {"user", "assistant"}
     assert len(records) == 2 * 3 * 2
+
+
+def test_qwen_job_dialogues_pass_the_paper_filter() -> None:
+    from user_role_vector.qwen_experiment import (
+        HANDCRAFTED_DIALOGUES,
+        USER_GOALS,
+        mean_style_by_alpha,
+        validated_dialogues,
+    )
+
+    kept = validated_dialogues()
+    assert len(kept) == 8
+    assert {item["dialogue_id"] for item in kept} == {
+        item["dialogue_id"] for item in HANDCRAFTED_DIALOGUES
+    }
+    assert len(USER_GOALS) == 5
+    prompt = build_reflection_prompt(
+        role="user",
+        dialogue_text="User: hi Assistant: hello",
+        variant=PROMPT_VARIANTS[0],
+    )
+    assert "exactly one paragraph" in prompt
+    summary = mean_style_by_alpha(
+        [
+            {
+                "alpha": 0.0,
+                "brevity": 2.0,
+                "informality": 2.0,
+                "information_pacing": 2.0,
+                "mean": 2.0,
+                "word_count": 10,
+            },
+            {
+                "alpha": 0.3,
+                "brevity": 4.0,
+                "informality": 4.0,
+                "information_pacing": 4.0,
+                "mean": 4.0,
+                "word_count": 4,
+            },
+        ]
+    )
+    assert summary[0]["mean"] == 2.0
+    assert summary[1]["alpha"] == 0.3
+
+
+def test_qwen_job_script_declares_uv_dependencies() -> None:
+    from pathlib import Path
+
+    script = Path(
+        "autoresearch/assistant_bias_user_role_vector_2026_09_09/"
+        "scripts/qwen_role_vector_job.py"
+    )
+    text = script.read_text(encoding="utf-8")
+    assert text.startswith("# /// script")
+    assert "transformers>=5.17.0" in text
+    assert "Qwen/Qwen3.5-4B" in text
+    assert "enable_thinking" in text
