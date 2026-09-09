@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts"
 
+import hfJob from "@/data/hf_job.json"
 import results from "@/data/mini_replication.json"
 import { EXAMPLES } from "@/lib/examples"
 import {
@@ -194,13 +195,13 @@ export function DashboardApp() {
               nativeButton={false}
               render={
                 <a
-                  href="https://huggingface.co/Qwen/Qwen3.5-4B"
+                  href="https://huggingface.co/Qwen/Qwen3-8B"
                   target="_blank"
                   rel="noreferrer"
                 />
               }
             >
-              Default lab model
+              Qwen3-8B
             </Button>
           </div>
         </div>
@@ -223,14 +224,13 @@ export function DashboardApp() {
         </section>
 
         <Alert>
-          <AlertTitle>This is a small replica, not the full paper run.</AlertTitle>
+          <AlertTitle>Paper scale vs this replica</AlertTitle>
           <AlertDescription>
             The paper trains Qwen3-8B with LoRA GRPO for about 1680 GPU hours
-            and uses Qwen3.5-397B as the training judge. There is no GPU in
-            this environment, so the replica keeps the paper formulas, uses
-            dummy users, and trains a small softmax policy with a heuristic
-            judge. The graphs below keep the published numbers and the dummy
-            run side by side.
+            and uses Qwen3.5-397B as the training judge. This dashboard still
+            includes the dummy softmax replica. The Qwen3-8B tab tracks a
+            scaled Hugging Face Jobs run: LoRA SFT then GRPO on Qwen/Qwen3-8B,
+            with gpt-4o-mini substituting for the 397B OpenRouter judge.
           </AlertDescription>
         </Alert>
 
@@ -238,6 +238,7 @@ export function DashboardApp() {
           <TabsList>
             <TabsTrigger value="paper">Paper results</TabsTrigger>
             <TabsTrigger value="replica">Dummy replica</TabsTrigger>
+            <TabsTrigger value="qwen">Qwen3-8B job</TabsTrigger>
             <TabsTrigger value="playground">Interactive judge</TabsTrigger>
           </TabsList>
 
@@ -429,6 +430,128 @@ export function DashboardApp() {
                     ))}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="qwen" className="flex flex-col gap-4 pt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Hugging Face Jobs: Qwen3-8B Turing-RL</CardTitle>
+                <CardDescription>
+                  Real LoRA SFT then GRPO on {hfJob.base_model}, submitted to
+                  HF Jobs. This is a short slice, not the paper&apos;s 1680
+                  GPU-hour training.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline">{hfJob.status}</Badge>
+                  <Badge variant="outline">{hfJob.flavor}</Badge>
+                  <Badge variant="outline">{hfJob.timeout} timeout</Badge>
+                </div>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {hfJob.scale_note}
+                </p>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Field</TableHead>
+                      <TableHead>Value</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>Job ID</TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {hfJob.job_id ?? "not submitted yet"}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Paper judge</TableCell>
+                      <TableCell>{hfJob.paper_judge}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>This job&apos;s judge</TableCell>
+                      <TableCell>
+                        {hfJob.job_judge}. {hfJob.job_judge_reason}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>SFT adapter</TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {hfJob.sft_repo}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>GRPO adapter</TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {hfJob.grpo_repo}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Missing keys</TableCell>
+                      <TableCell>
+                        {hfJob.missing_keys.join(", ") || "none"}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+                <div className="flex flex-wrap gap-2">
+                  {hfJob.job_url ? (
+                    <Button
+                      nativeButton={false}
+                      render={
+                        <a
+                          href={hfJob.job_url}
+                          target="_blank"
+                          rel="noreferrer"
+                        />
+                      }
+                    >
+                      Job logs
+                    </Button>
+                  ) : null}
+                  <Button
+                    variant="outline"
+                    nativeButton={false}
+                    render={
+                      <a
+                        href={`https://huggingface.co/${hfJob.sft_repo}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      />
+                    }
+                  >
+                    SFT repo
+                  </Button>
+                  <Button
+                    variant="outline"
+                    nativeButton={false}
+                    render={
+                      <a
+                        href={`https://huggingface.co/${hfJob.grpo_repo}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      />
+                    }
+                  >
+                    GRPO repo
+                  </Button>
+                  <Button
+                    variant="outline"
+                    nativeButton={false}
+                    render={
+                      <a
+                        href={hfJob.trackio_url}
+                        target="_blank"
+                        rel="noreferrer"
+                      />
+                    }
+                  >
+                    Trackio
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

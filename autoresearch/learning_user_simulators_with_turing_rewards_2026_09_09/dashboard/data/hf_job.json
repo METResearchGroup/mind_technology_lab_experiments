@@ -1,0 +1,24 @@
+{
+  "job_id": null,
+  "job_url": null,
+  "owner": "mtorres98",
+  "flavor": "a100-large",
+  "timeout": "3h",
+  "estimated_cost_usd": "up to ~7.50 at $2.50/hr if the 3h timeout is used",
+  "base_model": "Qwen/Qwen3-8B",
+  "sft_repo": "mtorres98/turing-rl-qwen3-8b-sft",
+  "grpo_repo": "mtorres98/turing-rl-qwen3-8b-grpo",
+  "trackio_project": "turing-rl-qwen3-8b",
+  "trackio_url": "https://huggingface.co/spaces/mtorres98/trackio",
+  "paper_judge": "Qwen/Qwen3.5-397B-A17B via OpenRouter",
+  "job_judge": "gpt-4o-mini via OpenAI",
+  "job_judge_reason": "OPENROUTER_API_KEY is missing in this environment",
+  "scale_note": "LoRA SFT (24 steps) then GRPO (8 steps, G=4, max new tokens 256). This is a real Qwen3-8B run, not the paper's 1680 GPU-hour training.",
+  "missing_keys": [
+    "OPENROUTER_API_KEY",
+    "LAB_AWS_ACCESS_KEY_ID",
+    "LAB_AWS_ACCESS_KEY_SECRET",
+    "VERCEL_TOKEN"
+  ],
+  "status": "not_submitted"
+}
