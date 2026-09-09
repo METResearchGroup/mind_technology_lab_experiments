@@ -1,0 +1,9 @@
+[project]
+name = "autoresearch-hidden-costs-of-personalization-2026-09-09"
+version = "0.1.0"
+description = "Minimal PRISK replication: hidden costs of LLM personalization."
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.uv]
+package = false
