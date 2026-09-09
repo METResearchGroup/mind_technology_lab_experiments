@@ -31,7 +31,7 @@ every workspace member into the shared environment.
 
 ```bash
 # from the repository root
-uv sync --extra test
+uv sync --all-packages --extra test
 ```
 
 Because the environment is shared, you do not create a separate virtual

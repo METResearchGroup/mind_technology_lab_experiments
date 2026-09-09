@@ -18,7 +18,7 @@ From the repository root:
 ```bash
 git clone https://github.com/METResearchGroup/mind_technology_lab_experiments.git
 cd mind_technology_lab_experiments
-uv sync --extra test
+uv sync --all-packages --extra test
 uv run pre-commit install
 ```
 
@@ -41,10 +41,10 @@ Work inside the relevant subdirectory and follow that experiment’s own README 
 
 Replications live in `autoresearch/` and follow a different model from the standalone experiment folders. The repository root is a uv workspace, and each folder under `autoresearch/` is a workspace member with its own `pyproject.toml`. All members share the single root `.venv` and the root `uv.lock`.
 
-Declare a replication's runtime dependencies in its own `pyproject.toml`, then run `uv sync` from the repository root to install every member into the shared environment:
+Declare a replication's runtime dependencies in its own `pyproject.toml`, then run `uv sync --all-packages --extra test` from the repository root to install every member into the shared environment:
 
 ```bash
-uv sync --extra test
+uv sync --all-packages --extra test
 ```
 
 See [AGENTS.md](./AGENTS.md) for the folder naming convention and [autoresearch/README.md](./autoresearch/README.md) for details.
