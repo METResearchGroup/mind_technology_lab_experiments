@@ -453,6 +453,12 @@ export function DashboardApp() {
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   {hfJob.scale_note}
                 </p>
+                {hfJob.billing_error ? (
+                  <Alert>
+                    <AlertTitle>Job not started</AlertTitle>
+                    <AlertDescription>{hfJob.billing_error}</AlertDescription>
+                  </Alert>
+                ) : null}
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -551,6 +557,21 @@ export function DashboardApp() {
                   >
                     Trackio
                   </Button>
+                  {hfJob.script_url ? (
+                    <Button
+                      variant="outline"
+                      nativeButton={false}
+                      render={
+                        <a
+                          href={hfJob.script_url}
+                          target="_blank"
+                          rel="noreferrer"
+                        />
+                      }
+                    >
+                      Job script
+                    </Button>
+                  ) : null}
                 </div>
               </CardContent>
             </Card>
