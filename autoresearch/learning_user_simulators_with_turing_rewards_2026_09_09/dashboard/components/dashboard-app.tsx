@@ -165,6 +165,7 @@ export function DashboardApp() {
           </p>
           <div className="flex flex-wrap gap-2">
             <Button
+              nativeButton={false}
               render={
                 <a
                   href="https://arxiv.org/abs/2606.19336"
@@ -177,6 +178,7 @@ export function DashboardApp() {
             </Button>
             <Button
               variant="outline"
+              nativeButton={false}
               render={
                 <a
                   href="https://github.com/SusanWYS/turing-rl"
@@ -189,6 +191,7 @@ export function DashboardApp() {
             </Button>
             <Button
               variant="outline"
+              nativeButton={false}
               render={
                 <a
                   href="https://huggingface.co/Qwen/Qwen3.5-4B"
@@ -509,7 +512,9 @@ function Playground() {
               <FieldLabel htmlFor="user">Dummy user</FieldLabel>
               <Select value={exampleId} onValueChange={handleUserChange}>
                 <SelectTrigger id="user" className="w-full">
-                  <SelectValue />
+                  <SelectValue>
+                    {example.userName} ({example.domain})
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -549,7 +554,10 @@ function Playground() {
               <FieldLabel htmlFor="catalog">Catalog reply</FieldLabel>
               <Select value={candidateId} onValueChange={handleCandidateChange}>
                 <SelectTrigger id="catalog" className="w-full">
-                  <SelectValue />
+                  <SelectValue>
+                    {example.candidates.find((item) => item.id === candidateId)
+                      ?.label ?? candidateId}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
