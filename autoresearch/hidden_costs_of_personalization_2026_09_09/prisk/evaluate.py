@@ -155,31 +155,124 @@ def _serialize_scored(row: ScoredResult) -> dict[str, Any]:
     return payload
 
 
+def _pct(value: float | None) -> float | None:
+    if value is None:
+        return None
+    return round(normalize_1_to_5(value), 2)
+
+
+def _playground_item(
+    case: SeedCase, setting: Setting, scored: ScoredResult
+) -> dict[str, Any]:
+    generation = scored.generation
+    return {
+        "record_id": case.record_id,
+        "risk_type": case.risk_type,
+        "domain": case.domain,
+        "question": case.question,
+        "persona": case.profile.persona,
+        "persona_id": case.profile.persona_id,
+        "attributes": case.profile.attributes,
+        "setting": setting,
+        "prompt": generation.prompt,
+        "response": generation.response,
+        "irp_score": scored.irp_score,
+        "irp_resistance_pct": _pct(scored.irp_score),
+        "uir_pct": None if scored.uir is None else round(scored.uir * 100.0, 2),
+        "coverage_rate": scored.coverage_rate,
+        "relative_coverage": scored.relative_coverage,
+        "syco_score": scored.syco_score,
+        "syco_resistance_pct": _pct(scored.syco_score),
+        "pis_score": scored.pis_score,
+        "flags": scored.flags,
+        "covered_answers": scored.covered_answers,
+        "universal_answers": list(case.universal_answers),
+        "useful_answers": list(case.useful_answers),
+        "router_decision": generation.router_decision,
+        "retrieved_memories": list(generation.retrieved_memories),
+        "user_is_at_fault": case.user_is_at_fault,
+        "stated_preference": case.stated_preference,
+        "preferences": list(case.profile.preferences),
+    }
+
+
+def _probe_generator(generator: Generator) -> None:
+    sample = seed_cases()[0]
+    reply = generator.generate(sample, "base", sample.question, [])
+    if not reply.strip():
+        raise RuntimeError("probe returned an empty completion")
+
+
+def _build_hf_generator(
+    hf_model: str,
+    *,
+    prefer_local: bool,
+    allow_mock_fallback: bool,
+) -> tuple[Generator, list[str]]:
+    notes: list[str] = []
+    router_error: Exception | None = None
+    if not prefer_local:
+        try:
+            generator: Generator = HuggingFaceGenerator(model_name=hf_model)
+            _probe_generator(generator)
+            notes.append(f"Hugging Face Inference Router served Qwen ({hf_model}).")
+            return generator, notes
+        except Exception as exc:
+            router_error = exc
+            notes.append(
+                "Hugging Face Inference Router could not serve Qwen "
+                f"({type(exc).__name__}: {exc})."
+            )
+    try:
+        from prisk.hf_local import DEFAULT_MODEL_ID, ensure_local_qwen_server
+
+        base_url = ensure_local_qwen_server()
+        generator = HuggingFaceGenerator(
+            model_name=DEFAULT_MODEL_ID,
+            base_url=base_url,
+            timeout_s=300.0,
+        )
+        _probe_generator(generator)
+        notes.append(
+            "Running Qwen/Qwen3.5-4B locally from the Hugging Face Hub "
+            "(unsloth/Qwen3.5-4B-GGUF, Q4_K_M) via llama-server."
+        )
+        return generator, notes
+    except Exception as local_exc:
+        notes.append(
+            f"Local Hugging Face Hub GGUF path failed ({type(local_exc).__name__}: "
+            f"{local_exc})."
+        )
+        if allow_mock_fallback:
+            notes.append("Falling back to the mock generator.")
+            return MockGenerator(), notes
+        detail = f"local Hub: {local_exc}"
+        if router_error is not None:
+            detail = f"router: {router_error}; {detail}"
+        raise RuntimeError(f"Qwen run failed ({detail})") from local_exc
+
+
 def run_replication(
     backend: str = "mock",
     hf_model: str = "Qwen/Qwen3.5-4B:featherless-ai",
     out_dir: Path | None = None,
+    prefer_local: bool = False,
+    allow_mock_fallback: bool = False,
 ) -> dict[str, Any]:
     generator: Generator
-    notes: list[str] = []
+    notes: list[str]
     if backend == "hf":
-        try:
-            generator = HuggingFaceGenerator(model_name=hf_model)
-            generator.generate(
-                seed_cases()[0],
-                "base",
-                seed_cases()[0].question,
-                [],
-            )
-        except Exception as exc:
-            notes.append(f"Hugging Face backend failed ({exc}); using mock generator.")
-            generator = MockGenerator()
+        generator, notes = _build_hf_generator(
+            hf_model,
+            prefer_local=prefer_local,
+            allow_mock_fallback=allow_mock_fallback,
+        )
     else:
         generator = MockGenerator()
-        notes.append(
+        notes = [
             "Mock generator used. Qwen3.5-4B via Hugging Face is optional "
             "with --backend hf."
-        )
+        ]
 
     cases = seed_cases()
     scored_rows: list[ScoredResult] = []
@@ -188,47 +281,7 @@ def run_replication(
         by_setting = run_case(case, generator)
         for setting, scored in by_setting.items():
             scored_rows.append(scored)
-            playground.append(
-                {
-                    "record_id": case.record_id,
-                    "risk_type": case.risk_type,
-                    "domain": case.domain,
-                    "question": case.question,
-                    "persona": case.profile.persona,
-                    "persona_id": case.profile.persona_id,
-                    "attributes": case.profile.attributes,
-                    "setting": setting,
-                    "prompt": scored.generation.prompt,
-                    "response": scored.generation.response,
-                    "irp_score": scored.irp_score,
-                    "irp_resistance_pct": (
-                        None
-                        if scored.irp_score is None
-                        else round(normalize_1_to_5(scored.irp_score), 2)
-                    ),
-                    "uir_pct": None
-                    if scored.uir is None
-                    else round(scored.uir * 100.0, 2),
-                    "coverage_rate": scored.coverage_rate,
-                    "relative_coverage": scored.relative_coverage,
-                    "syco_score": scored.syco_score,
-                    "syco_resistance_pct": (
-                        None
-                        if scored.syco_score is None
-                        else round(normalize_1_to_5(scored.syco_score), 2)
-                    ),
-                    "pis_score": scored.pis_score,
-                    "flags": scored.flags,
-                    "covered_answers": scored.covered_answers,
-                    "universal_answers": list(case.universal_answers),
-                    "useful_answers": list(case.useful_answers),
-                    "router_decision": scored.generation.router_decision,
-                    "retrieved_memories": list(scored.generation.retrieved_memories),
-                    "user_is_at_fault": case.user_is_at_fault,
-                    "stated_preference": case.stated_preference,
-                    "preferences": list(case.profile.preferences),
-                }
-            )
+            playground.append(_playground_item(case, setting, scored))
 
     summary = {
         "generated_at_utc": datetime.now(UTC).isoformat(),

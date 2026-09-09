@@ -19,6 +19,16 @@ def main() -> None:
         help="Hugging Face router model id, including provider suffix.",
     )
     parser.add_argument(
+        "--hf-local",
+        action="store_true",
+        help="Skip the Inference Router and run Qwen from a Hub GGUF locally.",
+    )
+    parser.add_argument(
+        "--allow-mock-fallback",
+        action="store_true",
+        help="If Hugging Face Qwen serving fails, fall back to the mock policy.",
+    )
+    parser.add_argument(
         "--out-dir",
         type=Path,
         default=ROOT / "results",
@@ -28,6 +38,8 @@ def main() -> None:
         backend=args.backend,
         hf_model=args.hf_model,
         out_dir=args.out_dir,
+        prefer_local=args.hf_local,
+        allow_mock_fallback=args.allow_mock_fallback,
     )
     print(f"backend={summary['backend']} model={summary['model_name']}")
     print(f"wrote {args.out_dir / 'replication_summary.json'}")

@@ -1,9 +1,10 @@
-"""Candidate generators: mock (always on) and optional Hugging Face inference."""
+"""Candidate generators: mock (always on) and Hugging Face (router or Hub GGUF)."""
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 from typing import Protocol
@@ -13,6 +14,13 @@ from prisk.retrieval import RetrievedMemory
 from prisk.schemas import SeedCase, Setting
 
 DEFAULT_HF_MODEL = "Qwen/Qwen3.5-4B:featherless-ai"
+HF_ROUTER_BASE = "https://router.huggingface.co/v1"
+_THINK_BLOCK = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+
+
+def strip_think_blocks(text: str) -> str:
+    """Drop Qwen thinking tags so the judge sees the visible answer."""
+    return _THINK_BLOCK.sub("", text).strip()
 
 
 class Generator(Protocol):
@@ -148,7 +156,7 @@ def _mock_sycophancy(case: SeedCase, personalized: bool, uses_memory: bool) -> s
 
 
 class HuggingFaceGenerator:
-    """OpenAI-compatible chat completions via the Hugging Face router."""
+    """OpenAI-compatible chat completions via the HF router or a local Hub GGUF."""
 
     name = "hf"
 
@@ -159,12 +167,23 @@ class HuggingFaceGenerator:
         max_tokens: int = 400,
         temperature: float = 0.2,
         timeout_s: float = 90.0,
+        base_url: str | None = None,
     ) -> None:
         self.model_name = model_name
-        self._token = token or os.environ.get("HF_TOKEN", "")
+        self._token = token if token is not None else os.environ.get("HF_TOKEN", "")
         self._max_tokens = max_tokens
         self._temperature = temperature
         self._timeout_s = timeout_s
+        raw = (base_url or HF_ROUTER_BASE).rstrip("/")
+        if raw.endswith("/chat/completions"):
+            self._endpoint = raw
+            self._base_url = raw[: -len("/chat/completions")]
+        else:
+            self._base_url = raw
+            self._endpoint = f"{raw}/chat/completions"
+        self._local = "127.0.0.1" in self._base_url or "localhost" in self._base_url
+        if self._local:
+            self.name = "hf-local"
 
     def generate(
         self,
@@ -174,7 +193,7 @@ class HuggingFaceGenerator:
         memories: list[RetrievedMemory],
     ) -> str:
         del case, memories
-        if not self._token:
+        if not self._local and not self._token:
             raise RuntimeError("HF_TOKEN is not set")
         payload = {
             "model": self.model_name,
@@ -184,14 +203,17 @@ class HuggingFaceGenerator:
             ],
             "max_tokens": self._max_tokens,
             "temperature": self._temperature,
+            "chat_template_kwargs": {"enable_thinking": False},
         }
+        headers = {"Content-Type": "application/json"}
+        if self._local:
+            headers["Authorization"] = "Bearer no-key"
+        else:
+            headers["Authorization"] = f"Bearer {self._token}"
         request = urllib.request.Request(
-            "https://router.huggingface.co/v1/chat/completions",
+            self._endpoint,
             data=json.dumps(payload).encode(),
-            headers={
-                "Authorization": f"Bearer {self._token}",
-                "Content-Type": "application/json",
-            },
+            headers=headers,
             method="POST",
         )
         try:
@@ -201,8 +223,8 @@ class HuggingFaceGenerator:
             detail = exc.read().decode()[:400]
             raise RuntimeError(f"Hugging Face HTTP {exc.code}: {detail}") from exc
         message = body["choices"][0]["message"]
-        content = (message.get("content") or "").strip()
-        reasoning = (message.get("reasoning") or "").strip()
+        content = strip_think_blocks(message.get("content") or "")
+        reasoning = strip_think_blocks(message.get("reasoning") or "")
         if content:
             return content
         if reasoning:

@@ -429,9 +429,10 @@ export default function Page() {
       <section className="panel">
         <h2>This repo&apos;s 8-item run</h2>
         <p>
-          Same 2×2 design and metrics, tiny seed set. Hosted Qwen3.5-4B was
-          blocked here, so answers come from a mock policy that reproduces the
-          paper&apos;s failure modes.
+          Same 2×2 design and metrics, tiny seed set.{" "}
+          {DATA.backend === "mock"
+            ? "Hosted Qwen3.5-4B was blocked on the Inference Router, so answers come from a mock policy that reproduces the paper's failure modes."
+            : `Answers come from ${DATA.model_name} (${DATA.backend}).`}
         </p>
         <ul className="takeaways">
           {DATA.takeaways.map((line) => (
@@ -439,7 +440,11 @@ export default function Page() {
           ))}
         </ul>
         <MiniBars />
-        <p className="note">{DATA.notes[0]}</p>
+        {DATA.notes.map((note) => (
+          <p className="note" key={note}>
+            {note}
+          </p>
+        ))}
       </section>
 
       <section className="panel">

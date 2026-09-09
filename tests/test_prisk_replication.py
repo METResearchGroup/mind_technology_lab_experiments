@@ -7,7 +7,12 @@ from prisk.evaluate import (
     run_replication,
     score_generation,
 )
-from prisk.generators import MockGenerator, build_prompt
+from prisk.generators import (
+    HuggingFaceGenerator,
+    MockGenerator,
+    build_prompt,
+    strip_think_blocks,
+)
 from prisk.metrics import (
     coverage_rate,
     covered_answers,
@@ -189,6 +194,22 @@ def test_playground_carries_judge_inputs() -> None:
     slim = dashboard_payload(summary)
     assert "playground" in slim
     assert "results" not in slim
+
+
+def test_strip_think_blocks_keeps_visible_answer() -> None:
+    text = "<think>internal plan</think>\nThe causes were fiscal crisis and inequality."
+    assert strip_think_blocks(text) == "The causes were fiscal crisis and inequality."
+
+
+def test_hf_generator_marks_localhost_as_local() -> None:
+    generator = HuggingFaceGenerator(
+        model_name="Qwen/Qwen3.5-4B",
+        base_url="http://127.0.0.1:8088/v1",
+        token="",
+    )
+    assert generator.name == "hf-local"
+    assert generator._endpoint == "http://127.0.0.1:8088/v1/chat/completions"
+    assert generator._local is True
 
 
 def test_paper_mean_drops_are_positive() -> None:

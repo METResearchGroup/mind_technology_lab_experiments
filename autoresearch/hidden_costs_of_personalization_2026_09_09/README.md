@@ -23,23 +23,32 @@ Three risks, scored as *resistance* (higher is better):
 
 ## What this run actually did
 
-Hosted `Qwen/Qwen3.5-4B` inference through Featherless returned Cloudflare 1010 from this environment after the first probe, so generations use a deterministic mock policy that injects the same failure modes the paper describes (attribute scaffolding, collapsed option lists, uncritical agreement). The original Table 2 numbers are shipped beside the mini-run so the dashboard can show both.
+The first pass never ran Qwen. `--backend hf` probed the Hugging Face Inference Router, then **silently fell back to a mock policy**. That was a pipeline choice, not a model failure. The hosted Qwen path is blocked in this environment for three independent reasons:
 
-On the seed set the mock policy drops IRP resistance 75 points, UIR 60 points, and sycophancy resistance 100 points once a profile is injected. Retrieval-only stays at the base IRP score because the factual queries never route to memory, which matches the paper's retrieval-only IRP column sitting near 100.
+1. **No GPU on the agent VM.** `nvidia-smi` is missing. Full `Qwen/Qwen3.5-4B` BF16 weights are ~9.3 GB, which does not fit cleanly in the ~10 GB of free RAM next to other processes.
+2. **The only live Inference Provider for `Qwen/Qwen3.5-4B` is Featherless**, and Featherless sits behind Cloudflare. Calls to `Qwen/Qwen3.5-4B:featherless-ai` return HTTP 403 / Cloudflare error 1010 (browser-integrity / bot block) from `api.featherless.ai`. Other router ids return `model_not_supported`. Together also 403s from this IP. This is not an invalid `HF_TOKEN`.
+3. **Hugging Face Jobs cannot start.** `POST /api/jobs/mtorres98` returns HTTP 402: prepaid credit balance is insufficient. `canPay` is false on the token’s account. Jobs are pay-as-you-go; they are not free just because the VM has an `HF_TOKEN`.
+
+`--backend hf` now tries the router first, then downloads `unsloth/Qwen3.5-4B-GGUF` (`Q4_K_M`) from the Hub and serves it with `llama-server`. It does **not** fall back to mock unless you pass `--allow-mock-fallback`.
 
 Recompute:
 
 ```bash
 # from the repository root
+uv sync --all-packages --extra test
+
+# mock (CI / no weights)
 PYTHONPATH=autoresearch/hidden_costs_of_personalization_2026_09_09 \
   uv run python autoresearch/hidden_costs_of_personalization_2026_09_09/scripts/run_replication.py \
   --backend mock
 
-# optional live model, if the Hugging Face router can reach a provider
+# Qwen via Hugging Face: router if reachable, otherwise Hub GGUF + llama-server
 PYTHONPATH=autoresearch/hidden_costs_of_personalization_2026_09_09 \
   uv run python autoresearch/hidden_costs_of_personalization_2026_09_09/scripts/run_replication.py \
-  --backend hf --hf-model 'Qwen/Qwen3.5-4B:featherless-ai'
+  --backend hf --hf-local
 ```
+
+`llama-server` must be on `PATH` or at `/tmp/llama.cpp/build/bin/llama-server` (or set `LLAMA_SERVER_BIN`). The Hub download uses `HF_TOKEN` when present.
 
 The same command also writes `dashboard/data/replication.json` for the Next.js dashboard in `dashboard/`. From that folder: `npm install && npm run dev`.
 
