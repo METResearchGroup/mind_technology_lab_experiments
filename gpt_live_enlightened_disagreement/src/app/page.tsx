@@ -10,6 +10,13 @@ import {
 import type { CaptionState } from "@/lib/live-captions";
 
 const IDLE_STATUS = "Idle";
+const PAGE_HEADING = "GPT-Live debate";
+const ROLE_LINE =
+  "You argue for socialism. The agent is a capitalist devil's advocate.";
+const COST_NOTE =
+  "Voice is billed at $0.05 per minute. Grant the microphone only if you accept that charge. The OpenAI key stays on the server.";
+const YOU_LABEL = "You";
+const AGENT_LABEL = "Agent";
 const EMPTY_CAPTIONS: CaptionState = { user: "", assistant: "" };
 
 async function fetchSession(sdp: string): Promise<Response> {
@@ -69,29 +76,33 @@ export default function Home() {
 
   return (
     <main>
-      <h1>GPT-Live debate</h1>
+      <h1>{PAGE_HEADING}</h1>
+      <p>{ROLE_LINE}</p>
       <p id="call-status">{status}</p>
-      <button id="start-call" type="button" onClick={onStart} disabled={busy}>
-        Start
-      </button>
-      <button
-        id="stop-call"
-        type="button"
-        onClick={() => {
-          void onStop();
-        }}
-        disabled={status !== CONNECTED_STATUS}
-      >
-        Stop
-      </button>
-      <section>
-        <h2>You</h2>
+      <div className="call-controls">
+        <button id="start-call" type="button" onClick={onStart} disabled={busy}>
+          Start
+        </button>
+        <button
+          id="stop-call"
+          type="button"
+          onClick={() => {
+            void onStop();
+          }}
+          disabled={status !== CONNECTED_STATUS}
+        >
+          Stop
+        </button>
+      </div>
+      <section className="caption-block">
+        <h2>{YOU_LABEL}</h2>
         <p id="user-caption">{captions.user}</p>
       </section>
-      <section>
-        <h2>Agent</h2>
+      <section className="caption-block">
+        <h2>{AGENT_LABEL}</h2>
         <p id="assistant-caption">{captions.assistant}</p>
       </section>
+      <p>{COST_NOTE}</p>
       <audio ref={audioRef} autoPlay />
     </main>
   );
