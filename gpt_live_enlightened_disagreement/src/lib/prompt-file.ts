@@ -1,7 +1,11 @@
+import fs from "node:fs";
+import path from "node:path";
+
 export const PRINCIPLES_FILE_NAME = "ENLIGHTENED_DISAGREEMENT_PRINCIPLES.md";
 export const PRINCIPLES_MISSING_ERROR =
   "ENLIGHTENED_DISAGREEMENT_PRINCIPLES.md is missing";
 export const PRINCIPLES_TITLE = "# Enlightened disagreement principles";
+export const PRINCIPLES_ENCODING = "utf8";
 
 export const OPERATING_RULES_HEADING = "## Operating rules";
 export const DEVILS_ADVOCATE_HEADING = "## Devil's advocate procedure";
@@ -24,9 +28,25 @@ export const OPERATING_RULE_NAMES = [
 ] as const;
 
 export function principlesFilePath(cwd = process.cwd()): string {
-  throw new Error("not implemented");
+  return path.join(cwd, PRINCIPLES_FILE_NAME);
 }
 
-export function readPrinciplesMarkdown(_cwd = process.cwd()): string {
-  throw new Error("not implemented");
+function isMissingFile(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code: unknown }).code === "ENOENT"
+  );
+}
+
+export function readPrinciplesMarkdown(cwd = process.cwd()): string {
+  try {
+    return fs.readFileSync(principlesFilePath(cwd), PRINCIPLES_ENCODING);
+  } catch (error) {
+    if (isMissingFile(error)) {
+      throw new Error(PRINCIPLES_MISSING_ERROR);
+    }
+    throw error;
+  }
 }
