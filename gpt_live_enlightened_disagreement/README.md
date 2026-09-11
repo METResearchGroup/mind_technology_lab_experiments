@@ -1,8 +1,8 @@
 # GPT-Live enlightened disagreement debate
 
-A one-page Next.js experiment. You argue for socialism out loud. A GPT-Live-1 agent replies as a capitalist devil's advocate using Kellogg enlightened disagreement moves.
+The experiment is a one-page Next.js app. You argue for socialism out loud, and a GPT-Live-1 agent replies as a capitalist devil's advocate using Kellogg enlightened disagreement moves.
 
-Requires Node.js 22.6 or later.
+The app needs Node.js 22.6 or later.
 
 ## Local run
 
