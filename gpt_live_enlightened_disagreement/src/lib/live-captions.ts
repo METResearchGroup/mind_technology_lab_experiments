@@ -12,8 +12,15 @@ export type TranscriptEvent = {
 };
 
 export function applyTranscriptDelta(
-  _state: CaptionState,
-  _event: TranscriptEvent,
+  state: CaptionState,
+  event: TranscriptEvent,
 ): CaptionState {
-  throw new Error("not implemented");
+  const delta = event.delta ?? "";
+  if (event.type === INPUT_TRANSCRIPT_DELTA) {
+    return { user: state.user + delta, assistant: state.assistant };
+  }
+  if (event.type === OUTPUT_TRANSCRIPT_DELTA) {
+    return { user: state.user, assistant: state.assistant + delta };
+  }
+  return state;
 }
