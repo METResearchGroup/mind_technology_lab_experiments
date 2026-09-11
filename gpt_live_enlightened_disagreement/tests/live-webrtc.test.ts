@@ -26,6 +26,7 @@ class FakeStream {
 class FakeChannel extends EventTarget {
   readyState: RTCDataChannelState = "open";
   sent: string[] = [];
+  autoFinalize = true;
 
   constructor(public label: string) {
     super();
@@ -33,6 +34,16 @@ class FakeChannel extends EventTarget {
 
   send(data: string) {
     this.sent.push(data);
+    if (!this.autoFinalize) {
+      return;
+    }
+    queueMicrotask(() => {
+      this.dispatchEvent(
+        new MessageEvent("message", {
+          data: JSON.stringify({ type: "session.closed" }),
+        }),
+      );
+    });
   }
 
   close() {
@@ -179,6 +190,9 @@ describe("startLiveCall", () => {
       attachRemoteTrack: () => {},
       onStatus: () => {},
     });
+    if (peer.channel) {
+      peer.channel.autoFinalize = false;
+    }
     const stopPromise = stopLiveCall();
     expect(track.stop).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(15_000);

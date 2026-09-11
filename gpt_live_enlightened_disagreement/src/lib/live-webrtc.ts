@@ -146,18 +146,22 @@ async function negotiateLive(
   await waitUntilStarted(call);
 }
 
-export async function startLiveCall(deps: LiveCallDeps): Promise<void> {
-  cleanup();
-  deps.onStatus(CONNECTING_STATUS);
-  const microphone = await deps.getUserMedia({ audio: true });
-  const peer = new deps.RTCPeerConnection();
+function attachTrackHandler(
+  peer: RTCPeerConnection,
+  attachRemoteTrack: (track: MediaStreamTrack) => void,
+): void {
   peer.addEventListener("track", (event: Event) => {
-    const trackEvent = event as RTCTrackEvent;
-    deps.attachRemoteTrack(trackEvent.track);
+    attachRemoteTrack((event as RTCTrackEvent).track);
   });
-  microphone.getAudioTracks().forEach((track) => peer.addTrack(track, microphone));
-  const channel = peer.createDataChannel(LIVE_DATA_CHANNEL);
-  const call: ActiveCall = {
+}
+
+function createActiveCall(
+  peer: RTCPeerConnection,
+  channel: RTCDataChannel,
+  microphone: MediaStream,
+  deps: LiveCallDeps,
+): ActiveCall {
+  return {
     peer,
     channel,
     microphone,
@@ -170,31 +174,66 @@ export async function startLiveCall(deps: LiveCallDeps): Promise<void> {
     startedWaiters: [],
     closeWaiters: [],
   };
-  activeCall = call;
-  bindChannel(call);
+}
+
+async function createLocalOffer(peer: RTCPeerConnection): Promise<string> {
   const offer = await peer.createOffer();
   await peer.setLocalDescription(offer);
   await waitForIce(peer);
   const localSdp = peer.localDescription?.sdp;
   if (!localSdp) {
-    cleanup();
     throw new Error(LIVE_CREATE_FAILED);
   }
+  return localSdp;
+}
+
+async function handOffRealtime(
+  deps: LiveCallDeps,
+  clientSecret: string,
+): Promise<void> {
+  cleanup();
+  await startRealtimeCall({
+    clientSecret,
+    getUserMedia: deps.getUserMedia,
+    RTCPeerConnection: deps.RTCPeerConnection,
+    attachRemoteTrack: deps.attachRemoteTrack,
+    onStatus: deps.onStatus,
+  });
+}
+
+export async function startLiveCall(deps: LiveCallDeps): Promise<void> {
+  cleanup();
+  deps.onStatus(CONNECTING_STATUS);
+  const microphone = await deps.getUserMedia({ audio: true });
+  const peer = new deps.RTCPeerConnection();
+  attachTrackHandler(peer, deps.attachRemoteTrack);
+  microphone.getAudioTracks().forEach((track) => peer.addTrack(track, microphone));
+  const call = createActiveCall(peer, peer.createDataChannel(LIVE_DATA_CHANNEL), microphone, deps);
+  activeCall = call;
+  bindChannel(call);
+  const localSdp = await createLocalOffer(peer);
   const payload = await readSessionPayload(await deps.fetchSession(localSdp));
   if (payload.mode === "realtime") {
-    cleanup();
-    await startRealtimeCall({
-      clientSecret: payload.client_secret ?? "",
-      getUserMedia: deps.getUserMedia,
-      RTCPeerConnection: deps.RTCPeerConnection,
-      attachRemoteTrack: deps.attachRemoteTrack,
-      onStatus: deps.onStatus,
-    });
+    await handOffRealtime(deps, payload.client_secret ?? "");
     return;
   }
   await negotiateLive(peer, payload.transport?.sdp ?? "", call);
 }
 
 export async function stopLiveCall(): Promise<void> {
-  cleanup();
+  const call = activeCall;
+  if (!call || call.channel.readyState !== "open" || !call.started) {
+    cleanup();
+    return;
+  }
+  call.onStatus(FINISHING_CONVERSATION);
+  call.channel.send(JSON.stringify({ type: SESSION_CLOSE }));
+  await new Promise<void>((resolve) => {
+    call.closeWaiters.push(resolve);
+    call.closeTimer = setTimeout(() => {
+      call.onStatus(INCOMPLETE_FINALIZATION);
+      cleanup();
+      resolve();
+    }, SESSION_CLOSE_TIMEOUT_MS);
+  });
 }
