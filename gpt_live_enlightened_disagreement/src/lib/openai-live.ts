@@ -144,13 +144,17 @@ export async function defaultCreateRealtimeClientSecret(): Promise<string> {
 }
 
 async function realtimeFallback(deps: SessionDeps): Promise<SessionResult> {
-  const createSecret =
-    deps.createRealtimeClientSecret ?? defaultCreateRealtimeClientSecret;
-  const clientSecret = await createSecret();
-  return {
-    status: STATUS_CREATED,
-    body: { mode: "realtime", client_secret: clientSecret },
-  };
+  try {
+    const createSecret =
+      deps.createRealtimeClientSecret ?? defaultCreateRealtimeClientSecret;
+    const clientSecret = await createSecret();
+    return {
+      status: STATUS_CREATED,
+      body: { mode: "realtime", client_secret: clientSecret },
+    };
+  } catch {
+    return errorResult(STATUS_BAD_GATEWAY, LIVE_CREATE_FAILED_ERROR);
+  }
 }
 
 async function createLiveOrFallback(
@@ -162,10 +166,10 @@ async function createLiveOrFallback(
     return liveSuccess(await createLive(sdp));
   } catch (error) {
     const status = readErrorStatus(error);
-    if (status === undefined || !LIVE_FALLBACK_STATUSES.has(status)) {
-      throw error;
+    if (status !== undefined && LIVE_FALLBACK_STATUSES.has(status)) {
+      return realtimeFallback(deps);
     }
-    return realtimeFallback(deps);
+    return errorResult(STATUS_BAD_GATEWAY, LIVE_CREATE_FAILED_ERROR);
   }
 }
 
