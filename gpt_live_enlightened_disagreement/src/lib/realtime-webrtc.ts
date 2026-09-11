@@ -1,3 +1,7 @@
+export const REALTIME_CALLS_URL = "https://api.openai.com/v1/realtime/calls";
+export const REALTIME_OUTPUT_TRANSCRIPT =
+  "response.output_audio_transcript.delta";
+
 export type RealtimeCallDeps = {
   clientSecret: string;
   getUserMedia: (constraints: MediaStreamConstraints) => Promise<MediaStream>;

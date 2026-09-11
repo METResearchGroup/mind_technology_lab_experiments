@@ -1,3 +1,6 @@
+export const INPUT_TRANSCRIPT_DELTA = "session.input_transcript.delta";
+export const OUTPUT_TRANSCRIPT_DELTA = "session.output_transcript.delta";
+
 export type CaptionState = {
   user: string;
   assistant: string;
