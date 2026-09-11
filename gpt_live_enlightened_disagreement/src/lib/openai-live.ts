@@ -1,3 +1,6 @@
+import { getOpenAIKey } from "@/lib/env";
+import { isAllowedOrigin } from "@/lib/origin";
+
 export const UNEXPECTED_ORIGIN_ERROR = "Unexpected request origin";
 export const MISSING_SDP_ERROR = "An SDP offer is required";
 export const MISSING_KEY_ERROR = "Set OPENAI_API_KEY on the server";
@@ -56,9 +59,39 @@ export type SessionDeps = {
   createRealtimeClientSecret?: () => Promise<string>;
 };
 
+function errorResult(status: number, message: string): SessionResult {
+  return { status, body: { error: message } };
+}
+
+function readSdpOffer(sdp: unknown): string | null {
+  if (typeof sdp !== "string" || !sdp.trim()) {
+    return null;
+  }
+  return sdp;
+}
+
+function readApiKey(deps: SessionDeps): string | null {
+  try {
+    const readKey = deps.getOpenAIKey ?? getOpenAIKey;
+    return readKey();
+  } catch {
+    return null;
+  }
+}
+
 export async function createSessionFromSdp(
-  _request: SessionRequest,
-  _deps: SessionDeps = {},
+  request: SessionRequest,
+  deps: SessionDeps = {},
 ): Promise<SessionResult> {
+  if (!isAllowedOrigin(request.origin)) {
+    return errorResult(STATUS_FORBIDDEN, UNEXPECTED_ORIGIN_ERROR);
+  }
+  const sdp = readSdpOffer(request.sdp);
+  if (!sdp) {
+    return errorResult(STATUS_BAD_REQUEST, MISSING_SDP_ERROR);
+  }
+  if (!readApiKey(deps)) {
+    return errorResult(STATUS_SERVICE_UNAVAILABLE, MISSING_KEY_ERROR);
+  }
   throw new Error("not implemented");
 }
