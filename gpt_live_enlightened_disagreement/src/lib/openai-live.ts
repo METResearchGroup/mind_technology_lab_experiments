@@ -123,6 +123,52 @@ function liveSuccess(result: LiveCreateResult): SessionResult {
   };
 }
 
+function readErrorStatus(error: unknown): number | undefined {
+  if (typeof error !== "object" || error === null || !("status" in error)) {
+    return undefined;
+  }
+  const status = (error as { status: unknown }).status;
+  return typeof status === "number" ? status : undefined;
+}
+
+export async function defaultCreateRealtimeClientSecret(): Promise<string> {
+  const client = new OpenAI({ apiKey: getOpenAIKey(), maxRetries: 0 });
+  const secret = await client.realtime.clientSecrets.create({
+    session: {
+      type: "realtime",
+      model: REALTIME_FALLBACK_MODEL,
+      audio: { output: { voice: LIVE_VOICE } },
+    },
+  });
+  return secret.value;
+}
+
+async function realtimeFallback(deps: SessionDeps): Promise<SessionResult> {
+  const createSecret =
+    deps.createRealtimeClientSecret ?? defaultCreateRealtimeClientSecret;
+  const clientSecret = await createSecret();
+  return {
+    status: STATUS_CREATED,
+    body: { mode: "realtime", client_secret: clientSecret },
+  };
+}
+
+async function createLiveOrFallback(
+  sdp: string,
+  deps: SessionDeps,
+): Promise<SessionResult> {
+  const createLive = deps.createLiveSession ?? defaultCreateLiveSession;
+  try {
+    return liveSuccess(await createLive(sdp));
+  } catch (error) {
+    const status = readErrorStatus(error);
+    if (status === undefined || !LIVE_FALLBACK_STATUSES.has(status)) {
+      throw error;
+    }
+    return realtimeFallback(deps);
+  }
+}
+
 export async function createSessionFromSdp(
   request: SessionRequest,
   deps: SessionDeps = {},
@@ -137,7 +183,5 @@ export async function createSessionFromSdp(
   if (!readApiKey(deps)) {
     return errorResult(STATUS_SERVICE_UNAVAILABLE, MISSING_KEY_ERROR);
   }
-  const createLive = deps.createLiveSession ?? defaultCreateLiveSession;
-  const live = await createLive(sdp);
-  return liveSuccess(live);
+  return createLiveOrFallback(sdp, deps);
 }
