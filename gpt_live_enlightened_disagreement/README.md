@@ -17,7 +17,7 @@ Put the OpenAI project key in `.env.local` as `OPENAI_API_KEY`. Do not prefix it
 npm run dev
 ```
 
-Open `http://localhost:3000`. The health page should show `GPT-Live debate` and `Health: up`.
+Open `http://localhost:3000`. The page heading is `GPT-Live debate`. The role line is `You argue for socialism. The agent is a capitalist devil's advocate.` Start and Stop control the call. The cost note is `Voice is billed at $0.05 per minute. Grant the microphone only if you accept that charge. The OpenAI key stays on the server.`
 
 ## Tests and build
 
