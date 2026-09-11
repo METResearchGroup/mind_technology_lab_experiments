@@ -84,6 +84,24 @@ async function waitForIce(peer: RTCPeerConnection): Promise<void> {
   });
 }
 
+function jsonErrorField(text: string): string | null {
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (typeof parsed !== "object" || parsed === null || !("error" in parsed)) {
+      return null;
+    }
+    const error = (parsed as { error: unknown }).error;
+    return typeof error === "string" && error.trim() ? error : null;
+  } catch {
+    return null;
+  }
+}
+
+export function sessionFailureMessage(text: string): string {
+  const trimmed = text.trim();
+  return jsonErrorField(trimmed) ?? (trimmed || LIVE_CREATE_FAILED);
+}
+
 async function readSessionPayload(response: Response): Promise<{
   mode: string;
   transport?: { sdp?: string };
@@ -91,7 +109,7 @@ async function readSessionPayload(response: Response): Promise<{
 }> {
   const text = await response.text();
   if (!response.ok) {
-    throw new Error(text.trim() || LIVE_CREATE_FAILED);
+    throw new Error(sessionFailureMessage(text));
   }
   return JSON.parse(text) as {
     mode: string;
