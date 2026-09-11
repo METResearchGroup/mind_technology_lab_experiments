@@ -1,5 +1,5 @@
 import { applyTranscriptDelta, type CaptionState } from "@/lib/live-captions";
-import { startRealtimeCall } from "@/lib/realtime-webrtc";
+import { startRealtimeCall, stopRealtimeCall } from "@/lib/realtime-webrtc";
 
 export const LIVE_DATA_CHANNEL = "oai-events";
 export const ICE_GATHER_TIMEOUT_MS = 10_000;
@@ -219,14 +219,17 @@ async function handOffRealtime(
   });
 }
 
-export async function startLiveCall(deps: LiveCallDeps): Promise<void> {
-  cleanup();
-  deps.onStatus(CONNECTING_STATUS);
+async function connectLivePeer(deps: LiveCallDeps): Promise<void> {
   const microphone = await deps.getUserMedia({ audio: true });
   const peer = new deps.RTCPeerConnection();
   attachTrackHandler(peer, deps.attachRemoteTrack);
   microphone.getAudioTracks().forEach((track) => peer.addTrack(track, microphone));
-  const call = createActiveCall(peer, peer.createDataChannel(LIVE_DATA_CHANNEL), microphone, deps);
+  const call = createActiveCall(
+    peer,
+    peer.createDataChannel(LIVE_DATA_CHANNEL),
+    microphone,
+    deps,
+  );
   activeCall = call;
   bindChannel(call);
   const localSdp = await createLocalOffer(peer);
@@ -238,7 +241,19 @@ export async function startLiveCall(deps: LiveCallDeps): Promise<void> {
   await negotiateLive(peer, payload.transport?.sdp ?? "", call);
 }
 
+export async function startLiveCall(deps: LiveCallDeps): Promise<void> {
+  cleanup();
+  deps.onStatus(CONNECTING_STATUS);
+  try {
+    await connectLivePeer(deps);
+  } catch (error) {
+    cleanup();
+    throw error;
+  }
+}
+
 export async function stopLiveCall(): Promise<void> {
+  await stopRealtimeCall();
   const call = activeCall;
   if (!call || call.channel.readyState !== "open" || !call.started) {
     cleanup();

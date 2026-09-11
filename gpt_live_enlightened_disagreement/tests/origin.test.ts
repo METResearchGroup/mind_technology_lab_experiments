@@ -5,12 +5,18 @@ const LOCALHOST = "http://localhost:3000";
 
 describe("isAllowedOrigin", () => {
   const originalVercelUrl = process.env.VERCEL_URL;
+  const originalBranchUrl = process.env.VERCEL_BRANCH_URL;
 
   afterEach(() => {
     if (originalVercelUrl === undefined) {
       delete process.env.VERCEL_URL;
     } else {
       process.env.VERCEL_URL = originalVercelUrl;
+    }
+    if (originalBranchUrl === undefined) {
+      delete process.env.VERCEL_BRANCH_URL;
+    } else {
+      process.env.VERCEL_BRANCH_URL = originalBranchUrl;
     }
   });
 
@@ -33,5 +39,14 @@ describe("isAllowedOrigin", () => {
   it("rejects a null origin", () => {
     const result = isAllowedOrigin(null);
     expect(result).toBe(false);
+  });
+
+  it("allows the Vercel git branch origin", () => {
+    process.env.VERCEL_BRANCH_URL =
+      "gpt-live-enlightened-disagree-git-87a948-marktorres10s-projects.vercel.app";
+    const result = isAllowedOrigin(
+      "https://gpt-live-enlightened-disagree-git-87a948-marktorres10s-projects.vercel.app",
+    );
+    expect(result).toBe(true);
   });
 });

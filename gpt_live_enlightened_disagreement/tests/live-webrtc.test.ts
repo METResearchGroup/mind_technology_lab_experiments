@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { startLiveCall, stopLiveCall } from "@/lib/live-webrtc";
-import { startRealtimeCall } from "@/lib/realtime-webrtc";
+import { startRealtimeCall, stopRealtimeCall } from "@/lib/realtime-webrtc";
 
 vi.mock("@/lib/realtime-webrtc", () => ({
   startRealtimeCall: vi.fn(async () => {}),
@@ -175,6 +175,46 @@ describe("startLiveCall", () => {
     });
     await stopLiveCall();
     expect(peer.channel?.sent[0]).toBe(JSON.stringify({ type: "session.close" }));
+  });
+
+  it("stops microphone tracks when session creation fails", async () => {
+    const peer = new FakePeer();
+    const track = new FakeTrack();
+    await expect(
+      startLiveCall({
+        fetchSession: async () =>
+          new Response(
+            JSON.stringify({ error: "Set OPENAI_API_KEY on the server" }),
+            { status: 503 },
+          ),
+        getUserMedia: async () =>
+          new FakeStream([track]) as unknown as MediaStream,
+        RTCPeerConnection: function FakePeerConnection() {
+          return peer;
+        } as unknown as new () => RTCPeerConnection,
+        attachRemoteTrack: () => {},
+        onStatus: () => {},
+      }),
+    ).rejects.toThrow("Set OPENAI_API_KEY on the server");
+    expect(track.stop).toHaveBeenCalled();
+    expect(peer.closed).toBe(true);
+  });
+
+  it("stops the Realtime call when Stop runs after fallback", async () => {
+    const peer = new FakePeer();
+    const track = new FakeTrack();
+    await startLiveCall({
+      fetchSession: async () => realtimeResponse(),
+      getUserMedia: async () =>
+        new FakeStream([track]) as unknown as MediaStream,
+      RTCPeerConnection: function FakePeerConnection() {
+        return peer;
+      } as unknown as new () => RTCPeerConnection,
+      attachRemoteTrack: () => {},
+      onStatus: () => {},
+    });
+    await stopLiveCall();
+    expect(stopRealtimeCall).toHaveBeenCalled();
   });
 
   it("stops tracks after 15 seconds without session.closed", async () => {
