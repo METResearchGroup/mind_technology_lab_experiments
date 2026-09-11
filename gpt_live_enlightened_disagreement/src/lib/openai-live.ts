@@ -1,5 +1,7 @@
+import OpenAI from "openai";
 import { getOpenAIKey } from "@/lib/env";
 import { isAllowedOrigin } from "@/lib/origin";
+import { getBackendInstructions, getLiveInstructions } from "@/lib/prompts";
 
 export const UNEXPECTED_ORIGIN_ERROR = "Unexpected request origin";
 export const MISSING_SDP_ERROR = "An SDP offer is required";
@@ -79,6 +81,48 @@ function readApiKey(deps: SessionDeps): string | null {
   }
 }
 
+function responsesDelegation() {
+  return {
+    type: "responses" as const,
+    responses: {
+      model: BACKEND_MODEL,
+      instructions: getBackendInstructions(),
+      tools: [{ type: "web_search" as const }],
+      tool_choice: "auto" as const,
+    },
+  };
+}
+
+export async function defaultCreateLiveSession(
+  sdp: string,
+): Promise<LiveCreateResult> {
+  const client = new OpenAI({ apiKey: getOpenAIKey(), maxRetries: 0 });
+  const result = await client.live.create({
+    session: {
+      model: LIVE_MODEL,
+      instructions: getLiveInstructions(),
+      audio: { output: { voice: LIVE_VOICE } },
+      delegation: responsesDelegation(),
+    },
+    transport: { type: "webrtc", sdp },
+  });
+  return {
+    session: { id: result.session.id },
+    transport: { type: "webrtc", sdp: result.transport.sdp },
+  };
+}
+
+function liveSuccess(result: LiveCreateResult): SessionResult {
+  return {
+    status: STATUS_CREATED,
+    body: {
+      mode: "live",
+      session: { id: result.session.id },
+      transport: { type: "webrtc", sdp: result.transport.sdp },
+    },
+  };
+}
+
 export async function createSessionFromSdp(
   request: SessionRequest,
   deps: SessionDeps = {},
@@ -93,5 +137,7 @@ export async function createSessionFromSdp(
   if (!readApiKey(deps)) {
     return errorResult(STATUS_SERVICE_UNAVAILABLE, MISSING_KEY_ERROR);
   }
-  throw new Error("not implemented");
+  const createLive = deps.createLiveSession ?? defaultCreateLiveSession;
+  const live = await createLive(sdp);
+  return liveSuccess(live);
 }
