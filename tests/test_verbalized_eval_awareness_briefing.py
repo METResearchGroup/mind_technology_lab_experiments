@@ -55,5 +55,9 @@ def test_dashboard_covers_findings_and_experiments() -> None:
         "100 gens + 100 judge calls",
         "0/100",
         "180 gens (4B) or 360 with 0.8B",
+        'id="e1-heading"',
+        'aria-labelledby="e5-heading"',
+        "MAX_PICKS = 2",
+        "Pick at most two",
     ):
         assert needle in html

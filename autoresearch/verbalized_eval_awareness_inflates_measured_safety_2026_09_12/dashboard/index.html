@@ -713,8 +713,8 @@
           API inference is missing; a T4 hour can consume the whole cap.
         </p>
         <p class="note" id="pick-help">
-          Check the experiments to run. The URL updates so a choice can be
-          pasted back into the thread.
+          Check up to two experiments. Extra checks are ignored. The URL
+          updates so a choice can be pasted back into the thread.
         </p>
 
         <div class="experiments">
@@ -722,10 +722,10 @@
             <div class="exp-head">
               <div>
                 <p class="kicker">E1 · reviews finding 1</p>
-                <h3>Does Qwen3.5-4B verbalize eval awareness at all?</h3>
+                <h3 id="e1-heading">Does Qwen3.5-4B verbalize eval awareness at all?</h3>
               </div>
               <label class="pick">
-                <input type="checkbox" name="pick" value="e1" aria-describedby="pick-help" />
+                <input type="checkbox" name="pick" value="e1" aria-labelledby="e1-heading" aria-describedby="pick-help" />
                 Pick
               </label>
             </div>
@@ -746,10 +746,10 @@
             <div class="exp-head">
               <div>
                 <p class="kicker">E2 · reviews finding 2</p>
-                <h3>Within-item: VEA rollouts vs safer answers</h3>
+                <h3 id="e2-heading">Within-item: VEA rollouts vs safer answers</h3>
               </div>
               <label class="pick">
-                <input type="checkbox" name="pick" value="e2" />
+                <input type="checkbox" name="pick" value="e2" aria-labelledby="e2-heading" aria-describedby="pick-help" />
                 Pick
               </label>
             </div>
@@ -770,10 +770,10 @@
             <div class="exp-head">
               <div>
                 <p class="kicker">E3 · reviews finding 3</p>
-                <h3>CoT prefill: safety test vs helpfulness test</h3>
+                <h3 id="e3-heading">CoT prefill: safety test vs helpfulness test</h3>
               </div>
               <label class="pick">
-                <input type="checkbox" name="pick" value="e3" />
+                <input type="checkbox" name="pick" value="e3" aria-labelledby="e3-heading" aria-describedby="pick-help" />
                 Pick
               </label>
             </div>
@@ -795,10 +795,10 @@
             <div class="exp-head">
               <div>
                 <p class="kicker">E4 · reviews finding 4</p>
-                <h3>Strip authority wrappers</h3>
+                <h3 id="e4-heading">Strip authority wrappers</h3>
               </div>
               <label class="pick">
-                <input type="checkbox" name="pick" value="e4" />
+                <input type="checkbox" name="pick" value="e4" aria-labelledby="e4-heading" aria-describedby="pick-help" />
                 Pick
               </label>
             </div>
@@ -819,10 +819,10 @@
             <div class="exp-head">
               <div>
                 <p class="kicker">E5 · reviews finding 1 / A1</p>
-                <h3>Exam format vs open-ended, 0.8B vs 4B</h3>
+                <h3 id="e5-heading">Exam format vs open-ended, 0.8B vs 4B</h3>
               </div>
               <label class="pick">
-                <input type="checkbox" name="pick" value="e5" />
+                <input type="checkbox" name="pick" value="e5" aria-labelledby="e5-heading" aria-describedby="pick-help" />
                 Pick
               </label>
             </div>
@@ -859,19 +859,36 @@
     </footer>
 
     <script>
-      const params = new URLSearchParams(window.location.search);
-      const picked = new Set(
-        (params.get("pick") || "")
-          .split(",")
-          .map((id) => id.trim())
-          .filter(Boolean)
-      );
-
+      const MAX_PICKS = 2;
       const boxes = [...document.querySelectorAll('input[name="pick"]')];
+      const validIds = new Set(boxes.map((box) => box.value));
       const tray = document.getElementById("tray-status");
 
-      function render() {
-        const ids = boxes.filter((box) => box.checked).map((box) => box.value);
+      function selectedIds() {
+        return boxes.filter((box) => box.checked).map((box) => box.value);
+      }
+
+      function keepAtMostTwo(ids) {
+        const unique = [];
+        for (const id of ids) {
+          if (!validIds.has(id) || unique.includes(id)) continue;
+          unique.push(id);
+        }
+        return {
+          ids: unique.slice(0, MAX_PICKS),
+          truncated: unique.length > MAX_PICKS,
+        };
+      }
+
+      function setChecks(ids) {
+        const keep = new Set(ids);
+        boxes.forEach((box) => {
+          box.checked = keep.has(box.value);
+        });
+      }
+
+      function render(truncated) {
+        const ids = selectedIds();
         boxes.forEach((box) => {
           box.closest(".experiment").classList.toggle("picked", box.checked);
         });
@@ -879,16 +896,36 @@
         if (ids.length) next.searchParams.set("pick", ids.join(","));
         else next.searchParams.delete("pick");
         history.replaceState(null, "", next);
+        if (truncated) {
+          tray.textContent = ids.length
+            ? `Pick at most two. Kept ${ids.join(", ").toUpperCase()}.`
+            : "Pick at most two experiments.";
+          return;
+        }
         tray.textContent = ids.length
           ? `Selected: ${ids.join(", ").toUpperCase()}. Paste this URL back to run them.`
           : "No experiments selected.";
       }
 
+      const params = new URLSearchParams(window.location.search);
+      const fromUrl = (params.get("pick") || "")
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean);
+      const loaded = keepAtMostTwo(fromUrl);
+      setChecks(loaded.ids);
+
       boxes.forEach((box) => {
-        box.checked = picked.has(box.value);
-        box.addEventListener("change", render);
+        box.addEventListener("change", (event) => {
+          let truncated = false;
+          if (selectedIds().length > MAX_PICKS) {
+            event.target.checked = false;
+            truncated = true;
+          }
+          render(truncated);
+        });
       });
-      render();
+      render(loaded.truncated);
 
       const sections = [...document.querySelectorAll("main section[id]")];
       const navLinks = [...document.querySelectorAll("nav a")];
