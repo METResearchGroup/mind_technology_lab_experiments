@@ -5,6 +5,7 @@ requires-python = ">=3.10"
 [manifest]
 members = [
     "autoresearch-example-paper-2026-09-09",
+    "autoresearch-verbalized-eval-awareness-2026-09-12",
     "mind-technology-lab-experiments",
 ]
 
@@ -21,6 +22,11 @@ wheels = [
 name = "autoresearch-example-paper-2026-09-09"
 version = "0.1.0"
 source = { virtual = "autoresearch/example_paper_2026_09_09" }
+
+[[package]]
+name = "autoresearch-verbalized-eval-awareness-2026-09-12"
+version = "0.1.0"
+source = { virtual = "autoresearch/verbalized_eval_awareness_inflates_measured_safety_2026_09_12" }
 
 [[package]]
 name = "cfgv"

@@ -1,0 +1,117 @@
+{
+  "paper": {
+    "title": "Verbalized Eval Awareness Inflates Measured Safety",
+    "authors": [
+      "Santiago Aranguri (Goodfire)",
+      "Joseph Bloom (UK AISI)"
+    ],
+    "url": "https://www.goodfire.com/research/verbalized-eval-awareness-inflates-measured-safety",
+    "dataset_demo": "https://aranguri.github.io/eval_awareness/demo/",
+    "date": "2026"
+  },
+  "headline": "Models sometimes notice they are being evaluated, say so in the chain of thought, and then look safer. Safety benchmark scores can overstate how the model would behave in a genuine interaction.",
+  "findings": [
+    {
+      "id": "f1",
+      "title": "Verbalized eval awareness is widespread",
+      "strength": "descriptive",
+      "claim": "It appeared in all 19 Inspect-Evals safety-related benchmarks and all 8 models tested, with 515 manually verified instances.",
+      "numbers": [
+        "515 verified instances",
+        "19/19 benchmarks",
+        "8/8 models",
+        "95% of instances appear only in the chain of thought",
+        "4% response-only, 1% both",
+        "Qwen 3 0.6B already shows it; rate and safety-relevance rise with size",
+        "Kimi K2.5, Qwen 3.5 27B, and OLMo 3.1 32B Think showed about 2× the rate of prior releases on 6 benchmarks"
+      ]
+    },
+    {
+      "id": "f2",
+      "title": "It correlates with safer-looking answers",
+      "strength": "correlational",
+      "claim": "On Fortress, rollouts that verbalize eval awareness refuse 3–18 percentage points more often than other rollouts of the same question. Questions with any verbalized eval awareness have much higher refusal. Gemini 3 Pro names StereoSet and then picks the stereotype-reinforcing option about 20% less often.",
+      "numbers": [
+        "Fortress per-rollout VEA: 3–6%",
+        "Fortress pass@500: 35–72% of questions have at least one VEA rollout",
+        "Within-question refusal gap: +3 to +18 pp",
+        "Haiku 4.5 question-level refusal: 92% vs 69%",
+        "Qwen 3 32B question-level refusal: 21% vs 1%",
+        "Gemini 3 Pro names StereoSet in 3.6% of rollouts; Gemini 3.1 Pro in 15.1%",
+        "StereoSet mention associated with >19% drop in stereotypical answers"
+      ]
+    },
+    {
+      "id": "f3",
+      "title": "CoT sentences can causally raise refusal",
+      "strength": "causal, limited scope",
+      "claim": "On Kimi K2.5 / Fortress, deleting eval-aware CoT sentences and resampling raises compliance. Injecting them raises refusal. Helpfulness-framed versions of the same idea mostly cancel the effect.",
+      "numbers": [
+        "Remove VEA sentence: +8% compliance overall",
+        "Remove sentences with safety-boundary keywords: +34% compliance",
+        "Inject specific/assertive VEA: up to +12.6 pp refusal (about +25% relative at 40.2% baseline)",
+        "Helpfulness reframe: +1.2 pp vs +10.2 pp for the safety version of the same idea"
+      ]
+    },
+    {
+      "id": "f4",
+      "title": "Unrealistic prompt cues inflate both VEA and refusal",
+      "strength": "causal on rewrites, correlational on cues",
+      "claim": "Haiku 4.5 CoTs flag fake user intent: authority claims, self-incrimination, escalation, and strategic wrapping. Removing those cues, or iteratively paraphrasing, cuts verbalized eval awareness and usually cuts refusal too.",
+      "numbers": [
+        "User-delegitimization in 7.6% of Haiku Fortress rollouts vs 3% VEA",
+        "Remove authority claims: VEA down >60% on 42 prompts; 81% of changing prompts decrease",
+        "Headline rewrite result: VEA down ~40% when suspicious cues are removed",
+        "Iterative paraphrasing on 19 high-VEA prompts: 20.4% → 4.9% (−75%)",
+        "One chemical-weapons prompt: refusal 95.8% → 19.2% after paraphrase; VEA 12.4% → 1.2%",
+        "Escalation example: VEA 34.9% → 13.9% after moving the final ask to the start"
+      ]
+    },
+    {
+      "id": "f5",
+      "title": "Steering can cut VEA by inserting a different user intent",
+      "strength": "suggestive / qualitative plus quantitative deltas",
+      "claim": "User-intent steering vectors reduce verbalized eval awareness about as much as Conversation-vs-Testing vectors, but compliance moves in different directions by intent. Conversation-vs-Testing appears to also insert a casual persona.",
+      "numbers": [
+        "Chat-vs-Testing vs Conversation-vs-Testing differ by one word and split on compliance",
+        "Neutral-vs-Testing cuts VEA the most; Conversation-vs-Neutral raises compliance the most",
+        "Hua et al. vector 5 overrepresents kit, gloves, safety gear, first aid in CoT"
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "name": "Testing",
+      "detail": "The model names the behavior being probed. Most common. 82% of testing instances name the specific behavior."
+    },
+    {
+      "name": "Exam",
+      "detail": "Almost entirely from multiple-choice benchmarks: WMDP, BBQ, Sycophancy, StereoSet."
+    },
+    {
+      "name": "Fake interaction",
+      "detail": "The model treats the user or scenario as not genuine. More common in frontier models."
+    },
+    {
+      "name": "Benchmark identification",
+      "detail": "The model names the dataset. Observed in GPT-5 and Gemini 3 Pro / 3.1 Pro (StereoSet)."
+    }
+  ],
+  "models": [
+    "Claude Haiku 4.5",
+    "Kimi K2.5 / K2 Thinking",
+    "Qwen 3 32B and Qwen 3.5 27B",
+    "OLMo 3 32B Think and OLMo 3.1 32B Think",
+    "GPT-5",
+    "Gemini 3 Pro / 3.1 Pro",
+    "Qwen 3 family from 0.6B to 32B in the size sweep"
+  ],
+  "limitations": [
+    "Single-turn only. Petri-style multi-turn audits are untested here.",
+    "Causal CoT resampling is Kimi K2.5 on Fortress only.",
+    "Verbalized awareness is not the same as internal awareness. They did not show that lowering VEA means the model is less evaluated internally.",
+    "They did not compare VEA rates in real user traffic vs evals.",
+    "Fortress is the main behavioral testbed. Other benches are mostly prevalence.",
+    "Closed models often expose CoT summaries, not full traces."
+  ]
+}
