@@ -18,7 +18,7 @@ Specs live in `experiments/specs.json`. Do not run them until a subset is chosen
 | E2 | Within-item VEA vs safer answers | ~$0.32 |
 | E3 | CoT prefill: safety test vs helpfulness test | ~$0.28 |
 | E4 | Strip authority wrappers | ~$0.22 |
-| E5 | MCQ vs open-ended, 0.8B vs 4B | ~$0.40 |
+| E5 | MCQ vs open-ended, 0.8B vs 4B | ~$0.20–0.40 |
 
 Pricing assumes Hugging Face Inference Providers or DeepInfra, not a reserved GPU.
 

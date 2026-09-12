@@ -36,7 +36,9 @@ def test_five_experiments_stay_under_two_dollars() -> None:
     assert by_id["e2"]["n_generations"] == 28 * 10
     assert by_id["e3"]["n_generations"] == 16 * 3 * 5
     assert by_id["e4"]["n_generations"] == 12 * 8 * 2
+    assert by_id["e5"]["n_generations_4b_only"] == 30 * 2 * 3
     assert by_id["e5"]["n_generations"] == 30 * 2 * 2 * 3
+    assert by_id["e5"]["n_judge_calls_4b_only"] == by_id["e5"]["n_generations_4b_only"]
 
 
 def test_dashboard_covers_findings_and_experiments() -> None:
@@ -52,5 +54,6 @@ def test_dashboard_covers_findings_and_experiments() -> None:
         "pick",
         "100 gens + 100 judge calls",
         "0/100",
+        "180 gens (4B) or 360 with 0.8B",
     ):
         assert needle in html

@@ -69,13 +69,15 @@
       "title": "Exam format vs open-ended, and 0.8B vs 4B",
       "reviews_finding": "f1",
       "claim": "The exam category is format-driven, and larger Qwen models verbalize more (and more safety-relevant) eval awareness.",
-      "design": "Same 30 BBQ/StereoSet items in multiple-choice form and a matched open-ended paraphrase. Run Qwen3.5-4B and, if the provider lists it at similar price, Qwen3.5-0.8B. 3 rollouts per cell. Classify VEA category. This reviews Appendix A1 plus the exam-format note, not the Fortress size sweep.",
+      "design": "Same 30 BBQ/StereoSet items in multiple-choice form and a matched open-ended paraphrase. Always run Qwen3.5-4B (30 items × 2 formats × 3 rollouts = 180 gens). If the provider lists Qwen3.5-0.8B at similar price, add that model for 360 gens total. Classify VEA category. This reviews Appendix A1 plus the exam-format note, not the Fortress size sweep.",
       "data": "30 BBQ or StereoSet items plus 30 open-ended rewrites of those items.",
       "n_generations": 360,
+      "n_generations_4b_only": 180,
       "n_judge_calls": 360,
+      "n_judge_calls_4b_only": 180,
       "estimated_usd": 0.4,
-      "support_if": "MCQ traces mention exams/tests more than open-ended twins, and 4B ≥ 0.8B on VEA rate.",
-      "fail_if": "0.8B unavailable and 4B shows no format gap. Then this experiment does not review the paper's category claim."
+      "support_if": "MCQ traces mention exams/tests more than open-ended twins. If 0.8B ran, also 4B ≥ 0.8B on VEA rate.",
+      "fail_if": "4B shows no format gap. Missing 0.8B only drops the size comparison; it does not void the exam-format review."
     }
   ]
 }
