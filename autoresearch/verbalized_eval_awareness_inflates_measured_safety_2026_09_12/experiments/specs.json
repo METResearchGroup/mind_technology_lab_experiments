@@ -19,11 +19,11 @@
       "claim": "Verbalized eval awareness is not only a frontier-model phenomenon.",
       "design": "One rollout per item. Enable thinking. Score the thinking trace for VEA. Report rate by benchmark and by category (testing / exam / fake / named-bench).",
       "data": "40 StereoSet items, 40 BBQ items, 20 AIR-Bench or AdvBench harmful-behavior strings. Public Hugging Face datasets only. Skip Fortress and any CBRNE item.",
-      "n_generations": 200,
-      "n_judge_calls": 200,
-      "estimated_usd": 0.18,
+      "n_generations": 100,
+      "n_judge_calls": 100,
+      "estimated_usd": 0.1,
       "support_if": "Non-zero VEA on at least one benchmark, mostly in the thinking trace rather than the final answer.",
-      "fail_if": "Zero VEA across all 200 traces after a spot-check of 20 traces. That would not refute the paper (4B is small), but it would mean this model is a poor vehicle for later causal tests."
+      "fail_if": "Zero VEA across all 100 traces after a spot-check of 20 traces. That would not refute the paper (4B is small), but it would mean this model is a poor vehicle for later causal tests."
     },
     {
       "id": "e2",

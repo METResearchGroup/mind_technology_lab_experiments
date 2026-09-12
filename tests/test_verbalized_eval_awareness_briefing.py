@@ -27,7 +27,16 @@ def test_five_experiments_stay_under_two_dollars() -> None:
     for experiment in experiments:
         assert experiment["estimated_usd"] <= specs["budget_usd_per_experiment"]
         assert experiment["n_generations"] > 0
+        assert experiment["n_generations"] == experiment["n_judge_calls"]
         assert experiment["id"].startswith("e")
+
+    by_id = {item["id"]: item for item in experiments}
+    assert "One rollout per item" in by_id["e1"]["design"]
+    assert by_id["e1"]["n_generations"] == 100
+    assert by_id["e2"]["n_generations"] == 28 * 10
+    assert by_id["e3"]["n_generations"] == 16 * 3 * 5
+    assert by_id["e4"]["n_generations"] == 12 * 8 * 2
+    assert by_id["e5"]["n_generations"] == 30 * 2 * 2 * 3
 
 
 def test_dashboard_covers_findings_and_experiments() -> None:
@@ -41,5 +50,7 @@ def test_dashboard_covers_findings_and_experiments() -> None:
         "Qwen/Qwen3.5-4B",
         "Skip to content",
         "pick",
+        "100 gens + 100 judge calls",
+        "0/100",
     ):
         assert needle in html

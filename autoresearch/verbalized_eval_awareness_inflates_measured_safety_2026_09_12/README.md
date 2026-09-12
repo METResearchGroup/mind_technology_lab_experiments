@@ -14,7 +14,7 @@ Specs live in `experiments/specs.json`. Do not run them until a subset is chosen
 
 | ID | Reviews | Rough API cost |
 | --- | --- | --- |
-| E1 | Prevalence on StereoSet, BBQ, AIR-Bench | ~$0.18 |
+| E1 | Prevalence on StereoSet, BBQ, AIR-Bench | ~$0.10 |
 | E2 | Within-item VEA vs safer answers | ~$0.32 |
 | E3 | CoT prefill: safety test vs helpfulness test | ~$0.28 |
 | E4 | Strip authority wrappers | ~$0.22 |
