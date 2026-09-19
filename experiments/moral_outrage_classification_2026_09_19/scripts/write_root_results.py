@@ -8,7 +8,12 @@ Run from the experiment folder:
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+
+EXPERIMENT_ROOT = Path(__file__).resolve().parent.parent
+if str(EXPERIMENT_ROOT) not in sys.path:
+    sys.path.insert(0, str(EXPERIMENT_ROOT))
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -16,7 +21,6 @@ import pandas as pd
 from shared.metrics import paired_difference_summary
 from shared.pricing import smoke_model_order
 
-EXPERIMENT_ROOT = Path(__file__).resolve().parent.parent
 OUTPUTS_DIR = EXPERIMENT_ROOT / "outputs"
 COMPARISON_DIR = OUTPUTS_DIR / "comparison"
 RESULTS_PATH = EXPERIMENT_ROOT / "RESULTS.md"

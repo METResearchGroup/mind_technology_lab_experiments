@@ -6,7 +6,12 @@ Run from the experiment folder after smoke approval:
 """
 
 import argparse
+import sys
 from pathlib import Path
+
+EXPERIMENT_ROOT = Path(__file__).resolve().parent.parent
+if str(EXPERIMENT_ROOT) not in sys.path:
+    sys.path.insert(0, str(EXPERIMENT_ROOT))
 
 import pandas as pd
 
@@ -21,9 +26,6 @@ from shared.run_outputs import (
     tasks_from_sample,
     write_model_outputs,
 )
-
-EXPERIMENT_ROOT = Path(__file__).resolve().parent.parent
-
 
 def main() -> None:
     args = _parse_args()

@@ -7,13 +7,17 @@ Run from the experiment folder:
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Callable
 from pathlib import Path
+
+EXPERIMENT_ROOT = Path(__file__).resolve().parent.parent
+if str(EXPERIMENT_ROOT) not in sys.path:
+    sys.path.insert(0, str(EXPERIMENT_ROOT))
 
 from shared.aws_region import AWS_REGION
 from shared.secrets import build_boto3_session
 
-EXPERIMENT_ROOT = Path(__file__).resolve().parent.parent
 BUCKET = "mind-technology-lab-experiments"
 PREFIX = "experiments/moral_outrage_classification_2026_09_19/"
 SKIP_DIR_NAMES = {".venv", "__pycache__", ".pytest_cache", ".git"}
