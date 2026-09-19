@@ -231,3 +231,75 @@ uv run python -c "from models.perspective_api import PerspectiveApiEngine; print
 ```
 
 Expected: `False`
+
+## Addendum 2026-09-19: Bedrock source file
+
+Issue 17 now says to create `BedrockEngine` by repurposing [bedrock_engine.py](https://github.com/METResearchGroup/mirrorView-task/blob/main/data_platform/generate_features/engines/bedrock_engine.py).
+
+Read that file before you change `experiments/moral_outrage_classification_2026_09_19/models/bedrock.py`. Copy these pieces into the experiment module (same names when they fit, same behavior when they do not):
+
+- `json_instruction_for_schema`
+- `parse_json_object` (markdown fence strip, then `json.loads`, then `{` `}` slice)
+- `converse_label` and `_converse_once` (8 attempts, 1.0s sleep, retry on `json.JSONDecodeError`, `ValueError`, `ValidationError`, and `ClientError`)
+- `inferenceConfig` with `maxTokens=32` and `temperature=0.0`
+- `BedrockContentFilterError` when the text contains `blocked by our content filters` or `stopReason` is `content_filtered` or `guardrail_intervened`
+- A Pydantic output schema validated with `model_validate`
+
+The output schema is a local model, not `FeatureSpec.llm_output_schema`:
+
+```python
+class MoralOutrageLabel(BaseModel):
+    moral_outrage: bool
+    probability: float | None = Field(default=None, ge=0.0, le=1.0)
+```
+
+System text is `BRADY_MORAL_OUTRAGE_INSTRUCTIONS` plus `json_instruction_for_schema(MoralOutrageLabel)`. User text is the post text.
+
+Keep the public experiment shape:
+
+- `BedrockEngine(model_id, converse=None)`
+- `label_one(text) -> PredictionRecord`
+- `label_records(tasks, output_dir)` through `shared/engine_loop.py`
+
+Map a validated `MoralOutrageLabel` onto `PredictionRecord` the same way as before. `probability` may be `None`. `binary_label` then comes from `moral_outrage`. Tokens still come from Converse `usage`. Region stays `us-east-2`. Allowed model IDs stay the five locked IDs.
+
+Do not copy these pieces:
+
+- `FeatureSpec`, `FeatureRunConfig`, `build_bedrock_engine`, or `DEFAULT_BEDROCK_NOVA_MICRO`
+- The news / opinion / neither word fallback inside `_payload_from_loose_text`
+- Thread-pool batch labeling as a replacement for `engine_loop`
+- Reading region from `BEDROCK_REGION` or from the environment
+- Converse `toolConfig` or native structured-output tools (the original Step 4 text asked for those, this addendum replaces that)
+
+A content-filter error is a failed row. The shared loop retries or deadletters it. Do not swap the model id.
+
+```bash
+cd experiments/moral_outrage_classification_2026_09_19
+uv run python -c "from models.bedrock import BedrockEngine, MoralOutrageLabel, json_instruction_for_schema; print(MoralOutrageLabel(moral_outrage=True, probability=0.9).moral_outrage); print('JSON object' in json_instruction_for_schema(MoralOutrageLabel)); print(BedrockEngine('us.openai.gpt-5.6-luna').model_name)"
+```
+
+Expected:
+
+```text
+True
+True
+Bedrock:us.openai.gpt-5.6-luna
+```
+
+```bash
+uv run python -c "from models.bedrock import BedrockEngine
+try:
+    BedrockEngine('amazon.nova-micro-v1:0')
+    print('accepted')
+except ValueError:
+    print('rejected')
+"
+```
+
+Expected: `rejected`
+
+```bash
+uv run python -c "print('toolConfig' in open('models/bedrock.py').read(), 'nova-micro' in open('models/bedrock.py').read().lower())"
+```
+
+Expected: `False False`

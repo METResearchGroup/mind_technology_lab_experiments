@@ -184,3 +184,5 @@ uv run python -c "from models.smoke_tests.perspective_api import score_smoke_tex
 ```
 
 Expected: `3 [0, 0, 1] Perspective API`
+
+Bedrock smoke still calls `BedrockEngine` once per locked model id on the three invented `SMOKE_TEXTS`. After the Bedrock addendum in Step 4, those calls go through the copied Converse helper (`temperature=0.0`, `maxTokens=32`, Pydantic `MoralOutrageLabel`). If a smoke text is blocked by a content filter, exit non-zero and name the model id. Do not substitute Nova Micro or another id.

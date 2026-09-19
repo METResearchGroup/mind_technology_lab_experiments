@@ -136,3 +136,13 @@ Delete every pytest file under `experiments/moral_outrage_classification_2026_09
 The current sample drops these seven `source_row_id` values because `pred_label` is empty: `1990`, `6429`, `19057`, `19803`, `19853`, `19977`, `22320`. Perspective then scores 993 rows (554 gold 0 and 439 gold 1). Do not redraw the sample to replace them.
 
 See [steps/step1.md](steps/step1.md), [steps/step2.md](steps/step2.md), [steps/step3.md](steps/step3.md), [steps/step4.md](steps/step4.md), [steps/step5.md](steps/step5.md), [steps/step6.md](steps/step6.md), and [steps/step7.md](steps/step7.md).
+
+## Addendum 2026-09-19: repurpose the mirrorView Bedrock engine
+
+Issue 17 now names the Bedrock source file and says to reuse it: [bedrock_engine.py](https://github.com/METResearchGroup/mirrorView-task/blob/main/data_platform/generate_features/engines/bedrock_engine.py).
+
+Copy the Converse call, the Pydantic output schema, the JSON parse, the short inner retry, and the content-filter error from that file. Do not use Converse tool JSON. Do not default to Nova Micro. Do not import `FeatureSpec` or campaign types.
+
+Keep `BedrockEngine`, the five locked model IDs, region `us-east-2`, the Brady instruction string, and the experiment `label_records` loop.
+
+See [steps/step4.md](steps/step4.md) and [steps/step5.md](steps/step5.md).
