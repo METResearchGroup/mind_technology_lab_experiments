@@ -14,7 +14,7 @@ from pathlib import Path
 
 from shared.aws_region import AWS_REGION
 from shared.brady_definition import BRADY_MORAL_OUTRAGE_INSTRUCTIONS
-from shared.engine_loop import LabelTask, label_records
+from shared.engine_loop import LabelTask, http_status_code, label_records
 from shared.metrics import binary_label_from_probability
 from shared.pricing import estimate_cost_usd
 from shared.records import BEDROCK_MODEL_IDS, PredictionRecord
@@ -29,6 +29,14 @@ STRUCTURED_OUTPUT_INSTRUCTIONS = (
     + '"probability": a number between 0 and 1}.'
 )
 JSON_OBJECT_PATTERN = re.compile(r"\{.*\}", re.DOTALL)
+
+
+class BedrockProviderError(RuntimeError):
+    """Converse failed. status_code is set for HTTP-shaped errors."""
+
+    def __init__(self, message: str, status_code: int | None) -> None:
+        super().__init__(message)
+        self.status_code = status_code
 
 
 class BedrockEngine:
@@ -49,8 +57,9 @@ class BedrockEngine:
         try:
             response, latency_ms = _converse_once(converse, self.model_id, text)
         except Exception as exc:
-            raise RuntimeError(
-                f"Bedrock model {self.model_id} failed: {exc}"
+            raise BedrockProviderError(
+                f"Bedrock model {self.model_id} failed: {exc}",
+                http_status_code(exc),
             ) from exc
         moral_outrage, probability = _parse_converse_payload(response)
         binary_label = (
@@ -120,7 +129,7 @@ def _parse_converse_payload(
 ) -> tuple[bool, float | None]:
     text = _extract_text(response)
     payload = _parse_json_object(text)
-    moral_outrage = bool(payload["moral_outrage"])
+    moral_outrage = _as_bool(payload["moral_outrage"])
     if "probability" not in payload or payload["probability"] is None:
         return moral_outrage, None
     return moral_outrage, float(payload["probability"])
@@ -132,6 +141,18 @@ def _extract_text(response: object) -> str:
     content = response["output"]["message"]["content"]
     parts = [item.get("text", "") for item in content if isinstance(item, dict)]
     return "".join(parts)
+
+
+def _as_bool(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered == "true":
+            return True
+        if lowered == "false":
+            return False
+    raise ValueError(f"moral_outrage is not a boolean: {value!r}")
 
 
 def _parse_json_object(text: str) -> dict[str, object]:

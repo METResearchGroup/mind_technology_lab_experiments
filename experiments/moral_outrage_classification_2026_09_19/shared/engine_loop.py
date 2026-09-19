@@ -22,6 +22,10 @@ RETRYABLE_STATUS_CODES = frozenset({429, 500, 502, 503, 504})
 DEFAULT_MAX_LABEL_RETRIES = 3
 
 
+class FatalLabelError(Exception):
+    """Stop the job. Do not deadletter and continue."""
+
+
 @dataclass(frozen=True)
 class LabelTask:
     source_row_id: str
@@ -93,6 +97,8 @@ def _label_chunk(
     for attempt in range(1, total_attempts + 1):
         try:
             records = [label_one(task) for task in chunk]
+        except FatalLabelError:
+            raise
         except Exception as exc:
             last_error = f"{type(exc).__name__}: {exc}"
             if _is_retryable(exc) and attempt < total_attempts:
@@ -108,12 +114,25 @@ def _label_chunk(
 def _is_retryable(exc: Exception) -> bool:
     if isinstance(exc, TimeoutError):
         return True
+    return http_status_code(exc) in RETRYABLE_STATUS_CODES
+
+
+def http_status_code(exc: Exception) -> int | None:
     status_code = getattr(exc, "status_code", None)
-    if status_code in RETRYABLE_STATUS_CODES:
-        return True
+    if isinstance(status_code, int):
+        return status_code
     response = getattr(exc, "response", None)
+    if isinstance(response, dict):
+        metadata = response.get("ResponseMetadata", {})
+        if isinstance(metadata, dict):
+            http_status = metadata.get("HTTPStatusCode")
+            if isinstance(http_status, int):
+                return http_status
+        return None
     response_status = getattr(response, "status_code", None)
-    return response_status in RETRYABLE_STATUS_CODES
+    if isinstance(response_status, int):
+        return response_status
+    return None
 
 
 def _append_labels(output_dir: Path, records: list[PredictionRecord]) -> None:

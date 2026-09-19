@@ -10,7 +10,7 @@ from pathlib import Path
 
 import requests
 
-from shared.engine_loop import LabelTask, label_records
+from shared.engine_loop import FatalLabelError, LabelTask, label_records
 from shared.metrics import binary_label_from_probability
 from shared.pricing import estimate_cost_usd
 from shared.records import MODEL_NAME_PERSPECTIVE, PredictionRecord
@@ -27,8 +27,16 @@ MIN_SECONDS_BETWEEN_CALLS = 1.0
 REJECTED_STATUS_CODES = frozenset({400, 404})
 
 
-class MoralOutrageAttributeRejected(Exception):
+class MoralOutrageAttributeRejected(FatalLabelError):
     """AnalyzeComment rejected the MORAL_OUTRAGE attribute."""
+
+
+class PerspectiveHttpError(RuntimeError):
+    """AnalyzeComment returned a non-success HTTP status."""
+
+    def __init__(self, message: str, status_code: int) -> None:
+        super().__init__(message)
+        self.status_code = status_code
 
 
 class PerspectiveApiEngine:
@@ -121,7 +129,9 @@ def _raise_if_attribute_rejected(response: object) -> None:
             f"AnalyzeComment rejected {MORAL_OUTRAGE_ATTRIBUTE}: {body_text}"
         )
     if status_code is not None and int(status_code) >= 400:
-        raise RuntimeError(f"Perspective HTTP {status_code}: {body_text}")
+        raise PerspectiveHttpError(
+            f"Perspective HTTP {status_code}: {body_text}", int(status_code)
+        )
 
 
 def _read_moral_outrage_score(response: object) -> float:

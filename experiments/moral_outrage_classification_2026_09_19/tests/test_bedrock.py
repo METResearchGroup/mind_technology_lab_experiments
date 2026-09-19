@@ -31,6 +31,25 @@ class TestBedrockEngine:
         assert result.probability == 0.88
         assert result.binary_label == 1
 
+    def test_string_false_is_not_true(self) -> None:
+        """JSON string false is a negative label, not a truthy string."""
+        payload = {
+            "output": {
+                "message": {
+                    "content": [{"text": '{"moral_outrage": "false"}'}]
+                }
+            },
+            "usage": {"inputTokens": 4, "outputTokens": 2},
+        }
+
+        engine = BedrockEngine(
+            "us.openai.gpt-5.6-luna", converse=lambda **_kwargs: payload
+        )
+        result = engine.label_one("The cafe opens at nine.")
+
+        assert result.binary_label == 0
+        assert result.probability is None
+
     def test_rejects_foundation_id_without_us_prefix(self) -> None:
         """anthropic.claude-sonnet-5 without the US profile prefix is rejected."""
         with pytest.raises(ValueError):

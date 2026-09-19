@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from shared.engine_loop import LabelTask, label_records
+from shared.engine_loop import FatalLabelError, LabelTask, label_records
 from shared.metrics import binary_label_from_probability
 from shared.records import MODEL_NAME_JEV, PredictionRecord
 
@@ -77,3 +77,67 @@ class TestLabelRecords:
         labels_path = tmp_path / "labels.parquet"
         if labels_path.is_file():
             assert len(pd.read_parquet(labels_path)) == 0
+
+    def test_retries_http_429_four_times(self, tmp_path: Path) -> None:
+        """An exception with status_code 429 is retried four times."""
+        calls = {"n": 0}
+
+        class RateLimited(Exception):
+            status_code = 429
+
+        def label_one(_task: LabelTask) -> PredictionRecord:
+            calls["n"] += 1
+            raise RateLimited("slow")
+
+        label_records(
+            [_task("9")],
+            label_one,
+            tmp_path,
+            batch_size=1,
+            max_label_retries=3,
+        )
+
+        assert calls["n"] == 4
+        payload = json.loads(
+            (tmp_path / "deadletter.jsonl").read_text(encoding="utf-8").strip()
+        )
+        assert payload["attempts"] == 4
+
+    def test_retries_boto_style_503(self, tmp_path: Path) -> None:
+        """A dict response with HTTPStatusCode 503 is retried four times."""
+        calls = {"n": 0}
+
+        class BotoStyleError(Exception):
+            def __init__(self) -> None:
+                self.response = {"ResponseMetadata": {"HTTPStatusCode": 503}}
+
+        def label_one(_task: LabelTask) -> PredictionRecord:
+            calls["n"] += 1
+            raise BotoStyleError()
+
+        label_records(
+            [_task("9")],
+            label_one,
+            tmp_path,
+            batch_size=1,
+            max_label_retries=3,
+        )
+
+        assert calls["n"] == 4
+
+    def test_fatal_error_does_not_deadletter(self, tmp_path: Path) -> None:
+        """FatalLabelError stops the job without a deadletter line."""
+
+        def label_one(_task: LabelTask) -> PredictionRecord:
+            raise FatalLabelError("stop")
+
+        with pytest.raises(FatalLabelError):
+            label_records(
+                [_task("9")],
+                label_one,
+                tmp_path,
+                batch_size=1,
+                max_label_retries=3,
+            )
+
+        assert not (tmp_path / "deadletter.jsonl").is_file()
