@@ -20,6 +20,15 @@ EXPERIMENT_ROOT = Path(__file__).resolve().parent.parent
 OUTPUTS_DIR = EXPERIMENT_ROOT / "outputs"
 COMPARISON_DIR = OUTPUTS_DIR / "comparison"
 RESULTS_PATH = EXPERIMENT_ROOT / "RESULTS.md"
+PERSPECTIVE_EMPTY_SAMPLE_IDS = (
+    "1990",
+    "6429",
+    "19057",
+    "19803",
+    "19853",
+    "19977",
+    "22320",
+)
 
 
 def write_root_results(
@@ -92,10 +101,15 @@ def render_root_results(
         f"- {name}: {payloads.get(name, {}).get('n_deadletter', 'missing')}"
         for name in order
     )
+    perspective_n = payloads.get("Perspective API", {}).get("n_scored", 993)
+    missing_ids = ", ".join(f"`{row_id}`" for row_id in PERSPECTIVE_EMPTY_SAMPLE_IDS)
     return (
         "# Results\n\n"
         "Scores are on the 1,000-row stratified sample (560 gold 0, 440 gold 1), "
         "seed `20260919`.\n\n"
+        f"Perspective classification metrics used {perspective_n} rows. "
+        "These sample `source_row_id` values have an empty stored `pred_label` "
+        f"and were dropped: {missing_ids}.\n\n"
         f"{quality}\n\n"
         f"{latency}\n\n"
         f"{cost}\n\n"

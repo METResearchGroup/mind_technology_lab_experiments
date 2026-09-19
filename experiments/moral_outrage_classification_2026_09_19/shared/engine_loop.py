@@ -63,11 +63,20 @@ def label_records(
     output_dir.mkdir(parents=True, exist_ok=True)
     pending = [task for task in tasks if task.source_row_id not in _seen_ids(output_dir)]
     written: list[PredictionRecord] = []
+    print(
+        f"label_records dir={output_dir} seen={len(tasks) - len(pending)} "
+        f"pending={len(pending)}",
+        flush=True,
+    )
     for batch_index, chunk in enumerate(_batched(pending, batch_size)):
-        written.extend(
-            _label_chunk(
-                chunk, label_one, output_dir, batch_index, max_label_retries
-            )
+        batch_records = _label_chunk(
+            chunk, label_one, output_dir, batch_index, max_label_retries
+        )
+        written.extend(batch_records)
+        print(
+            f"batch {batch_index} scored={len(batch_records)} "
+            f"chunk={len(chunk)} dir={output_dir.name}",
+            flush=True,
         )
     return written
 
