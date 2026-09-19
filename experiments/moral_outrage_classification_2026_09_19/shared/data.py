@@ -88,13 +88,68 @@ def download_full_csv(destination: Path | None = None) -> Path:
 
 
 def load_full_frame(csv_path: Path) -> pd.DataFrame:
-    """Parse the full CSV into source_row_id, text, gold_label, tweet_id."""
-    raise NotImplementedError
+    """Parse the full CSV into source_row_id, text, gold_label, tweet_id.
+
+    Parameters
+    ----------
+    csv_path
+        Path to the downloaded 26,000-row CSV.
+
+    Returns
+    -------
+    pd.DataFrame
+        Parsed frame with integer gold labels and string row ids.
+
+    Raises
+    ------
+    ValueError
+        When the file is missing required columns or fails count checks.
+    """
+    raw = pd.read_csv(csv_path, dtype={TWEET_ID_COLUMN: "string"})
+    missing_columns = {TEXT_COLUMN, GOLD_COLUMN} - set(raw.columns)
+    if missing_columns:
+        raise ValueError(f"CSV missing columns: {sorted(missing_columns)}")
+    frame = pd.DataFrame(
+        {
+            ROW_ID_FIELD: [str(i) for i in range(len(raw))],
+            "text": raw[TEXT_COLUMN].astype(str),
+            "gold_label": raw[GOLD_COLUMN].astype(int),
+            "tweet_id": raw[TWEET_ID_COLUMN]
+            if TWEET_ID_COLUMN in raw.columns
+            else pd.Series([pd.NA] * len(raw), dtype="string"),
+        }
+    )
+    validate_full_frame(frame)
+    return frame
 
 
 def validate_full_frame(frame: pd.DataFrame) -> None:
-    """Fail if the frame is not 26,000 rows with 14,563 zeros and 11,437 ones."""
-    raise NotImplementedError
+    """Fail if the frame is not 26,000 rows with 14,563 zeros and 11,437 ones.
+
+    Parameters
+    ----------
+    frame
+        Parsed frame with a ``gold_label`` column.
+
+    Raises
+    ------
+    ValueError
+        When the row count or gold-label mix does not match the locked file.
+    """
+    n_rows = len(frame)
+    n_gold_0 = int((frame.gold_label == 0).sum())
+    n_gold_1 = int((frame.gold_label == 1).sum())
+    counts_match = (
+        n_rows == FULL_ROW_COUNT
+        and n_gold_0 == FULL_GOLD_0_COUNT
+        and n_gold_1 == FULL_GOLD_1_COUNT
+    )
+    if not counts_match:
+        raise ValueError(
+            f"Expected {FULL_ROW_COUNT} rows ({FULL_GOLD_0_COUNT} gold 0, "
+            f"{FULL_GOLD_1_COUNT} gold 1); got {n_rows} ({n_gold_0} gold 0, "
+            f"{n_gold_1} gold 1)"
+        )
 
 
 def draw_stratified_sample(
