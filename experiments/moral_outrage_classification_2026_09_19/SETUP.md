@@ -42,3 +42,15 @@ Prefer `LAB_AWS_ACCESS_KEY_ID` and `LAB_AWS_ACCESS_KEY_SECRET`. If those names a
 ## Output prefix
 
 `s3://mind-technology-lab-experiments/experiments/moral_outrage_classification_2026_09_19/`
+
+## Bedrock prices
+
+Hardcoded USD per 1 million tokens, copied 2026-09-19 from [Amazon Bedrock Pricing](https://aws.amazon.com/bedrock/pricing/) and the us-east-2 on-demand listings for IDs the static tables do not expand:
+
+- `us.openai.gpt-5.6-luna`: $0.22 input / $1.32 output
+- `us.openai.gpt-5.6-terra`: $2.20 input / $13.20 output
+- `us.anthropic.claude-sonnet-5`: $3.00 input / $15.00 output
+- `qwen.qwen3-32b-v1:0`: $0.15 input / $0.60 output
+- `deepseek.v3-v1:0`: $0.58 input / $1.68 output
+
+TypeSafe Jev has no public token price. Smoke reports its cost as `unknown`. Perspective is $0.
