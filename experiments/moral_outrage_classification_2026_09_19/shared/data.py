@@ -41,6 +41,17 @@ SAMPLE_SEED = 20260919
 SAMPLE_PARQUET_NAME = "sample_1000.parquet"
 SAMPLE_MANIFEST_NAME = "sample_1000.manifest.json"
 FULL_CSV_NAME = "26k_training_data.csv"
+PERSPECTIVE_LABELS_URI = (
+    "s3://met-research-group-datasets/moral_outrage_classifier/"
+    "perspective_api_labeled_26k_twitter_dataset.csv"
+)
+PERSPECTIVE_LABELS_BUCKET = "met-research-group-datasets"
+PERSPECTIVE_LABELS_KEY = (
+    "moral_outrage_classifier/perspective_api_labeled_26k_twitter_dataset.csv"
+)
+PERSPECTIVE_LABELS_NAME = "perspective_api_labeled_26k_twitter_dataset.csv"
+PERSPECTIVE_LABELS_ROW_COUNT = 26000
+PERSPECTIVE_SMOKE_SOURCE_ROW_IDS = ("0", "1", "12")
 EXPERIMENT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = EXPERIMENT_ROOT / "data"
 
@@ -257,3 +268,89 @@ def load_sample() -> pd.DataFrame:
     if not sample_path.is_file():
         raise FileNotFoundError(sample_path)
     return pd.read_parquet(sample_path)
+
+
+def download_perspective_labels_csv(destination: Path | None = None) -> Path:
+    """Download the stored Perspective labels CSV if it is not already on disk.
+
+    Parameters
+    ----------
+    destination
+        Local path for the CSV. Defaults to
+        ``data/perspective_api_labeled_26k_twitter_dataset.csv``.
+
+    Returns
+    -------
+    Path
+        Path to the local CSV.
+    """
+    csv_path = DATA_DIR / PERSPECTIVE_LABELS_NAME if destination is None else destination
+    if csv_path.is_file():
+        return csv_path
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    client = _s3_client()
+    client.download_file(
+        PERSPECTIVE_LABELS_BUCKET, PERSPECTIVE_LABELS_KEY, str(csv_path)
+    )
+    return csv_path
+
+
+def load_perspective_labels_frame(csv_path: Path | None = None) -> pd.DataFrame:
+    """Load stored Perspective labels with ``source_row_id`` from row order.
+
+    Parameters
+    ----------
+    csv_path
+        Path to the downloaded labels CSV. Downloads the file when omitted.
+
+    Returns
+    -------
+    pd.DataFrame
+        Columns ``source_row_id``, ``text``, and nullable ``pred_label``.
+
+    Raises
+    ------
+    ValueError
+        When the file is missing required columns or is not 26,000 rows.
+    """
+    path = download_perspective_labels_csv() if csv_path is None else csv_path
+    raw = pd.read_csv(path)
+    missing_columns = {"text", "pred_label"} - set(raw.columns)
+    if missing_columns:
+        raise ValueError(f"Perspective CSV missing columns: {sorted(missing_columns)}")
+    if len(raw) != PERSPECTIVE_LABELS_ROW_COUNT:
+        raise ValueError(
+            f"Expected {PERSPECTIVE_LABELS_ROW_COUNT} Perspective rows; got {len(raw)}"
+        )
+    return pd.DataFrame(
+        {
+            ROW_ID_FIELD: [str(i) for i in range(len(raw))],
+            "text": raw["text"].astype(str),
+            "pred_label": pd.to_numeric(raw["pred_label"], errors="coerce"),
+        }
+    )
+
+
+def missing_perspective_source_row_ids(
+    sample: pd.DataFrame, labels: pd.DataFrame
+) -> list[str]:
+    """Return sample ``source_row_id`` values with an empty stored ``pred_label``.
+
+    Parameters
+    ----------
+    sample
+        Sample table with ``source_row_id``.
+    labels
+        Perspective labels with ``source_row_id`` and ``pred_label``.
+
+    Returns
+    -------
+    list[str]
+        Sorted missing ids.
+    """
+    sample_ids = sample[ROW_ID_FIELD].astype(str)
+    labeled = labels.loc[labels["pred_label"].notna(), [ROW_ID_FIELD]].copy()
+    labeled[ROW_ID_FIELD] = labeled[ROW_ID_FIELD].astype(str)
+    present = set(labeled[ROW_ID_FIELD])
+    missing = [row_id for row_id in sample_ids if row_id not in present]
+    return sorted(missing, key=int)

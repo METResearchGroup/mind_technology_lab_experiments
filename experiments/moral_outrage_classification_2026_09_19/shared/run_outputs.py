@@ -25,6 +25,7 @@ from shared.records import PredictionRecord
 RESULT_KEYS = (
     "model_name",
     "n_scored",
+    "n_missing_label",
     "n_deadletter",
     "f1",
     "accuracy",
@@ -80,6 +81,7 @@ def write_model_outputs(
     records: list[PredictionRecord],
     deadletters: list[dict[str, object]],
     output_dir: Path,
+    n_missing_label: int = 0,
 ) -> dict[str, object]:
     """Write results.json, RESULTS.md, and a probability histogram.
 
@@ -99,7 +101,7 @@ def write_model_outputs(
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     deadletters = outstanding_deadletters(records, deadletters)
-    payload = _results_payload(records, deadletters)
+    payload = _results_payload(records, deadletters, n_missing_label)
     (output_dir / "results.json").write_text(
         json.dumps(payload, indent=2) + "\n", encoding="utf-8"
     )
@@ -160,7 +162,9 @@ def outstanding_deadletters(
 
 
 def _results_payload(
-    records: list[PredictionRecord], deadletters: list[dict[str, object]]
+    records: list[PredictionRecord],
+    deadletters: list[dict[str, object]],
+    n_missing_label: int = 0,
 ) -> dict[str, object]:
     gold = [record.gold_label for record in records]
     pred = [record.binary_label for record in records]
@@ -179,6 +183,7 @@ def _results_payload(
     return {
         "model_name": model_name,
         "n_scored": len(records),
+        "n_missing_label": n_missing_label,
         "n_deadletter": len(deadletters),
         **report,
         **percentiles,
@@ -205,6 +210,7 @@ def _model_results_markdown(payload: dict[str, object], hist_path: Path | None) 
         f"# {payload['model_name']}\n\n"
         f"| metric | value |\n| --- | ---: |\n"
         f"| n_scored | {payload['n_scored']} |\n"
+        f"| n_missing_label | {payload['n_missing_label']} |\n"
         f"| n_deadletter | {payload['n_deadletter']} |\n"
         f"| f1 | {payload['f1']} |\n"
         f"| accuracy | {payload['accuracy']} |\n"

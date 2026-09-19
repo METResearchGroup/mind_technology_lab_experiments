@@ -17,6 +17,9 @@ The command creates a local `.venv` for this experiment, and it does not change 
 - Sample: 1,000 rows, 560 gold 0 / 440 gold 1, seed `20260919`
 - Sample path: `data/sample_1000.parquet`
 - Manifest path: `data/sample_1000.manifest.json`
+- Stored Perspective labels: `s3://met-research-group-datasets/moral_outrage_classifier/perspective_api_labeled_26k_twitter_dataset.csv`
+- Local Perspective labels path: `data/perspective_api_labeled_26k_twitter_dataset.csv`
+- Perspective score column: `pred_label` (`0.0`, `1.0`, or empty). Join the sample by `source_row_id`. Empty labels drop at comparison.
 
 ## Region
 
@@ -25,7 +28,7 @@ The region is hardcoded as `us-east-2` for Secrets Manager, Bedrock, dataset dow
 ## Secrets
 
 - Secret `jev-typesafe-api-key`, JSON field `TYPESAFE_API_KEY`
-- Secret `google-api-key`, JSON field `GOOGLE_API_KEY`
+- Secret `google-api-key`, JSON field `GOOGLE_API_KEY`. Perspective scoring does not use this key. The scorer reads the stored labels file.
 
 ## AWS keys
 

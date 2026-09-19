@@ -1,4 +1,4 @@
-"""Perspective AnalyzeComment engine for MORAL_OUTRAGE.
+"""File-backed Perspective engine that returns stored MORAL_OUTRAGE labels.
 
 Run from the experiment folder:
 
@@ -8,39 +8,25 @@ Run from the experiment folder:
 from collections.abc import Callable
 from pathlib import Path
 
-import requests
+import pandas as pd
 
-from shared.engine_loop import FatalLabelError, LabelTask, label_records
+from shared.data import download_perspective_labels_csv, load_perspective_labels_frame
+from shared.engine_loop import LabelTask, label_records
 from shared.metrics import binary_label_from_probability
 from shared.pricing import estimate_cost_usd
 from shared.records import MODEL_NAME_PERSPECTIVE, PredictionRecord
-from shared.secrets import load_google_api_key
 from shared.timer import timed
 
-ANALYZE_COMMENT_URL = (
-    "https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze"
-)
-MORAL_OUTRAGE_ATTRIBUTE = "MORAL_OUTRAGE"
 DEFAULT_BATCH_SIZE = 1
 DEFAULT_MAX_LABEL_RETRIES = 3
-MIN_SECONDS_BETWEEN_CALLS = 1.0
-REJECTED_STATUS_CODES = frozenset({400, 404})
 
 
-class MoralOutrageAttributeRejected(FatalLabelError):
-    """AnalyzeComment rejected the MORAL_OUTRAGE attribute."""
-
-
-class PerspectiveHttpError(RuntimeError):
-    """AnalyzeComment returned a non-success HTTP status."""
-
-    def __init__(self, message: str, status_code: int) -> None:
-        super().__init__(message)
-        self.status_code = status_code
+class MissingPerspectiveLabel(Exception):
+    """The stored Perspective file has no non-empty pred_label for this row."""
 
 
 class PerspectiveApiEngine:
-    """Score one post with Perspective MORAL_OUTRAGE."""
+    """Return a stored Perspective label for one post."""
 
     def __init__(
         self,
@@ -52,33 +38,19 @@ class PerspectiveApiEngine:
         self._api_key = api_key
         self._sleeper = sleeper
         self.model_name = MODEL_NAME_PERSPECTIVE
+        self._by_source_row_id: dict[str, float] | None = None
+        self._by_text: dict[str, float] | None = None
 
     def label_one(self, text: str) -> PredictionRecord:
-        """Score one post text with Perspective MORAL_OUTRAGE."""
-        http_post = self._http_post if self._http_post is not None else requests.post
-        api_key = self._api_key if self._api_key is not None else load_google_api_key()
-        sleeper = self._sleeper if self._sleeper is not None else _sleep
-        response, latency_ms = _analyze_comment(http_post, api_key, text)
-        _raise_if_attribute_rejected(response)
-        probability = _read_moral_outrage_score(response)
-        sleeper(MIN_SECONDS_BETWEEN_CALLS)
-        return PredictionRecord(
-            source_row_id="",
-            text=text,
-            gold_label=0,
-            model_name=MODEL_NAME_PERSPECTIVE,
-            probability=probability,
-            binary_label=binary_label_from_probability(probability),
-            latency_ms=latency_ms,
-            input_tokens=None,
-            output_tokens=None,
-            estimated_cost_usd=estimate_cost_usd(MODEL_NAME_PERSPECTIVE, None, None),
-        )
+        """Return the stored Perspective label for this exact text."""
+        self._ensure_lookups()
+        probability, latency_ms = _lookup_probability(self._by_text, text)
+        return _record_from_probability(text, "", 0, probability, latency_ms)
 
     def label_records(
         self, tasks: list[LabelTask], output_dir: object
     ) -> list[PredictionRecord]:
-        """Score tasks one request at a time through the shared loop."""
+        """Score tasks through the shared skip-seen loop."""
         return label_records(
             tasks,
             self._label_task,
@@ -88,54 +60,57 @@ class PerspectiveApiEngine:
         )
 
     def _label_task(self, task: LabelTask) -> PredictionRecord:
-        record = self.label_one(task.text)
-        return record.model_copy(
-            update={
-                "source_row_id": task.source_row_id,
-                "text": task.text,
-                "gold_label": task.gold_label,
-            }
+        self._ensure_lookups()
+        probability, latency_ms = _lookup_probability(
+            self._by_source_row_id, task.source_row_id
+        )
+        return _record_from_probability(
+            task.text, task.source_row_id, task.gold_label, probability, latency_ms
         )
 
-
-def _sleep(seconds: float) -> None:
-    import time
-
-    time.sleep(seconds)
+    def _ensure_lookups(self) -> None:
+        if self._by_source_row_id is not None and self._by_text is not None:
+            return
+        frame = load_perspective_labels_frame(download_perspective_labels_csv())
+        by_source_row_id: dict[str, float] = {}
+        by_text: dict[str, float] = {}
+        for row in frame.itertuples(index=False):
+            if pd.isna(row.pred_label):
+                continue
+            probability = float(row.pred_label)
+            source_row_id = str(row.source_row_id)
+            by_source_row_id[source_row_id] = probability
+            if row.text not in by_text:
+                by_text[str(row.text)] = probability
+        self._by_source_row_id = by_source_row_id
+        self._by_text = by_text
 
 
 @timed
-def _analyze_comment(
-    http_post: Callable[..., object], api_key: str, text: str
-) -> object:
-    body = {
-        "comment": {"text": text},
-        "languages": ["en"],
-        "requestedAttributes": {MORAL_OUTRAGE_ATTRIBUTE: {}},
-        "doNotStore": True,
-    }
-    return http_post(
-        ANALYZE_COMMENT_URL,
-        params={"key": api_key},
-        json=body,
-    )
-
-
-def _raise_if_attribute_rejected(response: object) -> None:
-    status_code = getattr(response, "status_code", None)
-    body_text = getattr(response, "text", "")
-    if status_code in REJECTED_STATUS_CODES and MORAL_OUTRAGE_ATTRIBUTE in str(body_text):
-        raise MoralOutrageAttributeRejected(
-            f"AnalyzeComment rejected {MORAL_OUTRAGE_ATTRIBUTE}: {body_text}"
+def _lookup_probability(lookup: dict[str, float] | None, key: str) -> float:
+    if lookup is None or key not in lookup:
+        raise MissingPerspectiveLabel(
+            f"No stored Perspective pred_label for {key!r}"
         )
-    if status_code is not None and int(status_code) >= 400:
-        raise PerspectiveHttpError(
-            f"Perspective HTTP {status_code}: {body_text}", int(status_code)
-        )
+    return lookup[key]
 
 
-def _read_moral_outrage_score(response: object) -> float:
-    payload = response.json()
-    return float(
-        payload["attributeScores"][MORAL_OUTRAGE_ATTRIBUTE]["summaryScore"]["value"]
+def _record_from_probability(
+    text: str,
+    source_row_id: str,
+    gold_label: int,
+    probability: float,
+    latency_ms: float,
+) -> PredictionRecord:
+    return PredictionRecord(
+        source_row_id=source_row_id,
+        text=text,
+        gold_label=gold_label,
+        model_name=MODEL_NAME_PERSPECTIVE,
+        probability=probability,
+        binary_label=binary_label_from_probability(probability),
+        latency_ms=latency_ms,
+        input_tokens=None,
+        output_tokens=None,
+        estimated_cost_usd=estimate_cost_usd(MODEL_NAME_PERSPECTIVE, None, None),
     )

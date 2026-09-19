@@ -1,4 +1,4 @@
-"""Live Perspective smoke on the three fixed texts.
+"""Perspective smoke on three stored labeled rows.
 
 Run from the experiment folder:
 
@@ -6,14 +6,26 @@ Run from the experiment folder:
 """
 
 from models.perspective_api import PerspectiveApiEngine
-from models.smoke_tests.texts import SMOKE_TEXTS
+from shared.data import (
+    PERSPECTIVE_SMOKE_SOURCE_ROW_IDS,
+    download_perspective_labels_csv,
+    load_perspective_labels_frame,
+)
 from shared.records import PredictionRecord
 
 
 def score_smoke_texts() -> list[PredictionRecord]:
-    """Classify SMOKE_TEXTS with Perspective MORAL_OUTRAGE."""
+    """Classify the three locked stored Perspective rows."""
+    labels = load_perspective_labels_frame(download_perspective_labels_csv())
+    by_id = {
+        str(row.source_row_id): str(row.text) for row in labels.itertuples(index=False)
+    }
     engine = PerspectiveApiEngine()
-    return [engine.label_one(text) for text in SMOKE_TEXTS]
+    records: list[PredictionRecord] = []
+    for source_row_id in PERSPECTIVE_SMOKE_SOURCE_ROW_IDS:
+        text = by_id[source_row_id]
+        records.append(engine.label_one(text))
+    return records
 
 
 def main() -> None:

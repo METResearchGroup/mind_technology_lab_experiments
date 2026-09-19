@@ -11,7 +11,14 @@ from pathlib import Path
 import pandas as pd
 
 from models.perspective_api import PerspectiveApiEngine
-from shared.data import DATA_DIR, SAMPLE_MANIFEST_NAME, SAMPLE_PARQUET_NAME
+from shared.data import (
+    DATA_DIR,
+    SAMPLE_MANIFEST_NAME,
+    SAMPLE_PARQUET_NAME,
+    download_perspective_labels_csv,
+    load_perspective_labels_frame,
+    missing_perspective_source_row_ids,
+)
 from shared.run_outputs import (
     assert_run_complete,
     load_deadletters,
@@ -38,13 +45,24 @@ def run_perspective(
     """Load the sample, score with Perspective, and write model outputs."""
     require_sample_manifest(manifest_path)
     frame = pd.read_parquet(sample_path)
+    labels = load_perspective_labels_frame(download_perspective_labels_csv())
+    missing_ids = missing_perspective_source_row_ids(frame, labels)
+    missing_set = set(missing_ids)
+    scored_frame = frame.loc[
+        ~frame["source_row_id"].astype(str).isin(missing_set)
+    ].copy()
     engine = PerspectiveApiEngine()
-    engine.label_records(tasks_from_sample(frame), output_dir)
+    engine.label_records(tasks_from_sample(scored_frame), output_dir)
     records = load_records_from_output(output_dir)
     deadletters = outstanding_deadletters(records, load_deadletters(output_dir))
-    assert_run_complete(len(records), len(deadletters), len(frame))
-    write_model_outputs(records, deadletters, output_dir)
-    print(f"DONE Perspective API scored={len(records)} deadletter={len(deadletters)}")
+    assert_run_complete(len(records), len(deadletters), len(frame) - len(missing_ids))
+    write_model_outputs(
+        records, deadletters, output_dir, n_missing_label=len(missing_ids)
+    )
+    print(
+        f"DONE Perspective API scored={len(records)} "
+        f"missing_label={len(missing_ids)} deadletter={len(deadletters)}"
+    )
 
 
 def _parse_args() -> argparse.Namespace:
