@@ -4,6 +4,10 @@ This is a repo where each folder is a series of experiments that are one-off. Un
 
 Local install, uv, pre-commit, and CI: **[SETUP.md](./SETUP.md)**.
 
+## Filepaths
+
+Make all code runnable with `uv` from the repo root. Don't invent new filepaths or make code that's runnable from a subfolder, as this causes undesirable filepath conflicts. Never insert into sys.path or edit sys.path.
+
 ## Replications and autoresearch
 
 If a user asks for a replication or an autoresearch run, put it in the `autoresearch/` folder in a subfolder named `{paper name}_{YYYY_MM_DD}`, where the date is the date of the request in UTC. For example, a replication of "Attention Is All You Need" requested on 2026-09-09 goes in `autoresearch/attention_is_all_you_need_2026_09_09/`.
