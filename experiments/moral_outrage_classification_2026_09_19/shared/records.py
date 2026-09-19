@@ -7,6 +7,18 @@ Run from the experiment folder:
 
 from pydantic import BaseModel
 
+MODEL_NAME_JEV = "Jev"
+MODEL_NAME_PERSPECTIVE = "Perspective API"
+BEDROCK_MODEL_IDS = (
+    "us.openai.gpt-5.6-luna",
+    "us.openai.gpt-5.6-terra",
+    "us.anthropic.claude-sonnet-5",
+    "qwen.qwen3-32b-v1:0",
+    "deepseek.v3-v1:0",
+)
+BEDROCK_MODEL_NAMES = tuple(f"Bedrock:{model_id}" for model_id in BEDROCK_MODEL_IDS)
+POSITIVE_PROBABILITY_THRESHOLD = 0.5
+
 
 class PredictionRecord(BaseModel):
     """One scored row. Bodies stay stubbed until tests exist."""
