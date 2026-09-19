@@ -21,7 +21,7 @@ POSITIVE_PROBABILITY_THRESHOLD = 0.5
 
 
 class PredictionRecord(BaseModel):
-    """One scored row. Bodies stay stubbed until tests exist."""
+    """One scored sample row shared by every engine."""
 
     source_row_id: str
     text: str
