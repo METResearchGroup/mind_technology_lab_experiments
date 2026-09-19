@@ -5,7 +5,7 @@ Run from the experiment folder:
     uv run python -c "from shared.records import PredictionRecord; print(PredictionRecord.__name__)"
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 MODEL_NAME_JEV = "Jev"
 MODEL_NAME_PERSPECTIVE = "Perspective API"
@@ -27,7 +27,7 @@ class PredictionRecord(BaseModel):
     text: str
     gold_label: int
     model_name: str
-    probability: float | None
+    probability: float | None = Field(default=None, ge=0.0, le=1.0)
     binary_label: int
     latency_ms: float
     input_tokens: int | None

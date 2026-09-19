@@ -5,8 +5,6 @@ Run from the experiment folder:
     uv run python -c "from shared.metrics import classification_report; print(classification_report.__name__)"
 """
 
-from shared.records import POSITIVE_PROBABILITY_THRESHOLD
-
 METRIC_KEYS = ("f1", "accuracy", "precision", "recall")
 LATENCY_KEYS = ("p50", "p90", "p99")
 DIFFERENCE_KEYS = ("mean", "median", "std", "iqr")
@@ -15,7 +13,9 @@ PERCENTILE_METHOD = "linear"
 
 def binary_label_from_probability(probability: float) -> int:
     """Return 1 when probability is at least 0.5."""
-    raise NotImplementedError
+    if probability >= POSITIVE_PROBABILITY_THRESHOLD:
+        return 1
+    return 0
 
 
 def classification_report(gold: list[int], pred: list[int]) -> dict[str, float]:
