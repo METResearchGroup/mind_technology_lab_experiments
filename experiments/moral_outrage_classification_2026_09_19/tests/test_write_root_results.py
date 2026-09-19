@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from scripts.upload_s3 import PREFIX, s3_key_for_local_path, upload_tree
 from scripts.write_root_results import pair_probabilities, write_root_results
@@ -103,6 +104,16 @@ class TestWriteRootResults:
         )
         assert saved["n_paired"] == 3
 
+    def test_missing_results_exits(self, tmp_path: Path) -> None:
+        """A missing per-model results.json exits before rewriting RESULTS.md."""
+        results_path = tmp_path / "RESULTS.md"
+        results_path.write_text("keep", encoding="utf-8")
+
+        with pytest.raises(SystemExit):
+            write_root_results(tmp_path / "outputs", results_path, tmp_path / "cmp")
+
+        assert results_path.read_text(encoding="utf-8") == "keep"
+
 
 class TestPairProbabilities:
     """Tests for pair_probabilities()."""
@@ -135,6 +146,20 @@ class TestPairProbabilities:
         assert len(paired) == 1
         assert n_dropped == 1
 
+    def test_counts_id_missing_probability_on_both(self) -> None:
+        """An id present on both sides with no probability is dropped."""
+        jev = pd.DataFrame(
+            {"source_row_id": ["1"], "probability": [None]}
+        )
+        perspective = pd.DataFrame(
+            {"source_row_id": ["1"], "probability": [None]}
+        )
+
+        paired, n_dropped = pair_probabilities(jev, perspective)
+
+        assert len(paired) == 0
+        assert n_dropped == 1
+
 
 class TestS3KeyMapping:
     """Tests for s3_key_for_local_path()."""
@@ -162,6 +187,11 @@ class TestS3KeyMapping:
         venv_file = experiment_root / ".venv" / "lib" / "pkg.py"
         venv_file.parent.mkdir(parents=True)
         venv_file.write_text("x", encoding="utf-8")
+        env_path = experiment_root / ".env"
+        env_path.write_text("SECRET=1", encoding="utf-8")
+        cache_file = experiment_root / ".pytest_cache" / "v" / "cache"
+        cache_file.parent.mkdir(parents=True)
+        cache_file.write_text("x", encoding="utf-8")
         keys: list[str] = []
 
         def put_object(*, Bucket: str, Key: str, Body: bytes) -> None:
@@ -171,4 +201,6 @@ class TestS3KeyMapping:
 
         assert PREFIX + "outputs/jev/results.json" in result
         assert PREFIX + "data/26k_training_data.csv" not in keys
+        assert PREFIX + ".env" not in keys
         assert not any(".venv" in key for key in keys)
+        assert not any(".pytest_cache" in key for key in keys)

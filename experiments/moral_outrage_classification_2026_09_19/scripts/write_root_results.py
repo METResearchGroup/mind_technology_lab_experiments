@@ -27,6 +27,9 @@ def write_root_results(
 ) -> dict[str, object]:
     """Write root RESULTS.md, histograms, and difference_summary.json."""
     payloads = _load_payloads(outputs_dir)
+    missing = [name for name in smoke_model_order() if name not in payloads]
+    if missing:
+        raise SystemExit(f"Missing results.json for: {', '.join(missing)}")
     jev_labels = _load_labels(outputs_dir / "jev" / "labels.parquet")
     perspective_labels = _load_labels(
         outputs_dir / "perspective_api" / "labels.parquet"
@@ -49,7 +52,18 @@ def pair_probabilities(
 ) -> tuple[pd.DataFrame, int]:
     """Inner-join probabilities on source_row_id. Count dropped ids."""
     if jev_labels.empty or perspective_labels.empty:
-        return pd.DataFrame(columns=["source_row_id", "jev", "perspective"]), 0
+        all_ids = set()
+        if not jev_labels.empty:
+            all_ids.update(jev_labels["source_row_id"].astype(str))
+        if not perspective_labels.empty:
+            all_ids.update(perspective_labels["source_row_id"].astype(str))
+        return (
+            pd.DataFrame(columns=["source_row_id", "jev", "perspective"]),
+            len(all_ids),
+        )
+    all_ids = set(jev_labels["source_row_id"].astype(str)).union(
+        set(perspective_labels["source_row_id"].astype(str))
+    )
     jev = jev_labels.dropna(subset=["probability"])[
         ["source_row_id", "probability"]
     ].rename(columns={"probability": "jev"})
@@ -57,7 +71,6 @@ def pair_probabilities(
         ["source_row_id", "probability"]
     ].rename(columns={"probability": "perspective"})
     merged = jev.merge(perspective, on="source_row_id", how="inner")
-    all_ids = set(jev["source_row_id"]).union(set(perspective["source_row_id"]))
     n_dropped = len(all_ids) - len(merged)
     return merged, n_dropped
 

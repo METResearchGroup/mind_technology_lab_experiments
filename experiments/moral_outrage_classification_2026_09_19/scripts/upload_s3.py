@@ -16,8 +16,8 @@ from shared.secrets import build_boto3_session
 EXPERIMENT_ROOT = Path(__file__).resolve().parent.parent
 BUCKET = "mind-technology-lab-experiments"
 PREFIX = "experiments/moral_outrage_classification_2026_09_19/"
-SKIP_DIR_NAMES = {".venv", "__pycache__"}
-SKIP_FILE_NAMES = {"26k_training_data.csv"}
+SKIP_DIR_NAMES = {".venv", "__pycache__", ".pytest_cache", ".git"}
+SKIP_FILE_NAMES = {"26k_training_data.csv", ".env"}
 UPLOAD_COMPLETE_LINE = (
     "UPLOAD COMPLETE s3://mind-technology-lab-experiments/"
     "experiments/moral_outrage_classification_2026_09_19/"
