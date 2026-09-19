@@ -5,6 +5,8 @@ Run from the experiment folder:
     uv run python -c "from shared.metrics import classification_report; print(classification_report.__name__)"
 """
 
+import numpy as np
+
 from shared.records import POSITIVE_PROBABILITY_THRESHOLD
 
 METRIC_KEYS = ("f1", "accuracy", "precision", "recall")
@@ -54,8 +56,13 @@ def _ratio(numerator: float, denominator: float) -> float:
 
 
 def latency_percentiles(latency_ms: list[float]) -> dict[str, float]:
-    """Return p50, p90, and p99 using NumPy linear percentile."""
-    raise NotImplementedError
+    """Return p50, p90, and p99 using NumPy percentile method='linear'."""
+    values = np.asarray(latency_ms, dtype=float)
+    return {
+        "p50": float(np.percentile(values, 50, method=PERCENTILE_METHOD)),
+        "p90": float(np.percentile(values, 90, method=PERCENTILE_METHOD)),
+        "p99": float(np.percentile(values, 99, method=PERCENTILE_METHOD)),
+    }
 
 
 def paired_difference_summary(
