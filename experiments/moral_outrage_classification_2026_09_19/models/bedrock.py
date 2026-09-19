@@ -279,18 +279,45 @@ def _converse_once(
     user_text: str,
     max_tokens: int = BEDROCK_MAX_TOKENS,
 ) -> tuple[BaseModel, BedrockUsage]:
-    response = client.converse(
-        modelId=model_id,
-        system=[{"text": f"{system_prompt}\n{json_instruction_for_schema(output_schema)}"}],
-        messages=[{"role": "user", "content": [{"text": user_text}]}],
-        inferenceConfig={
-            "maxTokens": max_tokens,
-            "temperature": BEDROCK_TEMPERATURE,
-        },
-    )
+    inference_config: dict[str, float | int] = {
+        "maxTokens": max_tokens,
+        "temperature": BEDROCK_TEMPERATURE,
+    }
+    try:
+        response = _invoke_converse(
+            client, model_id, system_prompt, output_schema, user_text, inference_config
+        )
+    except ClientError as error:
+        if not _is_unsupported_temperature(error):
+            raise
+        inference_config = {"maxTokens": max_tokens}
+        response = _invoke_converse(
+            client, model_id, system_prompt, output_schema, user_text, inference_config
+        )
     text = _first_text_block(response)
     parsed = output_schema.model_validate(parse_json_object(text))
     return parsed, _usage_from_response(response)
+
+
+def _invoke_converse(
+    client: BedrockRuntimeClient,
+    model_id: str,
+    system_prompt: str,
+    output_schema: type[BaseModel],
+    user_text: str,
+    inference_config: dict[str, float | int],
+) -> dict[str, Any]:
+    return client.converse(
+        modelId=model_id,
+        system=[{"text": f"{system_prompt}\n{json_instruction_for_schema(output_schema)}"}],
+        messages=[{"role": "user", "content": [{"text": user_text}]}],
+        inferenceConfig=inference_config,
+    )
+
+
+def _is_unsupported_temperature(error: ClientError) -> bool:
+    message = str(error)
+    return "doesn't support the temperature field" in message
 
 
 @timed
