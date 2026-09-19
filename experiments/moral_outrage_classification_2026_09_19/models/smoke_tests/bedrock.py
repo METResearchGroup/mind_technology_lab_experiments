@@ -14,6 +14,7 @@ def score_smoke_texts() -> list[PredictionRecord]:
     """Classify SMOKE_TEXTS with each of the five Bedrock model IDs."""
     records: list[PredictionRecord] = []
     for model_id in BEDROCK_MODEL_IDS:
+        print(f"Bedrock smoke scoring {model_id}", flush=True)
         engine = BedrockEngine(model_id)
         try:
             records.extend(engine.label_one(text) for text in SMOKE_TEXTS)

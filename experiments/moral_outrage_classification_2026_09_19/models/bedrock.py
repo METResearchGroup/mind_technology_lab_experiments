@@ -332,8 +332,11 @@ def _invoke_converse(
 
 
 def _is_unsupported_temperature(error: ClientError) -> bool:
-    message = str(error)
-    return "doesn't support the temperature field" in message
+    message = str(error).lower()
+    mentions_temperature = "temperature" in message
+    unsupported = "doesn't support" in message or "does not support" in message
+    deprecated = "deprecated" in message
+    return mentions_temperature and (unsupported or deprecated)
 
 
 @timed
