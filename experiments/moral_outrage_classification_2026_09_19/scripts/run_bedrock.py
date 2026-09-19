@@ -17,6 +17,7 @@ from shared.run_outputs import (
     assert_run_complete,
     load_deadletters,
     load_records_from_output,
+    outstanding_deadletters,
     require_sample_manifest,
     tasks_from_sample,
     write_model_outputs,
@@ -46,7 +47,7 @@ def run_bedrock(
         engine = BedrockEngine(model_id)
         engine.label_records(tasks, output_dir)
         records = load_records_from_output(output_dir)
-        deadletters = load_deadletters(output_dir)
+        deadletters = outstanding_deadletters(records, load_deadletters(output_dir))
         assert_run_complete(len(records), len(deadletters), len(tasks))
         write_model_outputs(records, deadletters, output_dir)
         print(

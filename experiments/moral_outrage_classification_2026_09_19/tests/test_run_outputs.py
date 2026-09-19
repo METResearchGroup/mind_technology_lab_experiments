@@ -13,6 +13,7 @@ from shared.records import MODEL_NAME_JEV, PredictionRecord
 from shared.run_outputs import (
     RESULT_KEYS,
     assert_run_complete,
+    outstanding_deadletters,
     require_sample_manifest,
     tasks_from_sample,
     write_model_outputs,
@@ -150,3 +151,20 @@ class TestWriteScoreHistogram:
 
         assert result is None
         assert not (tmp_path / "static" / "score_hist.png").exists()
+
+
+class TestOutstandingDeadletters:
+    """Tests for outstanding_deadletters()."""
+
+    def test_drops_ids_that_later_scored(self) -> None:
+        """A later successful label removes that id from the deadletter count."""
+        tasks = tasks_from_sample(_four_row_sample())
+        records = [_record(task) for task in tasks[:3]]
+        deadletters = [
+            {"source_row_id": "c", "error": "old", "attempts": 4, "batch_index": 0},
+            {"source_row_id": "d", "error": "x", "attempts": 4, "batch_index": 0},
+        ]
+
+        result = outstanding_deadletters(records, deadletters)
+
+        assert [row["source_row_id"] for row in result] == ["d"]

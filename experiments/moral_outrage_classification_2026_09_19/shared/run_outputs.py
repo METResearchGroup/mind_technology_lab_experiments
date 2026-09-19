@@ -98,6 +98,7 @@ def write_model_outputs(
         The results.json payload.
     """
     output_dir.mkdir(parents=True, exist_ok=True)
+    deadletters = outstanding_deadletters(records, deadletters)
     payload = _results_payload(records, deadletters)
     (output_dir / "results.json").write_text(
         json.dumps(payload, indent=2) + "\n", encoding="utf-8"
@@ -143,6 +144,19 @@ def load_deadletters(output_dir: Path) -> list[dict[str, object]]:
         return []
     lines = path.read_text(encoding="utf-8").strip().splitlines()
     return [json.loads(line) for line in lines if line]
+
+
+def outstanding_deadletters(
+    records: list[PredictionRecord], deadletters: list[dict[str, object]]
+) -> list[dict[str, object]]:
+    """Keep the latest deadletter row for ids that still have no label."""
+    scored_ids = {record.source_row_id for record in records}
+    latest: dict[str, dict[str, object]] = {}
+    for row in deadletters:
+        row_id = str(row.get("source_row_id", ""))
+        if row_id and row_id not in scored_ids:
+            latest[row_id] = row
+    return list(latest.values())
 
 
 def _results_payload(
