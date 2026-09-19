@@ -36,7 +36,8 @@ def _write_results_smoke_section(table_markdown: str) -> None:
         "Sample comparison tables are empty until Step 7.\n\n"
         f"{SMOKE_HEADING}\n\n"
         f"{table_markdown}\n\n"
-        "Jev estimated cost is `unknown` because TypeSafe has no public token price.\n"
+        "Jev estimated cost is `unknown` because TypeSafe has no public token price. "
+        "Runtime is median request latency in milliseconds.\n"
     )
     RESULTS_PATH.write_text(body, encoding="utf-8")
 
