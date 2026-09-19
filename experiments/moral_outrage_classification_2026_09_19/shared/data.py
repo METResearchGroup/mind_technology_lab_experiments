@@ -9,6 +9,26 @@ from pathlib import Path
 
 import pandas as pd
 
+SOURCE_URI = (
+    "s3://met-research-group-datasets/moral_outrage_classifier/26k_training_data.csv"
+)
+SOURCE_BUCKET = "met-research-group-datasets"
+SOURCE_KEY = "moral_outrage_classifier/26k_training_data.csv"
+TEXT_COLUMN = "text"
+GOLD_COLUMN = "outrage"
+TWEET_ID_COLUMN = "tweet_id"
+ROW_ID_FIELD = "source_row_id"
+FULL_ROW_COUNT = 26000
+FULL_GOLD_0_COUNT = 14563
+FULL_GOLD_1_COUNT = 11437
+SAMPLE_ROW_COUNT = 1000
+SAMPLE_GOLD_0_COUNT = 560
+SAMPLE_GOLD_1_COUNT = 440
+SAMPLE_SEED = 20260919
+SAMPLE_PARQUET_NAME = "sample_1000.parquet"
+SAMPLE_MANIFEST_NAME = "sample_1000.manifest.json"
+FULL_CSV_NAME = "26k_training_data.csv"
+
 
 def download_full_csv(destination: Path) -> Path:
     """Download the 26,000-row Brady CSV to the given path."""

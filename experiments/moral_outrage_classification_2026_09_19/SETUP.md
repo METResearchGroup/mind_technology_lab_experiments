@@ -11,8 +11,12 @@ That creates a local `.venv` for this experiment. It does not change the root wo
 ## Dataset
 
 - URI: `s3://met-research-group-datasets/moral_outrage_classifier/26k_training_data.csv`
-- Sample: 1,000 rows, 560 gold 0 / 440 gold 1
-- Seed: confirmed in Step 2
+- Text column: `text`
+- Gold label column: `outrage` (stored as int 0 or 1)
+- Row id: original CSV data-row index, stored as `source_row_id`
+- Sample: 1,000 rows, 560 gold 0 / 440 gold 1, seed `20260919`
+- Sample path: `data/sample_1000.parquet`
+- Manifest path: `data/sample_1000.manifest.json`
 
 ## Region
 
