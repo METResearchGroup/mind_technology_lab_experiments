@@ -118,7 +118,7 @@ def _raise_if_attribute_rejected(response: object) -> None:
     body_text = getattr(response, "text", "")
     if status_code in REJECTED_STATUS_CODES and MORAL_OUTRAGE_ATTRIBUTE in str(body_text):
         raise MoralOutrageAttributeRejected(
-            f"AnalyzeComment rejected {MORAL_OUTRAGE_ATTRIBUTE}"
+            f"AnalyzeComment rejected {MORAL_OUTRAGE_ATTRIBUTE}: {body_text}"
         )
     if status_code is not None and int(status_code) >= 400:
         raise RuntimeError(f"Perspective HTTP {status_code}: {body_text}")
