@@ -5,10 +5,12 @@ Run from the experiment folder:
     uv run python -c "from shared.data import download_full_csv, load_full_frame, write_sample_if_missing; from shared.aws_region import AWS_REGION; print(AWS_REGION); p=download_full_csv(); df=load_full_frame(p); print(len(df), int((df.gold_label==0).sum()), int((df.gold_label==1).sum())); write_sample_if_missing(df)"
 """
 
+import json
 import os
 from pathlib import Path
 
 import boto3
+import numpy as np
 import pandas as pd
 
 from shared.aws_region import AWS_REGION
@@ -158,15 +160,100 @@ def draw_stratified_sample(
     n_gold_1: int,
     seed: int,
 ) -> pd.DataFrame:
-    """Draw a stratified sample with explicit per-class counts."""
-    raise NotImplementedError
+    """Draw a stratified sample with explicit per-class counts.
+
+    Parameters
+    ----------
+    frame
+        Parsed labeled frame.
+    n_gold_0
+        Number of gold-0 rows to keep.
+    n_gold_1
+        Number of gold-1 rows to keep.
+    seed
+        Seed for ``numpy.random.Generator``.
+
+    Returns
+    -------
+    pd.DataFrame
+        Sample sorted by ``source_row_id``.
+    """
+    rng = np.random.default_rng(seed)
+    gold_0 = _sample_class(frame, gold_label=0, n_rows=n_gold_0, rng=rng)
+    gold_1 = _sample_class(frame, gold_label=1, n_rows=n_gold_1, rng=rng)
+    combined = pd.concat([gold_0, gold_1], ignore_index=True)
+    return combined.sort_values(ROW_ID_FIELD).reset_index(drop=True)
+
+
+def _sample_class(
+    frame: pd.DataFrame,
+    gold_label: int,
+    n_rows: int,
+    rng: np.random.Generator,
+) -> pd.DataFrame:
+    class_rows = frame.loc[frame.gold_label == gold_label].reset_index(drop=True)
+    if len(class_rows) < n_rows:
+        raise ValueError(
+            f"Need {n_rows} gold {gold_label} rows; found {len(class_rows)}"
+        )
+    order = rng.permutation(len(class_rows))
+    return class_rows.iloc[order[:n_rows]]
+
+
+def _sample_paths() -> tuple[Path, Path]:
+    return DATA_DIR / SAMPLE_PARQUET_NAME, DATA_DIR / SAMPLE_MANIFEST_NAME
+
+
+def _manifest_matches(manifest: dict[str, object]) -> bool:
+    expected = {
+        "source_uri": SOURCE_URI,
+        "seed": SAMPLE_SEED,
+        "n_rows": SAMPLE_ROW_COUNT,
+        "n_gold_0": SAMPLE_GOLD_0_COUNT,
+        "n_gold_1": SAMPLE_GOLD_1_COUNT,
+        "row_id_field": ROW_ID_FIELD,
+    }
+    return manifest == expected
 
 
 def write_sample_if_missing(frame: pd.DataFrame) -> Path:
-    """Write the 1,000-row sample and manifest once, then reuse them."""
-    raise NotImplementedError
+    """Write the 1,000-row sample and manifest once, then reuse them.
+
+    Parameters
+    ----------
+    frame
+        Validated full labeled frame.
+
+    Returns
+    -------
+    Path
+        Path to ``data/sample_1000.parquet``.
+    """
+    sample_path, manifest_path = _sample_paths()
+    if sample_path.is_file() and manifest_path.is_file():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if _manifest_matches(manifest):
+            return sample_path
+    sample = draw_stratified_sample(
+        frame, SAMPLE_GOLD_0_COUNT, SAMPLE_GOLD_1_COUNT, SAMPLE_SEED
+    )
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    sample.to_parquet(sample_path, index=False)
+    manifest = {
+        "source_uri": SOURCE_URI,
+        "seed": SAMPLE_SEED,
+        "n_rows": SAMPLE_ROW_COUNT,
+        "n_gold_0": SAMPLE_GOLD_0_COUNT,
+        "n_gold_1": SAMPLE_GOLD_1_COUNT,
+        "row_id_field": ROW_ID_FIELD,
+    }
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    return sample_path
 
 
 def load_sample() -> pd.DataFrame:
     """Load the on-disk 1,000-row sample."""
-    raise NotImplementedError
+    sample_path, _manifest_path = _sample_paths()
+    if not sample_path.is_file():
+        raise FileNotFoundError(sample_path)
+    return pd.read_parquet(sample_path)
