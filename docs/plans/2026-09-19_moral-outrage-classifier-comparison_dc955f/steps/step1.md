@@ -65,7 +65,7 @@ experiments/moral_outrage_classification_2026_09_19/
 
 3. `SETUP.md` must list, in short sentences:
    - Dataset URI `s3://met-research-group-datasets/moral_outrage_classifier/26k_training_data.csv`
-   - Sample rule: 1,000 rows, 560 gold 0 / 440 gold 1, seed locked in Step 2
+   - Sample rule: 1,000 rows, 560 gold 0 / 440 gold 1, seed confirmed in Step 2
    - Region constant `us-east-2`
    - Secret `jev-typesafe-api-key` JSON field `TYPESAFE_API_KEY`
    - Secret `google-api-key` JSON field `GOOGLE_API_KEY`
