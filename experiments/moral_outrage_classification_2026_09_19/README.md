@@ -1,9 +1,7 @@
 # Moral outrage classifier comparison
 
-Compares TypeSafe Jev, Perspective `MORAL_OUTRAGE`, and five Amazon Bedrock chat models on Brady, McLoughlin, Doan, and Crockett 2021 labeled tweets.
+This experiment compares TypeSafe Jev, Perspective `MORAL_OUTRAGE`, and five Amazon Bedrock models on labeled tweets from Brady, McLoughlin, Doan, and Crockett 2021.
 
-Tracking issue: [issue 17](https://github.com/METResearchGroup/mind_technology_lab_experiments/issues/17).
+The tracking issue is [issue 17](https://github.com/METResearchGroup/mind_technology_lab_experiments/issues/17). See [SETUP.md](SETUP.md) for install and IDs, and [RESULTS.md](RESULTS.md) for the current run.
 
-Setup: [SETUP.md](SETUP.md). Results: [RESULTS.md](RESULTS.md).
-
-Scoring uses one stratified random sample of 1,000 posts, not the full 26,000-row file. Smoke classifies three fixed texts on every scorer, then waits for approval before the 1,000-row jobs.
+Scoring uses one stratified random sample of 1,000 tweets, not the full 26,000-row file. Smoke classifies three fixed texts on every scorer. The 1,000-row jobs do not start until someone approves the smoke table.
