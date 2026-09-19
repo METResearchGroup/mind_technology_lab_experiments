@@ -33,6 +33,7 @@ from shared.timer import timed
 DEFAULT_BATCH_SIZE = 8
 DEFAULT_MAX_LABEL_RETRIES = 3
 BEDROCK_MAX_TOKENS = 32
+BEDROCK_FALLBACK_MAX_TOKENS = 1024
 BEDROCK_TEMPERATURE = 0.0
 JSON_INSTRUCTION_PREFIX = (
     "Reply with a single JSON object only. The object must have these fields: "
@@ -294,7 +295,22 @@ def _converse_once(
         response = _invoke_converse(
             client, model_id, system_prompt, output_schema, user_text, inference_config
         )
-    text = _first_text_block(response)
+    try:
+        text = _first_text_block(response)
+    except ValueError:
+        if (
+            str(response.get("stopReason", "")) == "max_tokens"
+            and max_tokens < BEDROCK_FALLBACK_MAX_TOKENS
+        ):
+            return _converse_once(
+                client,
+                model_id,
+                system_prompt,
+                output_schema,
+                user_text,
+                BEDROCK_FALLBACK_MAX_TOKENS,
+            )
+        raise
     parsed = output_schema.model_validate(parse_json_object(text))
     return parsed, _usage_from_response(response)
 
