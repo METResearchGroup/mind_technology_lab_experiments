@@ -184,3 +184,50 @@ Expected: all pass, no network.
 ## Done when
 
 Engines and the loop are unit-tested with fakes. Ready for Step 5 live smoke on three texts.
+
+## Addendum 2026-09-19
+
+Do not write pytest files. Do not call AnalyzeComment.
+
+Keep the public shape of `PerspectiveApiEngine` in `experiments/moral_outrage_classification_2026_09_19/models/perspective_api.py`:
+
+- `__init__(self, http_post=None, api_key=None, sleeper=None)`
+- `label_one(self, text: str) -> PredictionRecord`
+- `label_records(self, tasks, output_dir)`
+
+Those constructor arguments may stay unused. Do not load `GOOGLE_API_KEY`. Do not sleep for a quota. Do not request `TOXICITY`.
+
+On first use, load `experiments/moral_outrage_classification_2026_09_19/data/perspective_api_labeled_26k_twitter_dataset.csv`. Build two lookups:
+
+- `source_row_id` (the CSV row index as a string, `"0"` to `"25999"`) for `label_records`
+- exact `text` for `label_one`
+
+`probability` is `0.0` or `1.0` from `pred_label`. `binary_label` comes from that same value. `model_name` stays `Perspective API`. Tokens stay `None`. Cost stays `0.0`. Wrap the file lookup with the shared timer so `latency_ms` is still set.
+
+If `label_one` cannot find a non-empty `pred_label` for that exact text, raise `MissingPerspectiveLabel`. Do not turn that into a live HTTP error.
+
+If `_label_task` cannot find a non-empty `pred_label` for `task.source_row_id`, raise `MissingPerspectiveLabel`. The Step 6 runner must drop those tasks before the loop, so they are not deadletters.
+
+```bash
+cd experiments/moral_outrage_classification_2026_09_19
+uv run python -c "from models.perspective_api import PerspectiveApiEngine; import pandas as pd; df=pd.read_csv('data/perspective_api_labeled_26k_twitter_dataset.csv'); engine=PerspectiveApiEngine(); rec=engine.label_one(df.loc[0].text); print(rec.model_name, rec.binary_label, rec.probability, rec.estimated_cost_usd, rec.latency_ms>=0)"
+```
+
+Expected: `Perspective API 0 0.0 0.0 True`
+
+```bash
+uv run python -c "from models.perspective_api import PerspectiveApiEngine, MissingPerspectiveLabel; engine=PerspectiveApiEngine()
+try:
+    engine.label_one('this string is not in the stored Perspective file')
+except MissingPerspectiveLabel:
+    print('missing')
+"
+```
+
+Expected: `missing`
+
+```bash
+uv run python -c "from models.perspective_api import PerspectiveApiEngine; print('commentanalyzer' in open('models/perspective_api.py').read())"
+```
+
+Expected: `False`

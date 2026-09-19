@@ -159,3 +159,28 @@ If a Bedrock id is not enabled on the account, the process must exit non-zero an
 ## Done when
 
 `RESULTS.md` has the smoke table and the process has stopped for approval. Step 6 does not begin until the user approves that table.
+
+## Addendum 2026-09-19
+
+Do not write pytest files. Jev and Bedrock still classify the three invented `SMOKE_TEXTS`. Perspective smoke must not use those strings.
+
+Perspective smoke reads these three stored rows, by `source_row_id`:
+
+| source_row_id | pred_label |
+| --- | --- |
+| `0` | `0.0` |
+| `1` | `0.0` |
+| `12` | `1.0` |
+
+Load the text from `data/perspective_api_labeled_26k_twitter_dataset.csv`. Call `PerspectiveApiEngine.label_one` on those three texts. Expected `binary_label` values are `0`, `0`, and `1`. Cost stays `0`. Do not call AnalyzeComment. Do not exit for `MoralOutrageAttributeRejected`.
+
+The smoke table still has seven rows. Perspective estimated runtime is the median file-lookup latency.
+
+Jev and Bedrock smoke remain live provider calls. After the table is written, still print `SMOKE COMPLETE. Waiting for approval before the 1000-row jobs.` and stop.
+
+```bash
+cd experiments/moral_outrage_classification_2026_09_19
+uv run python -c "from models.smoke_tests.perspective_api import score_smoke_texts; recs=score_smoke_texts(); print(len(recs), [r.binary_label for r in recs], recs[0].model_name)"
+```
+
+Expected: `3 [0, 0, 1] Perspective API`

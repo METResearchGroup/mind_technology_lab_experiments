@@ -148,3 +148,24 @@ Expected: `True`
 ## Done when
 
 Root RESULTS is filled, the tree is on S3 at the named prefix, and the user has been notified. The plan package's implementation work ends here.
+
+## Addendum 2026-09-19
+
+Do not write pytest files.
+
+Pair Jev and Perspective probabilities only on `source_row_id`s that have a probability from both scorers. The seven empty Perspective `pred_label` rows count in `n_dropped`. Root RESULTS must name those ids (`1990`, `6429`, `19057`, `19803`, `19853`, `19977`, `22320`) and must say Perspective metrics used 993 rows.
+
+Do not upload `data/26k_training_data.csv` or `data/perspective_api_labeled_26k_twitter_dataset.csv`. Both files already live in `s3://met-research-group-datasets/moral_outrage_classifier/`.
+
+```bash
+cd experiments/moral_outrage_classification_2026_09_19
+uv run python -c "import json; from pathlib import Path; d=json.loads(Path('outputs/comparison/difference_summary.json').read_text()); print(d['n_dropped']>=7, 'n_dropped' in d)"
+```
+
+Expected: `True True`
+
+```bash
+test ! -d tests
+```
+
+Expected: exit 0.

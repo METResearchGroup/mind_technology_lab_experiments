@@ -200,3 +200,21 @@ No key substring in the output.
 ## Done when
 
 The sample file and secret loader work. SETUP records the locked columns. Ready for Step 3 contracts on the prediction record and timer.
+
+## Addendum 2026-09-19
+
+Also download the stored Perspective labels. Do not write pytest files.
+
+- URI: `s3://met-research-group-datasets/moral_outrage_classifier/perspective_api_labeled_26k_twitter_dataset.csv`
+- Local path: `experiments/moral_outrage_classification_2026_09_19/data/perspective_api_labeled_26k_twitter_dataset.csv` (gitignored with the other data CSVs)
+- Columns: `id`, `dataset`, `text`, `gold_label`, `pred_label`, `is_correct`, `model`
+- 26,000 rows. `text` and `gold_label` match `26k_training_data.csv` in the same row order. `pred_label` is `0.0`, `1.0`, or empty (189 empty). `model` is `perspective_api`.
+- Join later work to the Brady sample by `source_row_id` (original CSV row index `0` .. `25999`). Do not join on `id` (it is the tweet id, and 1,160 rows have none). Do not join on `text` for the sample job (511 texts repeat).
+
+```bash
+uv run python -c "from shared.data import DATA_DIR; from shared.aws_region import AWS_REGION; import boto3; from shared.secrets import resolve_aws_access_keys; aid, secret = resolve_aws_access_keys(); c=boto3.client('s3', region_name=AWS_REGION, aws_access_key_id=aid or None, aws_secret_access_key=secret or None); p=DATA_DIR/'perspective_api_labeled_26k_twitter_dataset.csv'; c.download_file('met-research-group-datasets','moral_outrage_classifier/perspective_api_labeled_26k_twitter_dataset.csv',str(p)); import pandas as pd; df=pd.read_csv(p); print(len(df), int(df.pred_label.isna().sum()), df.columns.tolist())"
+```
+
+Expected: `26000 189 ['id', 'dataset', 'text', 'gold_label', 'pred_label', 'is_correct', 'model']`
+
+`GOOGLE_API_KEY` may still load for the secrets CLI. Perspective scoring must not use it.

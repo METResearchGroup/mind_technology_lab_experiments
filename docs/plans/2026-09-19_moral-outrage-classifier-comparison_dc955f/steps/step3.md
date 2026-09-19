@@ -150,3 +150,38 @@ Expected: all pass.
 ## Done when
 
 Shared record, timer, Brady text, and metrics are tested. Ready for Step 4 to implement engines against these types.
+
+## Addendum 2026-09-19
+
+Do not write pytest files. The old tests under `experiments/moral_outrage_classification_2026_09_19/tests/` are deleted. Check the shared record, timer, and metrics with live commands only.
+
+```bash
+cd experiments/moral_outrage_classification_2026_09_19
+uv run python -c "from shared.metrics import binary_label_from_probability, classification_report, paired_difference_summary; print(binary_label_from_probability(0.5), binary_label_from_probability(0.499)); r=classification_report([1,1,0,0],[1,0,0,0]); print(r['accuracy'], r['precision'], r['recall'], r['f1']); d=paired_difference_summary([0.8,0.2],[0.5,0.4]); print(round(d['mean'],2), round(d['median'],2))"
+```
+
+Expected:
+
+```text
+1 0
+0.75 1.0 0.5 0.6666666666666666
+0.05 0.05
+```
+
+```bash
+uv run python -c "from shared.records import PredictionRecord; from shared.brady_definition import BRADY_MORAL_OUTRAGE_INSTRUCTIONS; print(PredictionRecord.model_fields.keys()); print('perceived moral violation' in BRADY_MORAL_OUTRAGE_INSTRUCTIONS)"
+```
+
+Expected: the printed keys include `source_row_id`, `probability`, `binary_label`, and `latency_ms`. The second line is `True`.
+
+```bash
+uv run python -c "import time; from shared.timer import timed
+@timed
+def _sleep():
+    time.sleep(0.02)
+    return 7
+value, latency_ms = _sleep()
+print(value, latency_ms >= 15)"
+```
+
+Expected: `7 True`

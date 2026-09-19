@@ -150,3 +150,30 @@ Expected: a number `<= 1000`. After a clean finish with no deadletter, `1000`.
 ## Done when
 
 Every model directory for Jev, Perspective, and the five Bedrock ids has labels (or deadletter), metrics JSON, and a RESULTS file. Ready for Step 7 to build the root comparison and upload.
+
+## Addendum 2026-09-19
+
+Do not write pytest files. Do not redraw the sample.
+
+The Perspective runner still reads `data/sample_1000.parquet` and still calls `PerspectiveApiEngine.label_records`. Before the loop, drop sample rows whose stored `pred_label` is empty. Join the labels file by `source_row_id`. Do not join by tweet `id` or by `text`.
+
+For the current sample those dropped ids are `1990`, `6429`, `19057`, `19803`, `19853`, `19977`, and `22320`. That leaves 993 Perspective rows (554 gold 0 and 439 gold 1). They are missing labels, not deadletters.
+
+`assert_run_complete` for Perspective must use `n_scored + n_deadletter == 1000 - n_missing_label`. After a clean file-backed run, `n_scored` is `993`, `n_missing_label` is `7`, and `n_deadletter` is `0`. Write `n_missing_label` in `outputs/perspective_api/results.json` and in that folder's `RESULTS.md`. Compute F1 and the other classification metrics on the 993 scored rows.
+
+Jev and Bedrock still require smoke-table approval before any 1,000-row provider traffic. The Perspective job is a file lookup, and it still waits for that same approval so the three jobs stay together.
+
+```bash
+cd experiments/moral_outrage_classification_2026_09_19
+uv run python -c "import pandas as pd; s=pd.read_parquet('data/sample_1000.parquet'); p=pd.read_csv('data/perspective_api_labeled_26k_twitter_dataset.csv'); p['source_row_id']=p.index.astype(str); s['source_row_id']=s['source_row_id'].astype(str); m=s.merge(p[['source_row_id','pred_label']], on='source_row_id', how='left'); print(int(m.pred_label.isna().sum()), sorted(m.loc[m.pred_label.isna(),'source_row_id'].astype(int).tolist()))"
+```
+
+Expected: `7 [1990, 6429, 19057, 19803, 19853, 19977, 22320]`
+
+After the Perspective job:
+
+```bash
+uv run python -c "import json; from pathlib import Path; d=json.loads(Path('outputs/perspective_api/results.json').read_text()); print(d['n_scored'], d['n_missing_label'], d['n_deadletter'])"
+```
+
+Expected: `993 7 0`

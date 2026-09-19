@@ -169,3 +169,20 @@ Expected: exit 0, a `.venv` under the experiment folder (or uv's project environ
 ## Done when
 
 The experiment folder, docs, local dependency file, gitignore, and root excludes exist. Ready for Step 2 to download data and secrets into that tree.
+
+## Addendum 2026-09-19
+
+The folder already exists. Do not add pytest to `experiments/moral_outrage_classification_2026_09_19/pyproject.toml`. Do not create `experiments/moral_outrage_classification_2026_09_19/tests/`.
+
+When you next edit SETUP, add this dataset URI:
+
+`s3://met-research-group-datasets/moral_outrage_classifier/perspective_api_labeled_26k_twitter_dataset.csv`
+
+SETUP may still name secret `google-api-key`. Perspective scoring must not use `GOOGLE_API_KEY`.
+
+```bash
+test ! -d experiments/moral_outrage_classification_2026_09_19/tests
+grep -n pytest experiments/moral_outrage_classification_2026_09_19/pyproject.toml || true
+```
+
+Expected: the `test ! -d` command exits 0. `grep` prints nothing.

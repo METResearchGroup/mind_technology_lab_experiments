@@ -120,3 +120,19 @@ Fill the root RESULTS file with the quality table, the latency table, the cost t
 8. The root RESULTS file also has bar histograms for Jev and Perspective scores, plus mean, median, standard deviation, and interquartile range of Jev minus Perspective.
 9. You upload the local tree to `s3://mind-technology-lab-experiments/experiments/moral_outrage_classification_2026_09_19/`.
 10. Root lint and CI still ignore the new experiment folder, matching the other experiment trees.
+
+## Addendum 2026-09-19: use stored Perspective labels, drop unit tests
+
+Issue 17 now says the live Perspective `MORAL_OUTRAGE` endpoint is unavailable, and that labels already exist at `s3://met-research-group-datasets/moral_outrage_classifier/perspective_api_labeled_26k_twitter_dataset.csv`.
+
+Keep `PerspectiveApiEngine` and its public methods. Change only the body: load that file and return the stored label. Do not call AnalyzeComment. Do not ask for `TOXICITY`. Do not load `GOOGLE_API_KEY` for Perspective.
+
+The stored file has one row per Brady training row, in the same order. The score column is `pred_label` (0, 1, or empty). 189 of 26,000 rows have no `pred_label`. The current 1,000-row sample has 7 of those empty rows. Drop empty Perspective labels when you compare models. Do not redraw the sample.
+
+Perspective smoke must read three rows from that file. It must not use the three invented smoke strings, because those strings are not in the file.
+
+Delete every pytest file under `experiments/moral_outrage_classification_2026_09_19/tests/`. Do not add new unit tests. Check the work with the live commands in the step files.
+
+The current sample drops these seven `source_row_id` values because `pred_label` is empty: `1990`, `6429`, `19057`, `19803`, `19853`, `19977`, `22320`. Perspective then scores 993 rows (554 gold 0 and 439 gold 1). Do not redraw the sample to replace them.
+
+See [steps/step1.md](steps/step1.md), [steps/step2.md](steps/step2.md), [steps/step3.md](steps/step3.md), [steps/step4.md](steps/step4.md), [steps/step5.md](steps/step5.md), [steps/step6.md](steps/step6.md), and [steps/step7.md](steps/step7.md).
