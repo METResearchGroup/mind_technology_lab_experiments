@@ -5,9 +5,20 @@ Run from the experiment folder:
     uv run python -c "from shared.data import download_full_csv, load_full_frame, write_sample_if_missing; from shared.aws_region import AWS_REGION; print(AWS_REGION); p=download_full_csv(); df=load_full_frame(p); print(len(df), int((df.gold_label==0).sum()), int((df.gold_label==1).sum())); write_sample_if_missing(df)"
 """
 
+import os
 from pathlib import Path
 
+import boto3
 import pandas as pd
+
+from shared.aws_region import AWS_REGION
+from shared.secrets import (
+    ACCESS_KEY_ID_ENV,
+    ACCESS_KEY_SECRET_ENV,
+    LAB_ACCESS_KEY_ID_ENV,
+    LAB_SECRET_ACCESS_KEY_ENV,
+    SECRET_ACCESS_KEY_ENV,
+)
 
 SOURCE_URI = (
     "s3://met-research-group-datasets/moral_outrage_classifier/26k_training_data.csv"
@@ -28,11 +39,52 @@ SAMPLE_SEED = 20260919
 SAMPLE_PARQUET_NAME = "sample_1000.parquet"
 SAMPLE_MANIFEST_NAME = "sample_1000.manifest.json"
 FULL_CSV_NAME = "26k_training_data.csv"
+EXPERIMENT_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = EXPERIMENT_ROOT / "data"
 
 
-def download_full_csv(destination: Path) -> Path:
-    """Download the 26,000-row Brady CSV to the given path."""
-    raise NotImplementedError
+def _resolve_aws_access_keys() -> tuple[str, str]:
+    lab_access_key_id = os.environ.get(LAB_ACCESS_KEY_ID_ENV, "")
+    lab_secret_access_key = os.environ.get(LAB_SECRET_ACCESS_KEY_ENV, "")
+    if lab_access_key_id and lab_secret_access_key:
+        return lab_access_key_id, lab_secret_access_key
+    access_key_id = os.environ.get(ACCESS_KEY_ID_ENV, "")
+    secret_access_key = os.environ.get(SECRET_ACCESS_KEY_ENV, "")
+    if not secret_access_key:
+        secret_access_key = os.environ.get(ACCESS_KEY_SECRET_ENV, "")
+    return access_key_id, secret_access_key
+
+
+def _s3_client() -> object:
+    access_key_id, secret_access_key = _resolve_aws_access_keys()
+    session_kwargs: dict[str, str] = {"region_name": AWS_REGION}
+    if access_key_id and secret_access_key:
+        session_kwargs["aws_access_key_id"] = access_key_id
+        session_kwargs["aws_secret_access_key"] = secret_access_key
+    session = boto3.session.Session(**session_kwargs)
+    return session.client("s3", region_name=AWS_REGION)
+
+
+def download_full_csv(destination: Path | None = None) -> Path:
+    """Download the 26,000-row Brady CSV if it is not already on disk.
+
+    Parameters
+    ----------
+    destination
+        Local path for the CSV. Defaults to ``data/26k_training_data.csv``.
+
+    Returns
+    -------
+    Path
+        Path to the local CSV.
+    """
+    csv_path = DATA_DIR / FULL_CSV_NAME if destination is None else destination
+    if csv_path.is_file():
+        return csv_path
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    client = _s3_client()
+    client.download_file(SOURCE_BUCKET, SOURCE_KEY, str(csv_path))
+    return csv_path
 
 
 def load_full_frame(csv_path: Path) -> pd.DataFrame:
