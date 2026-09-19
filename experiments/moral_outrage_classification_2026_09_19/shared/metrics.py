@@ -68,5 +68,15 @@ def latency_percentiles(latency_ms: list[float]) -> dict[str, float]:
 def paired_difference_summary(
     jev: list[float], perspective: list[float]
 ) -> dict[str, float]:
-    """Return mean, median, std, and iqr of jev minus perspective."""
-    raise NotImplementedError
+    """Return mean, median, sample std, and IQR of jev minus perspective."""
+    if len(jev) != len(perspective):
+        raise ValueError("jev and perspective must have the same length")
+    differences = np.asarray(jev, dtype=float) - np.asarray(perspective, dtype=float)
+    quartile_25 = float(np.percentile(differences, 25, method=PERCENTILE_METHOD))
+    quartile_75 = float(np.percentile(differences, 75, method=PERCENTILE_METHOD))
+    return {
+        "mean": float(np.mean(differences)),
+        "median": float(np.median(differences)),
+        "std": float(np.std(differences, ddof=1)),
+        "iqr": quartile_75 - quartile_25,
+    }
