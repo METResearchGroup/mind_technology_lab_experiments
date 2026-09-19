@@ -1,4 +1,8 @@
-"""Bedrock Converse engine for the five locked model IDs.
+"""Bedrock Converse engine copied from mirrorView-task bedrock_engine.py.
+
+The public experiment class stays ``BedrockEngine``. The Converse helper,
+Pydantic parse, inner retry, and content-filter handling come from
+https://github.com/METResearchGroup/mirrorView-task/blob/main/data_platform/generate_features/engines/bedrock_engine.py
 
 Run from the experiment folder:
 
@@ -8,9 +12,14 @@ Run from the experiment folder:
 from __future__ import annotations
 
 import json
-import re
+import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Protocol
+
+from botocore.exceptions import ClientError
+from pydantic import BaseModel, Field, ValidationError
 
 from shared.aws_region import AWS_REGION
 from shared.brady_definition import BRADY_MORAL_OUTRAGE_INSTRUCTIONS
@@ -23,12 +32,37 @@ from shared.timer import timed
 
 DEFAULT_BATCH_SIZE = 8
 DEFAULT_MAX_LABEL_RETRIES = 3
-STRUCTURED_OUTPUT_INSTRUCTIONS = (
-    BRADY_MORAL_OUTRAGE_INSTRUCTIONS
-    + ' Reply with JSON only: {"moral_outrage": true or false, '
-    + '"probability": a number between 0 and 1}.'
+BEDROCK_MAX_TOKENS = 32
+BEDROCK_TEMPERATURE = 0.0
+JSON_INSTRUCTION_PREFIX = (
+    "Reply with a single JSON object only. The object must have these fields: "
 )
-JSON_OBJECT_PATTERN = re.compile(r"\{.*\}", re.DOTALL)
+JSON_FENCE = "```"
+JSON_FENCE_LANGUAGE = "json"
+CONVERSE_RETRY_ATTEMPTS = 8
+CONVERSE_RETRY_SLEEP_SECONDS = 1.0
+CONTENT_FILTER_MARKER = "blocked by our content filters"
+CONTENT_FILTER_STOP_REASONS = frozenset({"content_filtered", "guardrail_intervened"})
+RETRYABLE_CONVERSE_ERRORS = (
+    json.JSONDecodeError,
+    ValueError,
+    ValidationError,
+    ClientError,
+)
+
+
+class BedrockRuntimeClient(Protocol):
+    """Subset of the Bedrock Runtime client used by the Converse engine."""
+
+    def converse(self, **kwargs: Any) -> dict[str, Any]: ...
+
+
+class BedrockContentFilterError(Exception):
+    """Bedrock refused the prompt under its content filters."""
+
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail
 
 
 class BedrockProviderError(RuntimeError):
@@ -39,8 +73,34 @@ class BedrockProviderError(RuntimeError):
         self.status_code = status_code
 
 
+class MoralOutrageLabel(BaseModel):
+    """Structured yes/no label returned by one Bedrock Converse call."""
+
+    moral_outrage: bool
+    probability: float | None = Field(default=None, ge=0.0, le=1.0)
+
+
+@dataclass(frozen=True)
+class BedrockUsage:
+    """Token counts from one Converse call."""
+
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+
+
+class _CallableConverseClient:
+    """Adapt a bare converse callable to the client protocol."""
+
+    def __init__(self, converse: Callable[..., object]) -> None:
+        self._converse = converse
+
+    def converse(self, **kwargs: Any) -> dict[str, Any]:
+        return self._converse(**kwargs)  # type: ignore[return-value]
+
+
 class BedrockEngine:
-    """Score one post with a single Bedrock model id."""
+    """Score one post with a single locked Bedrock model id."""
 
     def __init__(
         self, model_id: str, converse: Callable[..., object] | None = None
@@ -53,23 +113,22 @@ class BedrockEngine:
 
     def label_one(self, text: str) -> PredictionRecord:
         """Score one post text with Converse."""
-        converse = self._converse if self._converse is not None else self._live_converse()
+        client = self._client()
         try:
-            response, latency_ms = _converse_once(converse, self.model_id, text)
+            (parsed, usage), latency_ms = _timed_converse_label(client, self.model_id, text)
+        except BedrockContentFilterError:
+            raise
         except Exception as exc:
             raise BedrockProviderError(
                 f"Bedrock model {self.model_id} failed: {exc}",
                 http_status_code(exc),
             ) from exc
-        moral_outrage, probability = _parse_converse_payload(response)
+        probability = parsed.probability
         binary_label = (
             binary_label_from_probability(probability)
             if probability is not None
-            else int(moral_outrage)
+            else int(parsed.moral_outrage)
         )
-        usage = response.get("usage", {}) if isinstance(response, dict) else {}
-        input_tokens = usage.get("inputTokens")
-        output_tokens = usage.get("outputTokens")
         return PredictionRecord(
             source_row_id="",
             text=text,
@@ -78,10 +137,10 @@ class BedrockEngine:
             probability=probability,
             binary_label=binary_label,
             latency_ms=latency_ms,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
+            input_tokens=usage.input_tokens,
+            output_tokens=usage.output_tokens,
             estimated_cost_usd=estimate_cost_usd(
-                self.model_name, input_tokens, output_tokens
+                self.model_name, usage.input_tokens, usage.output_tokens
             ),
         )
 
@@ -107,56 +166,176 @@ class BedrockEngine:
             }
         )
 
-    def _live_converse(self) -> Callable[..., object]:
+    def _client(self) -> BedrockRuntimeClient:
+        if self._converse is not None:
+            return _CallableConverseClient(self._converse)
         session = build_boto3_session()
-        client = session.client("bedrock-runtime", region_name=AWS_REGION)
-        return client.converse
+        return session.client("bedrock-runtime", region_name=AWS_REGION)
+
+
+def json_instruction_for_schema(output_schema: type[BaseModel]) -> str:
+    """Return a JSON-only instruction derived from schema field names and types."""
+    schema = output_schema.model_json_schema()
+    properties = schema.get("properties") or {}
+    required = schema.get("required") or list(properties)
+    phrases = [_schema_field_phrase(name, properties.get(name) or {}) for name in required]
+    return f"{JSON_INSTRUCTION_PREFIX}{'; '.join(phrases)}."
+
+
+def _schema_field_phrase(name: str, field: dict[str, Any]) -> str:
+    type_name = str(field.get("type", "value"))
+    enum_values = field.get("enum")
+    if not enum_values:
+        return f"{name} ({type_name})"
+    allowed = ", ".join(str(value) for value in enum_values)
+    return f"{name} ({type_name}: {allowed})"
+
+
+def parse_json_object(text: str) -> dict[str, Any]:
+    """Parse a JSON object from model text, ignoring optional markdown fences."""
+    stripped = text.strip()
+    if _is_content_filter_text(stripped):
+        raise BedrockContentFilterError(stripped)
+    if stripped.startswith(JSON_FENCE):
+        stripped = _strip_markdown_fence(stripped)
+    try:
+        payload = json.loads(stripped)
+    except json.JSONDecodeError as error:
+        payload = _payload_from_braces(stripped)
+        if payload is None:
+            raise ValueError(f"Bedrock response was not JSON: {stripped!r}") from error
+    if not isinstance(payload, dict):
+        raise ValueError("Bedrock response JSON must be an object")
+    return payload
+
+
+def _is_content_filter_text(text: str) -> bool:
+    return CONTENT_FILTER_MARKER in text.lower()
+
+
+def _payload_from_braces(text: str) -> dict[str, Any] | None:
+    start = text.find("{")
+    end = text.rfind("}")
+    if start < 0 or end <= start:
+        return None
+    try:
+        payload = json.loads(text[start : end + 1])
+    except json.JSONDecodeError:
+        return None
+    if isinstance(payload, dict):
+        return payload
+    return None
+
+
+def _strip_markdown_fence(text: str) -> str:
+    body = text.strip().removeprefix(JSON_FENCE).strip()
+    if body.lower().startswith(JSON_FENCE_LANGUAGE):
+        body = body[len(JSON_FENCE_LANGUAGE) :].strip()
+    if body.endswith(JSON_FENCE):
+        body = body[: -len(JSON_FENCE)].strip()
+    return body
+
+
+def converse_label(
+    client: BedrockRuntimeClient,
+    model_id: str,
+    system_prompt: str,
+    output_schema: type[BaseModel],
+    user_text: str,
+    max_tokens: int = BEDROCK_MAX_TOKENS,
+) -> tuple[BaseModel, BedrockUsage]:
+    """Return structured output and token usage from one Converse call."""
+    last_error: Exception | None = None
+    for attempt in range(CONVERSE_RETRY_ATTEMPTS):
+        try:
+            return _converse_once(
+                client,
+                model_id,
+                system_prompt,
+                output_schema,
+                user_text,
+                max_tokens,
+            )
+        except RETRYABLE_CONVERSE_ERRORS as error:
+            last_error = error
+            print(
+                f"Bedrock Converse retry {attempt + 1}/{CONVERSE_RETRY_ATTEMPTS}: "
+                f"{type(error).__name__}: {error}",
+                flush=True,
+            )
+            if attempt + 1 >= CONVERSE_RETRY_ATTEMPTS:
+                break
+            time.sleep(CONVERSE_RETRY_SLEEP_SECONDS)
+    if last_error is None:
+        raise RuntimeError("Converse retry loop exited without a result")
+    raise last_error
+
+
+def _converse_once(
+    client: BedrockRuntimeClient,
+    model_id: str,
+    system_prompt: str,
+    output_schema: type[BaseModel],
+    user_text: str,
+    max_tokens: int = BEDROCK_MAX_TOKENS,
+) -> tuple[BaseModel, BedrockUsage]:
+    response = client.converse(
+        modelId=model_id,
+        system=[{"text": f"{system_prompt}\n{json_instruction_for_schema(output_schema)}"}],
+        messages=[{"role": "user", "content": [{"text": user_text}]}],
+        inferenceConfig={
+            "maxTokens": max_tokens,
+            "temperature": BEDROCK_TEMPERATURE,
+        },
+    )
+    text = _first_text_block(response)
+    parsed = output_schema.model_validate(parse_json_object(text))
+    return parsed, _usage_from_response(response)
 
 
 @timed
-def _converse_once(
-    converse: Callable[..., object], model_id: str, text: str
-) -> object:
-    return converse(
-        modelId=model_id,
-        system=[{"text": STRUCTURED_OUTPUT_INSTRUCTIONS}],
-        messages=[{"role": "user", "content": [{"text": text}]}],
+def _timed_converse_label(
+    client: BedrockRuntimeClient, model_id: str, text: str
+) -> tuple[MoralOutrageLabel, BedrockUsage]:
+    parsed, usage = converse_label(
+        client,
+        model_id,
+        BRADY_MORAL_OUTRAGE_INSTRUCTIONS,
+        MoralOutrageLabel,
+        text,
+    )
+    if not isinstance(parsed, MoralOutrageLabel):
+        raise TypeError(f"Expected MoralOutrageLabel, got {type(parsed)}")
+    return parsed, usage
+
+
+def _first_text_block(response: dict[str, Any]) -> str:
+    content = response["output"]["message"]["content"]
+    stop_reason = str(response.get("stopReason", ""))
+    for block in content:
+        text = block.get("text")
+        if text:
+            return _text_or_content_filter(str(text), stop_reason)
+    if stop_reason in CONTENT_FILTER_STOP_REASONS:
+        raise BedrockContentFilterError(f"stopReason={stop_reason!r}")
+    raise ValueError(
+        "Bedrock Converse response had no text "
+        f"(stopReason={stop_reason!r}, content={content!r})"
     )
 
 
-def _parse_converse_payload(
-    response: object,
-) -> tuple[bool, float | None]:
-    text = _extract_text(response)
-    payload = _parse_json_object(text)
-    moral_outrage = _as_bool(payload["moral_outrage"])
-    if "probability" not in payload or payload["probability"] is None:
-        return moral_outrage, None
-    return moral_outrage, float(payload["probability"])
+def _text_or_content_filter(text: str, stop_reason: str) -> str:
+    if stop_reason in CONTENT_FILTER_STOP_REASONS or _is_content_filter_text(text):
+        raise BedrockContentFilterError(text)
+    return text
 
 
-def _extract_text(response: object) -> str:
-    if not isinstance(response, dict):
-        raise ValueError("Bedrock response is not a mapping")
-    content = response["output"]["message"]["content"]
-    parts = [item.get("text", "") for item in content if isinstance(item, dict)]
-    return "".join(parts)
-
-
-def _as_bool(value: object) -> bool:
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, str):
-        lowered = value.strip().lower()
-        if lowered == "true":
-            return True
-        if lowered == "false":
-            return False
-    raise ValueError(f"moral_outrage is not a boolean: {value!r}")
-
-
-def _parse_json_object(text: str) -> dict[str, object]:
-    match = JSON_OBJECT_PATTERN.search(text)
-    if match is None:
-        raise ValueError("Bedrock response had no JSON object")
-    return json.loads(match.group(0))
+def _usage_from_response(response: dict[str, Any]) -> BedrockUsage:
+    usage = response.get("usage", {})
+    input_tokens = int(usage.get("inputTokens", 0))
+    output_tokens = int(usage.get("outputTokens", 0))
+    return BedrockUsage(
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        total_tokens=input_tokens + output_tokens,
+    )
