@@ -1,3 +1,3 @@
 # Results
 
-Stub. Filled in Step 1 implementation.
+Smoke and sample tables are empty until Step 5 and Step 7.
