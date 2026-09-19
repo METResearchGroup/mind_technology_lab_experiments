@@ -1,0 +1,9 @@
+[project]
+name = "moral-outrage-classification"
+version = "0.1.0"
+description = "Compare Jev, Perspective, and Bedrock on Brady 2021 moral outrage labels."
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.uv]
+package = false
