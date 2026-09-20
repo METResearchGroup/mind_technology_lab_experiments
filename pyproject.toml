@@ -27,7 +27,10 @@ members = ["autoresearch/*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["tests"]
+testpaths = [
+    "tests",
+    "autoresearch/from_simulated_citizens_to_simulated_deliberation_2026_09_09/tests",
+]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 
@@ -41,10 +44,26 @@ extend-exclude = [
     "ai_agent_simulation_networks",
     "mech_interp_reddit",
     "openai_rate_limit_scaling",
+    "autoresearch/from_simulated_citizens_to_simulated_deliberation_2026_09_09/dashboard",
 ]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "analyze",
+    "client",
+    "debate",
+    "dummy",
+    "metrics",
+    "paper_tables",
+    "parse",
+    "personas",
+    "prompts",
+    "questions",
+    "survey",
+]
 
 [tool.ruff.format]
 quote-style = "double"

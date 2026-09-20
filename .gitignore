@@ -34,6 +34,7 @@ pnpm-debug.log*
 .yarn/
 .pnp.*
 .next/
+out/
 .nuxt/
 .turbo/
 .vercel/
