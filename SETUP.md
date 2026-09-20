@@ -31,7 +31,7 @@ uv run pytest
 uv run pre-commit run --all-files
 ```
 
-Pushes and pull requests run the same quality job in GitHub Actions (ruff, format, pyright, complexipy, pytest). Root lint does not cover nested experiment trees.
+Pushes and pull requests run the same quality job in GitHub Actions (ruff, format, pyright, complexipy, pytest). Root lint does not cover nested experiment trees. Vercel deployments are not part of this repository's CI.
 
 ## Experiment folders
 
