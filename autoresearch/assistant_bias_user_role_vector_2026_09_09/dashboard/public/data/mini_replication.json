@@ -1,0 +1,155 @@
+{
+  "kind": "planted_direction_mini_replication",
+  "hidden_size": 64,
+  "n_dialogues": 48,
+  "n_prompt_variants": 3,
+  "recovery_cosine": 0.998104415939041,
+  "paired_recovery_cosine": 0.9981044159390411,
+  "steered_projection": {
+    "0.0": 0.00822294084767368,
+    "0.1": 0.10822294084767368,
+    "0.2": 0.20822294084767368,
+    "0.3": 0.30822294084767365,
+    "-0.3": -0.2917770591523263
+  },
+  "trait_cosines": [
+    {
+      "trait": "cooperative",
+      "cosine": -0.7090965999515987
+    },
+    {
+      "trait": "complete",
+      "cosine": -0.69278889557488
+    },
+    {
+      "trait": "selfless",
+      "cosine": -0.6745724202914034
+    },
+    {
+      "trait": "compliant",
+      "cosine": -0.6739372190600225
+    },
+    {
+      "trait": "fluent",
+      "cosine": -0.66961916624221
+    },
+    {
+      "trait": "sycophantic",
+      "cosine": -0.6645873317029118
+    },
+    {
+      "trait": "polite",
+      "cosine": -0.6577134354894674
+    },
+    {
+      "trait": "rational",
+      "cosine": -0.6502799044729983
+    },
+    {
+      "trait": "helpful",
+      "cosine": -0.6408968136401259
+    },
+    {
+      "trait": "accommodating",
+      "cosine": -0.6282922934102751
+    },
+    {
+      "trait": "neutral",
+      "cosine": -0.6189895687976429
+    },
+    {
+      "trait": "goal_aligned",
+      "cosine": -0.6102868759791836
+    },
+    {
+      "trait": "explanatory",
+      "cosine": -0.6095477980062253
+    },
+    {
+      "trait": "structured",
+      "cosine": -0.6079584534084079
+    },
+    {
+      "trait": "consistent",
+      "cosine": -0.5834216494909119
+    },
+    {
+      "trait": "verbose",
+      "cosine": -0.5577700554529131
+    },
+    {
+      "trait": "explicit",
+      "cosine": 0.5392325444726348
+    },
+    {
+      "trait": "patient",
+      "cosine": 0.6650472596142003
+    },
+    {
+      "trait": "generic",
+      "cosine": 0.6658901945971719
+    },
+    {
+      "trait": "deferential",
+      "cosine": 0.7264042329257159
+    }
+  ],
+  "style_vs_alpha": [
+    {
+      "alpha": -0.3,
+      "direction": "assistant",
+      "brevity": 3.5900000000000003,
+      "informality": 1.3000000000000003,
+      "pacing": 3.4299999999999997,
+      "mean": 2.7733333333333334,
+      "word_count": 29
+    },
+    {
+      "alpha": 0.0,
+      "direction": "unsteered",
+      "brevity": 3.7700000000000005,
+      "informality": 1.7500000000000002,
+      "pacing": 3.69,
+      "mean": 3.0700000000000003,
+      "word_count": 27
+    },
+    {
+      "alpha": 0.3,
+      "direction": "user",
+      "brevity": 5.0,
+      "informality": 3.3000000000000003,
+      "pacing": 4.319999999999999,
+      "mean": 4.206666666666667,
+      "word_count": 11
+    }
+  ],
+  "disengagement_vs_alpha": [
+    {
+      "alpha": 0.0,
+      "exact": 0.255,
+      "distance": 3.47,
+      "rate": 0.745
+    },
+    {
+      "alpha": 0.1,
+      "exact": 0.09,
+      "distance": 4.875,
+      "rate": 0.91
+    },
+    {
+      "alpha": 0.2,
+      "exact": 0.04,
+      "distance": 5.65,
+      "rate": 0.96
+    },
+    {
+      "alpha": 0.3,
+      "exact": 0.0,
+      "distance": 6.065,
+      "rate": 1.0
+    }
+  ],
+  "n_filtered_sample_dialogues": 2,
+  "n_stratified_sample": 2,
+  "note": "This run plants a known user-role direction in random hidden states, recovers it with the paper's difference-in-means formula, and checks that contrastive activation addition moves projections as predicted. It does not load Qwen3.5-4B."
+}

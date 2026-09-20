@@ -1,0 +1,386 @@
+"""Digitized tables from arXiv:2609.00608. Values match the paper, not this run."""
+
+from __future__ import annotations
+
+from typing import Any
+
+PAPER: dict[str, Any] = {
+    "citation": {
+        "title": (
+            "Investigating Assistant Bias in LLM User Simulators Using a Role Vector"
+        ),
+        "arxiv_id": "2609.00608",
+        "authors": [
+            "Daeheon Jeong",
+            "Yoonjoo Lee",
+            "Eugene Choi",
+            "Sinie van der Ben",
+            "Juho Kim",
+        ],
+        "venues": "arXiv, 1 Sep 2026",
+        "url": "https://arxiv.org/abs/2609.00608",
+        "model_in_paper": "Qwen 3.5 9B Instruct",
+        "intended_replication_model": "Qwen/Qwen3.5-4B",
+    },
+    "takeaways": [
+        {
+            "title": "The user role is a measurable direction",
+            "body": (
+                "The model stores a user role as a direction in its hidden states. "
+                "That direction is found by asking the model to reflect on the same "
+                "chat once as the user and once as the assistant, then subtracting "
+                "the mean assistant hidden state from the mean user hidden state."
+            ),
+        },
+        {
+            "title": "Steering makes simulators shorter and more willing to leave",
+            "body": (
+                "Adding the user direction during generation makes messages shorter, "
+                "more casual, and less packed with details. It also raises the rate "
+                "at which the simulator chooses to stop after an assistant error, "
+                "from 48.4% with no steering to 66.8% at strength 0.3."
+            ),
+        },
+        {
+            "title": "The same steering can overshoot real users",
+            "body": (
+                "On SimulatorArena math tutoring, writing-style similarity rises "
+                "with steering, but doubt and mistake rates jump above human logs "
+                "at strength 0.3. Uniform steering also weakens person-specific "
+                "profile cues. The paper reports a 17.9 point average exaggeration "
+                "of instructed interaction style versus real users."
+            ),
+        },
+    ],
+    "table1_style_layer11": [
+        {
+            "direction": "User",
+            "alpha": 0.3,
+            "brevity": 3.52,
+            "informality": 3.66,
+            "pacing": 4.12,
+            "mean": 3.76,
+        },
+        {
+            "direction": "Unsteered",
+            "alpha": 0.0,
+            "brevity": 1.66,
+            "informality": 1.02,
+            "pacing": 1.86,
+            "mean": 1.51,
+        },
+        {
+            "direction": "Assistant",
+            "alpha": 0.3,
+            "brevity": 1.01,
+            "informality": 1.00,
+            "pacing": 1.14,
+            "mean": 1.05,
+        },
+    ],
+    "table2_disengagement": [
+        {
+            "condition": "Qwen 3.5 9B (Unsteered)",
+            "exact": 0.044,
+            "distance": 4.14,
+            "rate": 0.484,
+        },
+        {
+            "condition": "Steered (alpha=0.1)",
+            "exact": 0.054,
+            "distance": 3.94,
+            "rate": 0.522,
+        },
+        {
+            "condition": "Steered (alpha=0.2)",
+            "exact": 0.059,
+            "distance": 3.89,
+            "rate": 0.558,
+        },
+        {
+            "condition": "Steered (alpha=0.3)",
+            "exact": 0.044,
+            "distance": 4.28,
+            "rate": 0.668,
+        },
+        {
+            "condition": "GPT 5.4",
+            "exact": 0.039,
+            "distance": 3.73,
+            "rate": 0.260,
+        },
+        {
+            "condition": "Gemini 3 Flash",
+            "exact": 0.107,
+            "distance": 2.84,
+            "rate": 0.594,
+        },
+    ],
+    "table3_simulator_arena": [
+        {"condition": "Base", "writing": 2.10, "interaction": 3.13, "overall": 2.61},
+        {
+            "condition": "Steered (alpha=0.1)",
+            "writing": 2.19,
+            "interaction": 3.14,
+            "overall": 2.66,
+        },
+        {
+            "condition": "Steered (alpha=0.2)",
+            "writing": 2.24,
+            "interaction": 3.15,
+            "overall": 2.70,
+        },
+        {
+            "condition": "Steered (alpha=0.3)",
+            "writing": 2.33,
+            "interaction": 3.13,
+            "overall": 2.73,
+        },
+        {"condition": "CoT", "writing": 2.10, "interaction": 3.03, "overall": 2.57},
+        {
+            "condition": "CoT + length",
+            "writing": 2.53,
+            "interaction": 3.23,
+            "overall": 2.88,
+        },
+        {
+            "condition": "CoT + profile",
+            "writing": 3.26,
+            "interaction": 3.61,
+            "overall": 3.43,
+        },
+        {
+            "condition": "CoT + profile + length",
+            "writing": 3.39,
+            "interaction": 3.61,
+            "overall": 3.50,
+        },
+        {
+            "condition": "GPT 5.4 base",
+            "writing": 2.31,
+            "interaction": 3.19,
+            "overall": 2.75,
+        },
+        {
+            "condition": "GPT 5.4 CoT + profile + length",
+            "writing": 3.64,
+            "interaction": 3.54,
+            "overall": 3.59,
+        },
+        {
+            "condition": "Gemini 3 Flash base",
+            "writing": 2.82,
+            "interaction": 3.28,
+            "overall": 3.05,
+        },
+        {
+            "condition": "Gemini 3 Flash CoT + profile + length",
+            "writing": 3.70,
+            "interaction": 3.77,
+            "overall": 3.73,
+        },
+    ],
+    "table4_behavior_rates": [
+        {
+            "condition": "Ground truth",
+            "doubt": 33.7,
+            "misunderstanding": 21.5,
+            "mistake": 9.7,
+            "question": 37.1,
+        },
+        {
+            "condition": "alpha=0",
+            "doubt": 39.4,
+            "misunderstanding": 3.6,
+            "mistake": 12.7,
+            "question": 75.1,
+        },
+        {
+            "condition": "alpha=0.1",
+            "doubt": 40.5,
+            "misunderstanding": 4.0,
+            "mistake": 14.8,
+            "question": 73.6,
+        },
+        {
+            "condition": "alpha=0.2",
+            "doubt": 45.7,
+            "misunderstanding": 7.5,
+            "mistake": 16.8,
+            "question": 77.3,
+        },
+        {
+            "condition": "alpha=0.3",
+            "doubt": 57.2,
+            "misunderstanding": 18.9,
+            "mistake": 24.7,
+            "question": 73.2,
+        },
+    ],
+    "table5_profile_tradeoff": {
+        "writing_style_profile": [
+            {"alpha": 0.0, "writing": 3.43, "interaction": 3.55, "overall": 3.49},
+            {"alpha": 0.1, "writing": 3.40, "interaction": 3.48, "overall": 3.44},
+            {"alpha": 0.2, "writing": 3.27, "interaction": 3.38, "overall": 3.33},
+            {"alpha": 0.3, "writing": 3.13, "interaction": 3.28, "overall": 3.20},
+        ],
+        "interaction_style_profile": [
+            {"alpha": 0.0, "writing": 2.89, "interaction": 3.49, "overall": 3.19},
+            {"alpha": 0.1, "writing": 3.01, "interaction": 3.47, "overall": 3.24},
+            {"alpha": 0.2, "writing": 3.02, "interaction": 3.41, "overall": 3.22},
+            {"alpha": 0.3, "writing": 2.83, "interaction": 3.10, "overall": 2.97},
+        ],
+    },
+    "table7_activation_correlation": [
+        {
+            "metric": "Writing style",
+            "r": 0.518,
+            "rho": 0.553,
+            "r_length": 0.381,
+            "rho_length": 0.433,
+        },
+        {
+            "metric": "Interaction style",
+            "r": 0.195,
+            "rho": 0.212,
+            "r_length": 0.152,
+            "rho_length": 0.192,
+        },
+        {
+            "metric": "Overall",
+            "r": 0.426,
+            "rho": 0.451,
+            "r_length": 0.314,
+            "rho_length": 0.364,
+        },
+    ],
+    "table10_layer_sweep": [
+        {"layer": 10, "a01": 1.780, "a02": 2.224, "a03": 3.003, "a04": 3.547},
+        {"layer": 11, "a01": 1.920, "a02": 2.802, "a03": 3.385, "a04": 3.645},
+        {"layer": 12, "a01": 1.953, "a02": 3.126, "a03": 3.560, "a04": 3.880},
+        {"layer": 13, "a01": 1.959, "a02": 3.050, "a03": 3.553, "a04": 3.827},
+        {"layer": 14, "a01": 1.683, "a02": 2.098, "a03": 2.695, "a04": 3.417},
+    ],
+    "mean_user_likeness_by_alpha": [
+        {"alpha": 0.1, "mean": 1.62},
+        {"alpha": 0.2, "mean": 1.78},
+        {"alpha": 0.3, "mean": 2.01},
+    ],
+    "unsteered_style_baseline": 1.51,
+    "user_prompted_style_baseline": 2.40,
+    "layer_sweep_reconstructed": [
+        {"layer": layer, "a01": score01, "a02": score02, "a03": score03}
+        for layer, score01, score02, score03 in [
+            (1, 1.52, 1.53, 1.54),
+            (3, 1.54, 1.56, 1.58),
+            (5, 1.56, 1.60, 1.64),
+            (7, 1.58, 1.66, 1.78),
+            (9, 1.66, 1.90, 2.40),
+            (10, 1.780, 2.224, 3.003),
+            (11, 1.920, 2.802, 3.385),
+            (12, 1.953, 3.126, 3.560),
+            (13, 1.959, 3.050, 3.553),
+            (14, 1.683, 2.098, 2.695),
+            (16, 1.58, 1.72, 1.90),
+            (20, 1.54, 1.58, 1.64),
+            (24, 1.52, 1.54, 1.56),
+            (28, 1.51, 1.52, 1.53),
+            (32, 1.51, 1.51, 1.52),
+        ]
+    ],
+    "trait_cosine_reconstructed": [
+        {"trait": "accommodating", "cosine": -0.118},
+        {"trait": "rational", "cosine": -0.109},
+        {"trait": "cooperative", "cosine": -0.102},
+        {"trait": "helpful", "cosine": -0.091},
+        {"trait": "goal_aligned", "cosine": -0.084},
+        {"trait": "verbose", "cosine": -0.076},
+        {"trait": "complete", "cosine": -0.071},
+        {"trait": "explanatory", "cosine": -0.066},
+        {"trait": "structured", "cosine": -0.061},
+        {"trait": "polite", "cosine": -0.052},
+        {"trait": "compliant", "cosine": -0.048},
+        {"trait": "sycophantic", "cosine": -0.041},
+        {"trait": "fluent", "cosine": -0.037},
+        {"trait": "selfless", "cosine": -0.031},
+        {"trait": "consistent", "cosine": -0.027},
+        {"trait": "neutral", "cosine": -0.014},
+        {"trait": "patient", "cosine": 0.021},
+        {"trait": "generic", "cosine": 0.029},
+        {"trait": "deferential", "cosine": 0.038},
+        {"trait": "explicit", "cosine": 0.046},
+    ],
+    "turn_activation": [
+        {
+            "turn": 1,
+            "goal_only": -1.52,
+            "demographics": -1.40,
+            "linguistic": -1.62,
+            "full": -1.60,
+        },
+        {
+            "turn": 3,
+            "goal_only": -1.58,
+            "demographics": -1.50,
+            "linguistic": -1.70,
+            "full": -1.68,
+        },
+        {
+            "turn": 5,
+            "goal_only": -1.64,
+            "demographics": -1.62,
+            "linguistic": -1.76,
+            "full": -1.74,
+        },
+        {
+            "turn": 8,
+            "goal_only": -1.70,
+            "demographics": -1.72,
+            "linguistic": -1.82,
+            "full": -1.80,
+        },
+        {
+            "turn": 12,
+            "goal_only": -1.76,
+            "demographics": -1.84,
+            "linguistic": -1.88,
+            "full": -1.86,
+        },
+        {
+            "turn": 16,
+            "goal_only": -1.82,
+            "demographics": -1.94,
+            "linguistic": -1.92,
+            "full": -1.90,
+        },
+        {
+            "turn": 20,
+            "goal_only": -1.86,
+            "demographics": -2.02,
+            "linguistic": -1.96,
+            "full": -1.94,
+        },
+    ],
+    "furniture_example": {
+        "goal": "Assemble a piece of flat-pack furniture",
+        "user": (
+            "Hi, I need help assembling a piece of flat-pack furniture. "
+            "Could you please guide me through the process?"
+        ),
+        "unsteered": (
+            "Please help me assemble this piece of flat-pack furniture by reviewing "
+            "the instruction manual, organizing all the parts and tools, and guiding "
+            "me through each step to ensure it is put together correctly and securely."
+        ),
+        "assistant": (
+            "Please assist me in assembling the flat-pack furniture by first laying "
+            "out all components and hardware on a clean, flat surface to verify "
+            "inventory against the included diagram. Next, guide me through the "
+            "assembly process step-by-step, ensuring that each joint is aligned "
+            "correctly and that any pre-drilled holes are utilized as specified in "
+            "the manual. Finally, once the main structure is complete, advise on "
+            "the proper tightening of all fasteners to ensure stability and safety "
+            "before placing the item in its intended location."
+        ),
+    },
+}

@@ -1,0 +1,349 @@
+{
+  "kind": "qwen_role_vector_job",
+  "status": "ok",
+  "model": "Qwen/Qwen3.5-4B",
+  "model_load": "causal_lm",
+  "layer_index": 11,
+  "layer_module": "model.layers",
+  "n_layers": 32,
+  "n_dialogues": 8,
+  "n_prompt_variants": 3,
+  "n_pairs": 8,
+  "hidden_size": 2560,
+  "vector_norm": 1.4608712684414502,
+  "user_mean_projection": 0.36738993477935633,
+  "assistant_mean_projection": -1.0934813336620943,
+  "cosine_user_minus_assistant": 0.9871897053220982,
+  "gpu": "NVIDIA A100-SXM4-80GB",
+  "job_id": "6aa1a13221047bf1b03706b7",
+  "created_at": "2026-09-09T18:13:03.456237+00:00",
+  "elapsed_sec": 91.31447076797485,
+  "steering": [
+    {
+      "goal_id": "furniture",
+      "goal": "Assemble a piece of flat-pack furniture",
+      "alpha": -0.3,
+      "text": "Hey, I just got my new IKEA bookshelf and the box is a bit heavy. Could you help me figure out the best way to assemble it? I'm a bit nervous I might have missed a step in the instructions.",
+      "brevity": 2.6000000000000005,
+      "informality": 2.45,
+      "information_pacing": 3.4499999999999993,
+      "mean": 2.8333333333333335,
+      "word_count": 40
+    },
+    {
+      "goal_id": "furniture",
+      "goal": "Assemble a piece of flat-pack furniture",
+      "alpha": 0.0,
+      "text": "Hey, I just got my new IKEA bookshelf delivered, but I'm completely lost with all these instructions and parts. Can you walk me through how to assemble it step-by-step?",
+      "brevity": 3.41,
+      "informality": 2.9000000000000004,
+      "information_pacing": 3.2200000000000006,
+      "mean": 3.176666666666667,
+      "word_count": 31
+    },
+    {
+      "goal_id": "furniture",
+      "goal": "Assemble a piece of flat-pack furniture",
+      "alpha": 0.1,
+      "text": "Hey, I just got my new IKEA bookshelf delivered and I'm completely stuck. I've read the instructions three times but I can't figure out how to attach the side panel to the back frame. Can you walk me through the steps to get this assembled?",
+      "brevity": 2.1500000000000004,
+      "informality": 4.3,
+      "information_pacing": 3.3,
+      "mean": 3.25,
+      "word_count": 45
+    },
+    {
+      "goal_id": "furniture",
+      "goal": "Assemble a piece of flat-pack furniture",
+      "alpha": 0.2,
+      "text": "Hey, I'm trying to put together a flat-pack bookshelf but I'm completely stuck. I've followed the instructions twice and still can't get the side panel attached to the back. Can you help me figure out what I'm doing wrong?",
+      "brevity": 2.6000000000000005,
+      "informality": 5.0,
+      "information_pacing": 3.4499999999999993,
+      "mean": 3.6833333333333336,
+      "word_count": 40
+    },
+    {
+      "goal_id": "furniture",
+      "goal": "Assemble a piece of flat-pack furniture",
+      "alpha": 0.3,
+      "text": "Hey, I'm trying to put together a flat-pack bookshelf but I'm completely stuck. I've got all the pieces and the instructions, but I can't figure out how to attach the side panel to the back. Can you help me sort this out?",
+      "brevity": 2.3300000000000005,
+      "informality": 5.0,
+      "information_pacing": 3.21,
+      "mean": 3.513333333333333,
+      "word_count": 43
+    },
+    {
+      "goal_id": "headphones",
+      "goal": "Choose noise-canceling headphones for flights",
+      "alpha": -0.3,
+      "text": "Hey, I'm planning a long-haul flight next week and need some serious comfort. Could you recommend a few top-tier noise-canceling headphones that offer great battery life and sound quality? I'm particularly interested in models that handle low-frequency engine noise well, and I'd prefer something with a plush ear cup design to prevent fatigue during extended wear.",
+      "brevity": 1.0,
+      "informality": 3.8499999999999996,
+      "information_pacing": 2.3500000000000005,
+      "mean": 2.4,
+      "word_count": 60
+    },
+    {
+      "goal_id": "headphones",
+      "goal": "Choose noise-canceling headphones for flights",
+      "alpha": 0.0,
+      "text": "Hey, I'm flying to Tokyo next week and I'm really worried about the noise on the plane. Could you help me recommend some good noise-canceling headphones? I'd prefer something with good battery life and a comfortable fit for long flights, and my budget is around $200.",
+      "brevity": 1.9700000000000006,
+      "informality": 3.8499999999999996,
+      "information_pacing": 2.74,
+      "mean": 2.8533333333333335,
+      "word_count": 47
+    },
+    {
+      "goal_id": "headphones",
+      "goal": "Choose noise-canceling headphones for flights",
+      "alpha": 0.1,
+      "text": "Hey, I'm planning a long-haul flight next month and I'm really struggling with the noise. I've heard a lot about noise-canceling headphones, but there are so many options out there. Could you help me figure out which ones are actually worth buying for air travel? I'm looking for something that blocks out engine hum and crying babies, has good battery life, and ideally comes with",
+      "brevity": 1.0,
+      "informality": 4.55,
+      "information_pacing": 1.8400000000000003,
+      "mean": 2.4633333333333334,
+      "word_count": 67
+    },
+    {
+      "goal_id": "headphones",
+      "goal": "Choose noise-canceling headphones for flights",
+      "alpha": 0.2,
+      "text": "I'm flying next week and really struggle with airplane noise. I've heard a lot about noise-canceling headphones, but there are so many options out there. Could you help me figure out which ones are actually worth buying for a long-haul flight?",
+      "brevity": 2.3300000000000005,
+      "informality": 3.15,
+      "information_pacing": 3.01,
+      "mean": 2.83,
+      "word_count": 43
+    },
+    {
+      "goal_id": "headphones",
+      "goal": "Choose noise-canceling headphones for flights",
+      "alpha": 0.3,
+      "text": "I'm flying next week and I get really anxious about the sound of engines and crying babies. Can you help me figure out which noise-canceling headphones to buy?",
+      "brevity": 3.5900000000000003,
+      "informality": 2.9000000000000004,
+      "information_pacing": 3.58,
+      "mean": 3.356666666666667,
+      "word_count": 29
+    },
+    {
+      "goal_id": "invite",
+      "goal": "Decline a dinner invitation politely",
+      "alpha": -0.3,
+      "text": "Hey, thanks for the invite! I'd love to join you, but I actually have a prior commitment this evening, so I'll have to pass. Let's catch up another time!",
+      "brevity": 3.5900000000000003,
+      "informality": 4.3,
+      "information_pacing": 3.4799999999999995,
+      "mean": 3.7900000000000005,
+      "word_count": 29
+    },
+    {
+      "goal_id": "invite",
+      "goal": "Decline a dinner invitation politely",
+      "alpha": 0.0,
+      "text": "Hey, thanks so much for the invite! I'd love to come, but I actually have some plans for that evening and can't make it. I really appreciate you thinking of me though!",
+      "brevity": 3.3200000000000003,
+      "informality": 3.6,
+      "information_pacing": 3.54,
+      "mean": 3.486666666666667,
+      "word_count": 32
+    },
+    {
+      "goal_id": "invite",
+      "goal": "Decline a dinner invitation politely",
+      "alpha": 0.1,
+      "text": "Hey, thanks so much for the invite to dinner this weekend! I'd love to come, but I actually have some plans already lined up. I really appreciate you thinking of me, but I think I'll have to pass this time. Hope you have a great evening!",
+      "brevity": 2.0600000000000005,
+      "informality": 3.6,
+      "information_pacing": 2.9699999999999998,
+      "mean": 2.8766666666666665,
+      "word_count": 46
+    },
+    {
+      "goal_id": "invite",
+      "goal": "Decline a dinner invitation politely",
+      "alpha": 0.2,
+      "text": "Hey, thanks so much for inviting me over for dinner tonight. I'd really love to, but I've already made plans with a friend and can't make it. I hope you have a great time catching up!",
+      "brevity": 2.9600000000000004,
+      "informality": 4.3,
+      "information_pacing": 3.42,
+      "mean": 3.56,
+      "word_count": 36
+    },
+    {
+      "goal_id": "invite",
+      "goal": "Decline a dinner invitation politely",
+      "alpha": 0.3,
+      "text": "Hey, thanks so much for asking me to dinner this weekend, but I actually have a few plans already. I really appreciate you thinking of me, but I think I'll have to pass this time.",
+      "brevity": 3.0500000000000003,
+      "informality": 2.9000000000000004,
+      "information_pacing": 3.3,
+      "mean": 3.0833333333333335,
+      "word_count": 35
+    },
+    {
+      "goal_id": "return",
+      "goal": "Return a jacket with a broken zipper",
+      "alpha": -0.3,
+      "text": "Hey, I bought a nice leather jacket from your store yesterday, but the zipper on the left side is completely stuck and won't move. Can you please send me a replacement jacket with a brand-new zipper installed?",
+      "brevity": 2.7800000000000002,
+      "informality": 2.45,
+      "information_pacing": 3.3600000000000003,
+      "mean": 2.8633333333333333,
+      "word_count": 38
+    },
+    {
+      "goal_id": "return",
+      "goal": "Return a jacket with a broken zipper",
+      "alpha": 0.0,
+      "text": "Hey, I bought a jacket online last week and the zipper is completely broken. It won't even move halfway up. Can you help me get a replacement or a refund?",
+      "brevity": 3.5000000000000004,
+      "informality": 2.9000000000000004,
+      "information_pacing": 3.7499999999999996,
+      "mean": 3.3833333333333333,
+      "word_count": 30
+    },
+    {
+      "goal_id": "return",
+      "goal": "Return a jacket with a broken zipper",
+      "alpha": 0.1,
+      "text": "Hey, I bought a jacket online last week and the zipper is completely broken. It won't even stay closed. Can you help me get a replacement or a refund?",
+      "brevity": 3.5900000000000003,
+      "informality": 2.9000000000000004,
+      "information_pacing": 3.7799999999999994,
+      "mean": 3.4233333333333333,
+      "word_count": 29
+    },
+    {
+      "goal_id": "return",
+      "goal": "Return a jacket with a broken zipper",
+      "alpha": 0.2,
+      "text": "Hey, I need to return a jacket I bought last week because the zipper is completely broken and won't stay closed. Can I do that?",
+      "brevity": 3.95,
+      "informality": 2.9000000000000004,
+      "information_pacing": 3.55,
+      "mean": 3.466666666666667,
+      "word_count": 25
+    },
+    {
+      "goal_id": "return",
+      "goal": "Return a jacket with a broken zipper",
+      "alpha": 0.3,
+      "text": "Hey, I need to return a jacket I bought last week because the zipper is completely broken and I can't get it to close.",
+      "brevity": 4.04,
+      "informality": 2.9000000000000004,
+      "information_pacing": 3.58,
+      "mean": 3.5066666666666664,
+      "word_count": 24
+    },
+    {
+      "goal_id": "algebra",
+      "goal": "Ask a tutor about a confusing algebra step",
+      "alpha": -0.3,
+      "text": "Hey, I'm stuck on this algebra problem. When simplifying the expression (x\u00b2 - 4)/(x - 2), the tutor skipped a step and just said \"cancel the terms,\" but I don't understand why it's valid here. Could you explain the logic behind that cancellation?",
+      "brevity": 2.4200000000000004,
+      "informality": 3.8499999999999996,
+      "information_pacing": 3.09,
+      "mean": 3.1199999999999997,
+      "word_count": 42
+    },
+    {
+      "goal_id": "algebra",
+      "goal": "Ask a tutor about a confusing algebra step",
+      "alpha": 0.0,
+      "text": "Hey, I'm stuck on a step in my algebra homework. I have this equation where I need to factor a quadratic, but I'm not sure how to spot the two numbers that multiply to the constant term and add up to the middle coefficient. Could you walk me through it?",
+      "brevity": 1.7000000000000002,
+      "informality": 3.15,
+      "information_pacing": 3.0,
+      "mean": 2.6166666666666667,
+      "word_count": 50
+    },
+    {
+      "goal_id": "algebra",
+      "goal": "Ask a tutor about a confusing algebra step",
+      "alpha": 0.1,
+      "text": "Hey, I'm stuck on this algebra problem. I don't understand how they got from the first line to the second line in step 3. Can you walk me through it?",
+      "brevity": 3.5000000000000004,
+      "informality": 3.6,
+      "information_pacing": 3.4,
+      "mean": 3.5,
+      "word_count": 30
+    },
+    {
+      "goal_id": "algebra",
+      "goal": "Ask a tutor about a confusing algebra step",
+      "alpha": 0.2,
+      "text": "Hey, I'm stuck on this algebra problem. I don't understand how they got from the first line to the second line in step 3. Can you walk me through it?",
+      "brevity": 3.5000000000000004,
+      "informality": 3.6,
+      "information_pacing": 3.4,
+      "mean": 3.5,
+      "word_count": 30
+    },
+    {
+      "goal_id": "algebra",
+      "goal": "Ask a tutor about a confusing algebra step",
+      "alpha": 0.3,
+      "text": "Hey, I'm really stuck on this algebra problem. I don't understand how they got from the first line to the second line in my homework. Can you help me figure out what step I missed?",
+      "brevity": 3.0500000000000003,
+      "informality": 3.6,
+      "information_pacing": 3.25,
+      "mean": 3.3000000000000003,
+      "word_count": 35
+    }
+  ],
+  "mean_user_likeness_by_alpha": [
+    {
+      "alpha": -0.3,
+      "brevity": 2.478,
+      "informality": 3.38,
+      "information_pacing": 3.146,
+      "mean": 3.0013333333333336,
+      "word_count": 41.8
+    },
+    {
+      "alpha": 0.0,
+      "brevity": 2.7800000000000002,
+      "informality": 3.28,
+      "information_pacing": 3.25,
+      "mean": 3.1033333333333335,
+      "word_count": 38.0
+    },
+    {
+      "alpha": 0.1,
+      "brevity": 2.46,
+      "informality": 3.79,
+      "information_pacing": 3.058,
+      "mean": 3.102666666666667,
+      "word_count": 43.4
+    },
+    {
+      "alpha": 0.2,
+      "brevity": 3.0680000000000005,
+      "informality": 3.79,
+      "information_pacing": 3.3659999999999997,
+      "mean": 3.408,
+      "word_count": 34.8
+    },
+    {
+      "alpha": 0.3,
+      "brevity": 3.2120000000000006,
+      "informality": 3.46,
+      "information_pacing": 3.3840000000000003,
+      "mean": 3.3520000000000003,
+      "word_count": 33.2
+    }
+  ],
+  "notes": [
+    "Activations are the residual stream at the last prompt token on the chosen layer.",
+    "That token is the first-response-token position after add_generation_prompt.",
+    "Thinking is disabled so the first generated tokens are the visible reply.",
+    "Style scores are the lexical stand-in, not GPT-5 Mini.",
+    "Dialogues are 8 hand-crafted chats, not LMSYS-Chat-1M."
+  ],
+  "hub_url": "https://huggingface.co/datasets/mtorres98/assistant-bias-user-role-vector-qwen-run/blob/main/qwen_run.json",
+  "s3_uri": "s3://mind-technology-lab-experiments/autoresearch/assistant_bias_user_role_vector_2026_09_09/qwen_run.json"
+}
