@@ -297,7 +297,8 @@ def _converse_once(
         )
     try:
         text = _first_text_block(response)
-    except ValueError:
+        parsed = output_schema.model_validate(parse_json_object(text))
+    except (ValueError, json.JSONDecodeError, ValidationError):
         if (
             str(response.get("stopReason", "")) == "max_tokens"
             and max_tokens < BEDROCK_FALLBACK_MAX_TOKENS
@@ -311,7 +312,6 @@ def _converse_once(
                 BEDROCK_FALLBACK_MAX_TOKENS,
             )
         raise
-    parsed = output_schema.model_validate(parse_json_object(text))
     return parsed, _usage_from_response(response)
 
 
