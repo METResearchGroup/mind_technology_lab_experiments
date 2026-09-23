@@ -103,8 +103,8 @@ def main() -> None:
     _write_parquet_outputs(predictions, requests, output_dir)
     results = _build_pass_results(batch_size, predictions, requests, output_dir)
     _write_results_json(output_dir, results)
-    hist_path = _write_score_histogram(predictions, output_dir / STATIC_DIRNAME)
-    _write_results_markdown(output_dir, results, hist_path)
+    _write_score_histogram(predictions, output_dir / STATIC_DIRNAME)
+    _write_results_markdown(output_dir, results)
 
 
 def _parse_batch_size() -> int:
@@ -214,10 +214,9 @@ def _write_score_histogram(predictions: list[PostPrediction], static_dir: Path) 
     return hist_path
 
 
-def _write_results_markdown(
-    output_dir: Path, results: PassResults, hist_path: Path
-) -> None:
+def _write_results_markdown(output_dir: Path, results: PassResults) -> None:
     """Write per-pass ``RESULTS.md`` with a metrics table and histogram link."""
+    histogram_path = f"{STATIC_DIRNAME}/{HISTOGRAM_FILENAME}"
     lines = [
         f"# Batch size {results.batch_size}",
         "",
@@ -225,7 +224,7 @@ def _write_results_markdown(
         "| --- | ---: |",
     ]
     lines.extend(_results_table_rows(results))
-    lines.extend(["", f"Histogram: `{hist_path}`", ""])
+    lines.extend(["", f"![score histogram]({histogram_path})", ""])
     lines.append(_deadletter_line(results.n_deadletter))
     path = output_dir / RESULTS_MARKDOWN_FILENAME
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -260,8 +259,8 @@ def _results_table_rows(results: PassResults) -> list[str]:
 def _deadletter_line(n_deadletter: int) -> str:
     """Return a short deadletter summary sentence for RESULTS markdown."""
     if n_deadletter == 0:
-        return "No failures."
-    return f"Deadletter rows: {n_deadletter}"
+        return "0 deadletters."
+    return f"{n_deadletter} deadletters. See deadletter.jsonl."
 
 
 def _frame_to_tasks(frame: pd.DataFrame) -> list[PostTask]:
