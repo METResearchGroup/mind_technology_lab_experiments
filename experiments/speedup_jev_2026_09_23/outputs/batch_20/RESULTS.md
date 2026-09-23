@@ -14,7 +14,7 @@
 | request_latency_ms_p90 | 261.79525840002503 |
 | request_latency_ms_p99 | 324.9191125200923 |
 | per_post_latency_ms_p50 | 6.799435700008871 |
-| wall_time_seconds | 1.1050391790004142 |
+| wall_time_seconds | 1.0946760060000997 |
 | input_tokens | 111332 |
 | output_tokens | 18700 |
 | estimated_cost_usd | 0.0046759440000000005 |

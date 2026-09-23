@@ -29,7 +29,9 @@ Per-batch RESULTS:
 | 20 | 131.8 | 196.6 | 331.3 | 6.6 | 65.3 | 23886.3 | 20000.0 | yes |
 | 40 | 139.7 | 192.9 | 320.7 | 3.5 | 12.2 | 128309.5 | 40000.0 | no |
 | 60 | 154.1 | 208.1 | 375.4 | 2.6 | 9.1 | 171473.2 | 60000.0 | no |
-| 80 | 160.6 | 212.9 | 374.8 | 2.0 | 7.3 | 213606.0 | 80000.0 | no |
+| 80 | 160.6 | 212.9 | 374.8 | 2.0 | 7.0 | 221567.8 | 80000.0 | no |
+
+Measured posts per minute for passes that were not cap bound reflects a burst below the cap and is not a sustainable rate.
 
 ## Cost
 

@@ -69,6 +69,10 @@ REFERENCE_F1_LABEL = (
 )
 RATE_CAP_REQUEST_FLOOR = 1000
 RATE_CAP_SECONDS_PER_EXTRA_THOUSAND = 60.0
+MEASURED_THROUGHPUT_FOOTNOTE = (
+    "Measured posts per minute for passes that were not cap bound reflects a "
+    "burst below the cap and is not a sustainable rate."
+)
 
 
 class QualityRow(BaseModel):
@@ -478,6 +482,8 @@ def _render_results_markdown(
         "## Latency",
         "",
         *_latency_table_lines(latency_rows),
+        "",
+        MEASURED_THROUGHPUT_FOOTNOTE,
         "",
         "## Cost",
         "",
