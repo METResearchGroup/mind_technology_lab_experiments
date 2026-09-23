@@ -13,5 +13,24 @@ PRICE_PAGE_DATE = "2026-09-23"
 
 
 def estimate_jev_cost_usd(input_tokens: int, output_tokens: int) -> float:
-    """Return the estimated USD cost of Jev tokens."""
-    raise NotImplementedError
+    """Return the estimated USD cost of Jev tokens.
+
+    Parameters
+    ----------
+    input_tokens
+        Count of input tokens billed for the request.
+    output_tokens
+        Count of output tokens billed for the request.
+
+    Returns
+    -------
+    float
+        Estimated cost in USD.
+    """
+    input_cost = (
+        input_tokens * JEV_USD_PER_MILLION_INPUT_TOKENS / TOKENS_PER_MILLION
+    )
+    output_cost = (
+        output_tokens * JEV_USD_PER_MILLION_OUTPUT_TOKENS / TOKENS_PER_MILLION
+    )
+    return input_cost + output_cost
