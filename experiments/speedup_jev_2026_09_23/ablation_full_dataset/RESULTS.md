@@ -23,23 +23,23 @@ Per-batch RESULTS:
 
 ## Latency
 
-| batch size | request p50 (ms) | request p90 (ms) | request p99 (ms) | per-post p50 (ms) | wall time (s) | sustained posts/min | projected posts/min |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 10 | 115.4 | 163.6 | 299.1 | 11.5 | 129.6 | 12037.9 | 10000.0 |
-| 20 | 131.8 | 196.6 | 331.3 | 6.6 | 65.3 | 23886.3 | 20000.0 |
-| 40 | 139.7 | 192.9 | 320.7 | 3.5 | 12.2 | 128309.5 | 40000.0 |
-| 60 | 154.1 | 208.1 | 375.4 | 2.6 | 9.1 | 171473.2 | 60000.0 |
-| 80 | 160.6 | 212.9 | 374.8 | 2.0 | 7.0 | 221567.8 | 80000.0 |
+| batch size | request p50 (ms) | request p90 (ms) | request p99 (ms) | per-post p50 (ms) | wall time (s) | measured posts per minute (includes first-minute burst) | projected posts/min | cap bound |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 10 | 115.4 | 163.6 | 299.1 | 11.5 | 129.6 | 12037.9 | 10000.0 | yes |
+| 20 | 131.8 | 196.6 | 331.3 | 6.6 | 65.3 | 23886.3 | 20000.0 | yes |
+| 40 | 139.7 | 192.9 | 320.7 | 3.5 | 12.2 | 128309.5 | 40000.0 | no |
+| 60 | 154.1 | 208.1 | 375.4 | 2.6 | 9.1 | 171473.2 | 60000.0 | no |
+| 80 | 160.6 | 212.9 | 374.8 | 2.0 | 7.3 | 213606.0 | 80000.0 | no |
 
 ## Cost
 
-| batch size | requests | input tokens | output tokens | estimated USD | USD per 1,000 posts | 20M hours (cap) | 20M hours (measured) | 20M USD |
+| batch size | requests | input tokens | output tokens | estimated USD | USD per 1,000 posts | 20M hours (1,000 req/min cap) | 20M hours (1,200 req/min limit) | 20M USD |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 10 | 2600 | 3220187 | 478400 | 0.135248 | 0.005202 | 33.3 | 27.7 | 104.04 |
-| 20 | 1300 | 2889987 | 486200 | 0.121379 | 0.004668 | 16.7 | 14.0 | 93.37 |
-| 40 | 650 | 2724887 | 490100 | 0.114445 | 0.004402 | 8.3 | 2.6 | 88.03 |
-| 60 | 434 | 2670023 | 491396 | 0.112141 | 0.004313 | 5.6 | 1.9 | 86.26 |
-| 80 | 325 | 2642337 | 492050 | 0.110978 | 0.004268 | 4.2 | 1.5 | 85.37 |
+| 10 | 2600 | 3220187 | 478400 | 0.135248 | 0.005202 | 33.3 | 27.8 | 104.04 |
+| 20 | 1300 | 2889987 | 486200 | 0.121379 | 0.004668 | 16.7 | 13.9 | 93.37 |
+| 40 | 650 | 2724887 | 490100 | 0.114445 | 0.004402 | 8.3 | 6.9 | 88.03 |
+| 60 | 434 | 2670023 | 491396 | 0.112141 | 0.004313 | 5.6 | 4.6 | 86.26 |
+| 80 | 325 | 2642337 | 492050 | 0.110978 | 0.004268 | 4.2 | 3.5 | 85.37 |
 
 ## Drift from batch size 10 on full data
 
@@ -66,4 +66,7 @@ Per-batch RESULTS:
 - Posts were shuffled once with seed 20260923 before batching.
 - The model is jev-1.13.0.
 - Reference F1 0.752 is from the main run at batch size 1 on the 1,000-post sample, not the full data.
-- The 1,000 request starts per minute cap bound batch sizes 10, 20.
+- The request start cap counts starts in a rolling 60 s window, so each pass starts with a burst of up to 1,000 requests.
+- Passes with fewer than 1,000 requests never waited on the cap.
+- Over 20M posts the burst is negligible, so the projection uses the cap rate.
+- Batch size 10 wall time of 129.6 s is consistent with the cap floor of two full 60 s windows plus the remainder (about 120.0 s minimum for 2600 starts).
