@@ -70,13 +70,12 @@ def run_pass(
     output_dir.mkdir(parents=True, exist_ok=True)
     started_at = datetime.now(UTC)
     wall_started = time.monotonic()
-    pending = _pending_tasks(tasks, output_dir)
-    batches = make_batches(pending, batch_size)
-    counts = _run_batches(batches, batch_size, output_dir, scorer, limiter)
+    pending_batches = _pending_batches(tasks, batch_size, output_dir)
+    counts = _run_batches(pending_batches, batch_size, output_dir, scorer, limiter)
     wall_seconds = time.monotonic() - wall_started
     summary = PassSummary(
         batch_size=batch_size,
-        n_requests=len(batches),
+        n_requests=len(pending_batches),
         n_scored=counts["n_scored"],
         n_deadletter=counts["n_deadletter"],
         wall_time_seconds=wall_seconds,
@@ -86,9 +85,16 @@ def run_pass(
     return summary
 
 
-def _pending_tasks(tasks: list[PostTask], output_dir: Path) -> list[PostTask]:
+def _pending_batches(
+    tasks: list[PostTask], batch_size: int, output_dir: Path
+) -> list[tuple[int, list[PostTask]]]:
     seen = _seen_source_row_ids(output_dir / PREDICTIONS_FILENAME)
-    return [task for task in tasks if task.source_row_id not in seen]
+    pending_batches: list[tuple[int, list[PostTask]]] = []
+    for request_index, batch in enumerate(make_batches(tasks, batch_size)):
+        unscored = [task for task in batch if task.source_row_id not in seen]
+        if unscored:
+            pending_batches.append((request_index, unscored))
+    return pending_batches
 
 
 def _seen_source_row_ids(predictions_path: Path) -> set[str]:
@@ -104,19 +110,19 @@ def _seen_source_row_ids(predictions_path: Path) -> set[str]:
 
 
 def _run_batches(
-    batches: list[list[PostTask]],
+    pending_batches: list[tuple[int, list[PostTask]]],
     batch_size: int,
     output_dir: Path,
     scorer: Callable[[list[str]], BatchResult],
     limiter: RequestStartLimiter,
 ) -> dict[str, int]:
-    if not batches:
+    if not pending_batches:
         return {"n_scored": 0, "n_deadletter": 0}
     n_scored = 0
     n_deadletter = 0
-    progress_step = _progress_step(len(batches))
+    progress_step = _progress_step(len(pending_batches))
     with ThreadPoolExecutor(max_workers=WORKER_THREADS) as executor:
-        futures = _submit_batches(executor, batches, scorer, limiter)
+        futures = _submit_batches(executor, pending_batches, scorer, limiter)
         completed = 0
         try:
             for future in as_completed(futures):
@@ -127,8 +133,10 @@ def _run_batches(
                 n_scored += scored
                 n_deadletter += deadlettered
                 completed += 1
-                if _should_report_progress(completed, len(batches), progress_step):
-                    _print_progress(completed, len(batches), batch_size)
+                if _should_report_progress(
+                    completed, len(pending_batches), progress_step
+                ):
+                    _print_progress(completed, len(pending_batches), batch_size)
         except (TypeSafeAuthenticationError, TypeSafePermissionDeniedError):
             _cancel_futures(futures)
             raise
@@ -137,12 +145,12 @@ def _run_batches(
 
 def _submit_batches(
     executor: ThreadPoolExecutor,
-    batches: list[list[PostTask]],
+    pending_batches: list[tuple[int, list[PostTask]]],
     scorer: Callable[[list[str]], BatchResult],
     limiter: RequestStartLimiter,
 ) -> list[Future[_BatchSuccess | _BatchFailure]]:
     futures: list[Future[_BatchSuccess | _BatchFailure]] = []
-    for request_index, batch in enumerate(batches):
+    for request_index, batch in pending_batches:
         future = executor.submit(
             _score_batch_job, tuple(batch), request_index, scorer, limiter
         )
