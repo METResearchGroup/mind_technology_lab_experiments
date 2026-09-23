@@ -15,6 +15,9 @@ EXPERIMENT_ROOT = Path(__file__).resolve().parent.parent
 if str(EXPERIMENT_ROOT) not in sys.path:
     sys.path.insert(0, str(EXPERIMENT_ROOT))
 
+from shared.aws_region import AWS_REGION
+from shared.secrets import build_boto3_session
+
 BUCKET = "mind-technology-lab-experiments"
 PREFIX = "experiments/speedup_jev_2026_09_23/"
 SKIP_DIR_NAMES = {".venv", "__pycache__", ".pytest_cache", ".git"}
@@ -27,12 +30,22 @@ UPLOAD_COMPLETE_LINE = (
 
 def s3_key_for_local_path(local_path: Path, experiment_root: Path) -> str:
     """Map a local file to the experiment S3 key."""
-    raise NotImplementedError
+    relative = local_path.resolve().relative_to(experiment_root.resolve())
+    return PREFIX + relative.as_posix()
 
 
 def iter_upload_paths(experiment_root: Path) -> list[Path]:
     """List files to upload, excluding venv, pycache, and env files."""
-    raise NotImplementedError
+    paths: list[Path] = []
+    for path in experiment_root.rglob("*"):
+        if not path.is_file():
+            continue
+        if any(part in SKIP_DIR_NAMES for part in path.parts):
+            continue
+        if path.name in SKIP_FILE_NAMES:
+            continue
+        paths.append(path)
+    return paths
 
 
 def upload_tree(
@@ -40,12 +53,20 @@ def upload_tree(
     put_object: Callable[..., object],
 ) -> list[str]:
     """Upload allowed local files. Returns uploaded keys."""
-    raise NotImplementedError
+    keys: list[str] = []
+    for path in iter_upload_paths(experiment_root):
+        key = s3_key_for_local_path(path, experiment_root)
+        put_object(Bucket=BUCKET, Key=key, Body=path.read_bytes())
+        keys.append(key)
+    return keys
 
 
 def main() -> None:
     """Upload the experiment folder to S3."""
-    raise NotImplementedError
+    session = build_boto3_session()
+    client = session.client("s3", region_name=AWS_REGION)
+    upload_tree(EXPERIMENT_ROOT, client.put_object)
+    print(UPLOAD_COMPLETE_LINE)
 
 
 if __name__ == "__main__":
