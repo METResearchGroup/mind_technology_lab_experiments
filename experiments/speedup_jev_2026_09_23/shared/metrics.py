@@ -93,6 +93,62 @@ def summarize_pass_predictions(predictions: list[PostPrediction]) -> dict[str, f
     return {**report, "per_post_latency_ms_p50": per_post_p50}
 
 
+def agreement_rate(a: list[int], b: list[int]) -> float:
+    """Return the fraction of positions where ``a`` and ``b`` match.
+
+    Parameters
+    ----------
+    a
+        First binary label list.
+    b
+        Second binary label list.
+
+    Returns
+    -------
+    float
+        Agreement rate in ``[0, 1]``.
+
+    Raises
+    ------
+    ValueError
+        When the two lists differ in length.
+    """
+    if len(a) != len(b):
+        raise ValueError("a and b must have the same length")
+    if not a:
+        return 0.0
+    matches = sum(1 for left, right in zip(a, b, strict=True) if left == right)
+    return matches / len(a)
+
+
+def mean_absolute_difference(a: list[float], b: list[float]) -> float:
+    """Return the mean absolute difference between paired floats.
+
+    Parameters
+    ----------
+    a
+        First value list.
+    b
+        Second value list.
+
+    Returns
+    -------
+    float
+        Mean absolute difference.
+
+    Raises
+    ------
+    ValueError
+        When the two lists differ in length.
+    """
+    if len(a) != len(b):
+        raise ValueError("a and b must have the same length")
+    if not a:
+        return 0.0
+    total = sum(abs(left - right) for left, right in zip(a, b, strict=True))
+    return total / len(a)
+
+
 def summarize_pass_requests(requests: list[RequestLog]) -> dict[str, object]:
     """Return request latency percentiles and token aggregates."""
     if not requests:
