@@ -50,6 +50,28 @@ class _BatchFailure:
     attempts: int
 
 
+@dataclass
+class _OrderedOutcomeWriter:
+    request_indices: list[int]
+    buffer: dict[int, _BatchSuccess | _BatchFailure]
+    next_position: int
+
+    def store(self, outcome: _BatchSuccess | _BatchFailure) -> None:
+        self.buffer[outcome.request_index] = outcome
+
+    def ready_outcomes(self) -> list[_BatchSuccess | _BatchFailure]:
+        ready: list[_BatchSuccess | _BatchFailure] = []
+        while self.next_position < len(self.request_indices):
+            request_index = self.request_indices[self.next_position]
+            outcome = self.buffer.get(request_index)
+            if outcome is None:
+                break
+            ready.append(outcome)
+            del self.buffer[request_index]
+            self.next_position += 1
+        return ready
+
+
 def make_batches(tasks: list[PostTask], batch_size: int) -> list[list[PostTask]]:
     """Cut tasks sorted by row id into consecutive groups."""
     ordered = sorted(tasks, key=lambda task: int(task.source_row_id))
@@ -66,7 +88,11 @@ def run_pass(
     scorer: Callable[[list[str]], BatchResult],
     limiter: RequestStartLimiter,
 ) -> PassSummary:
-    """Score pending tasks, write JSONL logs, and return pass counts."""
+    """Score pending tasks, write JSONL logs, and return pass counts.
+
+    Predictions and request logs are appended in ``request_index`` order even
+    when worker threads finish out of order.
+    """
     output_dir.mkdir(parents=True, exist_ok=True)
     started_at = datetime.now(UTC)
     wall_started = time.monotonic()
@@ -121,22 +147,30 @@ def _run_batches(
     n_scored = 0
     n_deadletter = 0
     progress_step = _progress_step(len(pending_batches))
+    writer = _OrderedOutcomeWriter(
+        request_indices=[index for index, _ in pending_batches],
+        buffer={},
+        next_position=0,
+    )
     with ThreadPoolExecutor(max_workers=WORKER_THREADS) as executor:
         futures = _submit_batches(executor, pending_batches, scorer, limiter)
         completed = 0
         try:
             for future in as_completed(futures):
-                outcome = future.result()
-                scored, deadlettered = _write_outcome(
-                    outcome, batch_size, output_dir
-                )
-                n_scored += scored
-                n_deadletter += deadlettered
-                completed += 1
-                if _should_report_progress(
-                    completed, len(pending_batches), progress_step
-                ):
-                    _print_progress(completed, len(pending_batches), batch_size)
+                writer.store(future.result())
+                for outcome in writer.ready_outcomes():
+                    scored, deadlettered = _write_outcome(
+                        outcome, batch_size, output_dir
+                    )
+                    n_scored += scored
+                    n_deadletter += deadlettered
+                    completed += 1
+                    if _should_report_progress(
+                        completed, len(pending_batches), progress_step
+                    ):
+                        _print_progress(
+                            completed, len(pending_batches), batch_size
+                        )
         except (TypeSafeAuthenticationError, TypeSafePermissionDeniedError):
             _cancel_futures(futures)
             raise
