@@ -30,7 +30,7 @@ flowchart TD
   D --> E[Smoke: first 40 posts at batch sizes 5 and 40]
   E --> F{Every post answered?}
   F -->|no| G[Stop and fix the request]
-  F -->|yes| H[Six sequential passes: batch sizes 1, 5, 10, 20, 30, 40]
+  F -->|yes| H[Six passes one after another with 8 threads each, at batch sizes 1, 5, 10, 20, 30, 40]
   H --> I[Per batch size: labels, request log, metrics, histogram, RESULTS]
   I --> J[Root RESULTS: quality, latency, cost, drift from batch size 1]
   J --> K[Upload folder to experiment S3 prefix]
@@ -42,7 +42,7 @@ Change only one thing from PR 20, which is the number of posts in each request. 
 
 ## Decisions
 
-These choices are proposed. Please confirm or change them before the step files are written.
+These choices were confirmed on 2026-09-23, with concurrency changed to 8 threads.
 
 1. **Folder.** Create `experiments/speedup_jev_2026_09_23/` with README, SETUP, RESULTS, a local dependency file, and `models/`, `shared/`, `scripts/`, `data/`, and `outputs/` folders. Keep it out of the root uv workspace, root ruff, and root pyright, in the same way as `experiments/moral_outrage_classification_2026_09_19/` in `/workspace/pyproject.toml`.
 
@@ -56,9 +56,9 @@ These choices are proposed. Please confirm or change them before the step files 
 
 6. **Model version.** Pin `jev-1.13.0` instead of `jev-latest`, so all six passes use the same weights even if the alias moves during the run. Record the model version that each response reports. PR 20 did not record which version `jev-latest` pointed to, so the PR 20 reference row may come from an earlier model.
 
-7. **Request order.** Send one request at a time and wait for each response. Latency then measures one request and does not include time spent waiting behind other requests. At 1,000 requests, batch size 1 takes about 2 to 3 minutes, and larger batch sizes take less.
+7. **Concurrency.** Send requests from 8 worker threads. Each thread sends one batch per request and waits for the response before it takes the next batch. Cap request starts at 1,000 per minute across all threads, which is below the TypeSafe limit of 1,200 requests per minute. Without the cap, 8 threads at batch size 1 would send about 50 requests per second. The request timer covers only the HTTP call, so request latency does not include time spent waiting for the cap. Wall time covers the whole pass. Run the six passes one after another, so two passes never compete for the rate limit.
 
-8. **Failures.** Retry a whole batch on HTTP 429, HTTP 5xx, or a timeout, up to 3 extra tries. After the last try fails, write every post in that batch to a deadletter file with the error and the attempt count. Treat a response that is missing an answer for any post in the batch as a failure of that batch.
+8. **Failures.** Turn off the retries built into the TypeSafe SDK, so each timed call is one attempt. The experiment's own loop retries a whole batch up to 3 extra times, and it waits 1, 2, and then 4 seconds before each retry. An authentication or permission error stops the pass, because every later request would fail the same way. After the last try fails, write every post in that batch to a deadletter file with the error and the attempt count. Treat a response that is missing an answer for any post in the batch as a failed attempt.
 
 9. **Cost.** Use $0.042 per million input tokens and $0 for output tokens, from the [TypeSafe models page](https://docs.typesafe.ai/models) as read on 2026-09-23. Also apply that price to the PR 20 Jev token counts, so the reference row has a cost.
 
@@ -82,25 +82,37 @@ These choices are proposed. Please confirm or change them before the step files 
 
 ### Step 1: Scaffold the experiment folder and documents
 
+See [steps/step1.md](steps/step1.md).
+
 Create `experiments/speedup_jev_2026_09_23/` with README, SETUP, a RESULTS stub, a local dependency file, and the empty folders from decision 1. Copy the helpers named in decision 2, and add the folder to the root ruff and pyright exclude lists.
 
 ### Step 2: Download the sample and load the key
+
+See [steps/step2.md](steps/step2.md).
 
 Download the PR 20 sample and manifest from S3 and check them against decision 3. Load the TypeSafe key from Secrets Manager and make one single-post request to confirm the key works.
 
 ### Step 3: Build the batched Jev engine
 
+See [steps/step3.md](steps/step3.md).
+
 Build one engine that takes a list of posts, sends one request in the shape from decision 5, and returns one prediction per post. Every post in a request shares that request's latency and token counts, and each prediction also records the request index and the number of posts in the request. Write the batch loop with the retry, skip-already-scored, and deadletter rules from decision 8.
 
 ### Step 4: Run the smoke test
+
+See [steps/step4.md](steps/step4.md).
 
 Score the first 40 posts at batch sizes 5 and 40. Print, for each batch size, the number of posts answered, the median request latency, the input tokens, and the estimated cost. Stop if any post has no answer.
 
 ### Step 5: Run the six full passes
 
+See [steps/step5.md](steps/step5.md).
+
 Run batch sizes 1, 5, 10, 20, 30, and 40 over all 1,000 posts, one pass after another. Each pass writes its labels, a log with one row per request, a metrics file, a histogram, and its own RESULTS file under `outputs/batch_{size}/`.
 
 ### Step 6: Write the comparison and upload to S3
+
+See [steps/step6.md](steps/step6.md).
 
 Fill the root RESULTS file with the quality, latency, cost, and drift tables from decision 10, with one row per batch size and one PR 20 reference row. Add a plot of F1 and per-post latency against batch size. Upload the folder to the S3 prefix from decision 13.
 
