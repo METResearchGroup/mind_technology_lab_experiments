@@ -18,19 +18,14 @@ MS_PER_SECOND = 1000.0
 def timed(func: Callable[..., T]) -> Callable[..., tuple[T, float]]:
     """Wrap a remote call and return ``(result, latency_ms)``.
 
-    Exceptions are re-raised. Failed calls attach ``latency_ms`` on the
-    exception when possible.
+    Exceptions are re-raised unchanged.
     """
 
     @wraps(func)
     def wrapper(*args: object, **kwargs: object) -> tuple[T, float]:
         """Call ``func`` and return its result with elapsed milliseconds."""
         started = time.perf_counter()
-        try:
-            result = func(*args, **kwargs)
-        except Exception as exc:
-            exc.latency_ms = (time.perf_counter() - started) * MS_PER_SECOND
-            raise
+        result = func(*args, **kwargs)
         latency_ms = (time.perf_counter() - started) * MS_PER_SECOND
         return result, latency_ms
 

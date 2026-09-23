@@ -12,8 +12,6 @@ import numpy as np
 from shared.records import PostPrediction, RequestLog
 
 POSITIVE_PROBABILITY_THRESHOLD = 0.5
-METRIC_KEYS = ("f1", "accuracy", "precision", "recall")
-LATENCY_KEYS = ("p50", "p90", "p99")
 PERCENTILE_METHOD = "linear"
 ZERO_CLASSIFICATION = {
     "f1": 0.0,

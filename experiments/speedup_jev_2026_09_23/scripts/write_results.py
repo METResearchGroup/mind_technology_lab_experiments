@@ -34,8 +34,8 @@ from shared.pricing import (  # noqa: E402
     estimate_jev_cost_usd,
 )
 from shared.rate_limiter import MAX_REQUEST_STARTS_PER_MINUTE, WINDOW_SECONDS  # noqa: E402
+from shared.records import BATCH_SIZES  # noqa: E402
 
-BATCH_SIZES: tuple[int, ...] = (1, 5, 10, 20, 30, 40)
 PR20_ROW_LABEL = "PR 20"
 PR20_MODEL_NAME = "jev-latest"
 TODAY_MODEL_VERSION = "jev-1.13.0"

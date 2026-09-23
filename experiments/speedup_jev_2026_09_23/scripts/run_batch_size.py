@@ -42,10 +42,9 @@ from shared.rate_limiter import (  # noqa: E402
     MAX_REQUEST_STARTS_PER_MINUTE,
     RequestStartLimiter,
 )
-from shared.records import PostPrediction, PostTask, RequestLog  # noqa: E402
+from shared.records import BATCH_SIZES, PostPrediction, PostTask, RequestLog  # noqa: E402
 from shared.secrets import load_typesafe_api_key  # noqa: E402
 
-ALLOWED_BATCH_SIZES: tuple[int, ...] = (1, 5, 10, 20, 30, 40)
 HISTOGRAM_BINS = 10
 HISTOGRAM_RANGE = (0.0, 1.0)
 OUTPUTS_ROOT = EXPERIMENT_ROOT / "outputs"
@@ -113,9 +112,9 @@ def _parse_batch_size() -> int:
     parser.add_argument(
         "--batch-size",
         type=int,
-        choices=ALLOWED_BATCH_SIZES,
+        choices=BATCH_SIZES,
         required=True,
-        help=f"Posts per request; allowed values: {ALLOWED_BATCH_SIZES}",
+        help=f"Posts per request; allowed values: {BATCH_SIZES}",
     )
     return parser.parse_args().batch_size
 

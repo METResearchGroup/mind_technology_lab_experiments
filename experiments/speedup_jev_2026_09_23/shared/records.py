@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+BATCH_SIZES = (1, 5, 10, 20, 30, 40)
+
 
 class PostTask(BaseModel):
     """One post to score in a batch pass."""
