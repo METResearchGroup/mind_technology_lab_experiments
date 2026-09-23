@@ -97,13 +97,19 @@ def main() -> None:
     scorer = build_live_scorer(load_typesafe_api_key())
     limiter = RequestStartLimiter(MAX_REQUEST_STARTS_PER_MINUTE)
     run_pass(tasks, batch_size, output_dir, scorer, limiter)
-    predictions = _load_deduped_predictions(output_dir / PREDICTIONS_FILENAME)
-    requests = _load_requests(output_dir / REQUESTS_FILENAME)
-    _write_parquet_outputs(predictions, requests, output_dir)
-    results = _build_pass_results(batch_size, predictions, requests, output_dir)
-    _write_results_json(output_dir, results)
-    _write_score_histogram(predictions, output_dir / STATIC_DIRNAME)
-    _write_results_markdown(output_dir, results)
+    finalize_pass_outputs(batch_size, output_dir)
+
+
+def finalize_pass_outputs(batch_size: int, output_dir: Path) -> PassResults:
+    """Load pass JSONL logs and write parquet, metrics, and RESULTS."""
+    predictions = load_deduped_predictions(output_dir / PREDICTIONS_FILENAME)
+    requests = load_requests(output_dir / REQUESTS_FILENAME)
+    write_parquet_outputs(predictions, requests, output_dir)
+    results = build_pass_results(batch_size, predictions, requests, output_dir)
+    write_results_json(output_dir, results)
+    write_score_histogram(predictions, output_dir / STATIC_DIRNAME)
+    write_results_markdown(output_dir, results)
+    return results
 
 
 def _parse_batch_size() -> int:
@@ -122,7 +128,7 @@ def _parse_batch_size() -> int:
 def _load_tasks() -> list[PostTask]:
     """Load the full sample as scoring tasks."""
     sample = load_sample()
-    return _frame_to_tasks(sample)
+    return frame_to_tasks(sample)
 
 
 def _output_dir(batch_size: int) -> Path:
@@ -130,18 +136,18 @@ def _output_dir(batch_size: int) -> Path:
     return OUTPUTS_ROOT / f"batch_{batch_size}"
 
 
-def _load_deduped_predictions(predictions_path: Path) -> list[PostPrediction]:
+def load_deduped_predictions(predictions_path: Path) -> list[PostPrediction]:
     """Load predictions JSONL and keep the latest row per ``source_row_id``."""
     predictions = _read_predictions_jsonl(predictions_path)
     return _dedupe_predictions(predictions)
 
 
-def _load_requests(requests_path: Path) -> list[RequestLog]:
+def load_requests(requests_path: Path) -> list[RequestLog]:
     """Load request rows from ``requests.jsonl``."""
     return _read_requests_jsonl(requests_path)
 
 
-def _write_parquet_outputs(
+def write_parquet_outputs(
     predictions: list[PostPrediction],
     requests: list[RequestLog],
     output_dir: Path,
@@ -157,7 +163,7 @@ def _write_parquet_outputs(
     )
 
 
-def _build_pass_results(
+def build_pass_results(
     batch_size: int,
     predictions: list[PostPrediction],
     requests: list[RequestLog],
@@ -190,7 +196,7 @@ def _build_pass_results(
     )
 
 
-def _write_results_json(output_dir: Path, results: PassResults) -> None:
+def write_results_json(output_dir: Path, results: PassResults) -> None:
     """Write ``results.json`` for one batch-size pass."""
     path = output_dir / RESULTS_FILENAME
     path.write_text(
@@ -199,7 +205,7 @@ def _write_results_json(output_dir: Path, results: PassResults) -> None:
     )
 
 
-def _write_score_histogram(predictions: list[PostPrediction], static_dir: Path) -> Path:
+def write_score_histogram(predictions: list[PostPrediction], static_dir: Path) -> Path:
     """Write a probability histogram PNG and return its path."""
     static_dir.mkdir(parents=True, exist_ok=True)
     hist_path = static_dir / HISTOGRAM_FILENAME
@@ -213,7 +219,7 @@ def _write_score_histogram(predictions: list[PostPrediction], static_dir: Path) 
     return hist_path
 
 
-def _write_results_markdown(output_dir: Path, results: PassResults) -> None:
+def write_results_markdown(output_dir: Path, results: PassResults) -> None:
     """Write per-pass ``RESULTS.md`` with a metrics table and histogram link."""
     histogram_path = f"{STATIC_DIRNAME}/{HISTOGRAM_FILENAME}"
     lines = [
@@ -262,7 +268,7 @@ def _deadletter_line(n_deadletter: int) -> str:
     return f"{n_deadletter} deadletters. See deadletter.jsonl."
 
 
-def _frame_to_tasks(frame: pd.DataFrame) -> list[PostTask]:
+def frame_to_tasks(frame: pd.DataFrame) -> list[PostTask]:
     """Convert a sample dataframe into scoring tasks."""
     tasks: list[PostTask] = []
     for row in frame.itertuples(index=False):
