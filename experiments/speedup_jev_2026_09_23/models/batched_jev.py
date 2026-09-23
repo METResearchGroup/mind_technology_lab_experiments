@@ -66,8 +66,8 @@ def score_batch(client: TypeSafeClient, texts: list[str]) -> BatchResult:
     return BatchResult(
         probabilities=probabilities,
         latency_ms=latency_ms,
-        input_tokens=response.usage.input_tokens,
-        output_tokens=response.usage.output_tokens,
+        input_tokens=_usage_token_count(response.usage.input_tokens),
+        output_tokens=_usage_token_count(response.usage.output_tokens),
         model_version=response.model,
     )
 
@@ -102,6 +102,12 @@ def _thread_client(api_key: str) -> TypeSafeClient:
         client = build_client(api_key)
         _thread_local.client = client
     return client
+
+
+def _usage_token_count(token_count: int | None) -> int:
+    if token_count is None:
+        return 0
+    return token_count
 
 
 def _extract_probabilities(response: object, n_posts: int) -> list[float]:
