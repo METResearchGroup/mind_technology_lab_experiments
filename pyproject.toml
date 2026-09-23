@@ -26,7 +26,7 @@ package = false
 members = ["autoresearch/*"]
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = [".", "autoresearch/hidden_costs_of_personalization_2026_09_09"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
@@ -55,6 +55,7 @@ indent-style = "space"
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
 include = ["tests"]
+extraPaths = ["autoresearch/hidden_costs_of_personalization_2026_09_09"]
 exclude = [
     ".cursor",
     ".agents",
