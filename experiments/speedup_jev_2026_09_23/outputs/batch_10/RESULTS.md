@@ -14,13 +14,13 @@
 | request_latency_ms_p90 | 228.40177549996972 |
 | request_latency_ms_p99 | 319.8945442298374 |
 | per_post_latency_ms_p50 | 12.750845649998155 |
-| wall_time_seconds | 1.8754439089998414 |
+| wall_time_seconds | 1.8816666610000539 |
 | input_tokens | 124032 |
 | output_tokens | 18400 |
 | estimated_cost_usd | 0.005209344 |
 | model_versions | ['jev-1.13.0'] |
 | price_source | https://docs.typesafe.ai/models (2026-09-23) |
 
-Histogram: `/workspace/experiments/speedup_jev_2026_09_23/outputs/batch_10/static/score_hist.png`
+![score histogram](static/score_hist.png)
 
-No failures.
+0 deadletters.
