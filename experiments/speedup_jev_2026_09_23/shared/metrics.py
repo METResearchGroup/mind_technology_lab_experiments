@@ -68,3 +68,13 @@ def latency_percentiles(latency_ms: list[float]) -> dict[str, float]:
         "p90": float(np.percentile(values, 90, method=PERCENTILE_METHOD)),
         "p99": float(np.percentile(values, 99, method=PERCENTILE_METHOD)),
     }
+
+
+def summarize_pass_predictions(predictions: list[object]) -> dict[str, float]:
+    """Return classification metrics and per-post latency p50."""
+    raise NotImplementedError
+
+
+def summarize_pass_requests(requests: list[object]) -> dict[str, object]:
+    """Return request latency percentiles and token aggregates."""
+    raise NotImplementedError
