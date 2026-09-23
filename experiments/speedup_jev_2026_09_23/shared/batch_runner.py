@@ -81,11 +81,14 @@ class _OrderedOutcomeWriter:
 
 
 def make_batches(tasks: list[PostTask], batch_size: int) -> list[list[PostTask]]:
-    """Cut tasks sorted by row id into consecutive groups."""
-    ordered = sorted(tasks, key=lambda task: int(task.source_row_id))
+    """Cut tasks into consecutive groups in the given list order.
+
+    Batches follow ``tasks`` order. Callers that need row-id sorting must sort
+    ``tasks`` before calling.
+    """
     batches: list[list[PostTask]] = []
-    for start in range(0, len(ordered), batch_size):
-        batches.append(ordered[start : start + batch_size])
+    for start in range(0, len(tasks), batch_size):
+        batches.append(tasks[start : start + batch_size])
     return batches
 
 
