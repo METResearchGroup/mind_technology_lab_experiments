@@ -1,0 +1,9 @@
+[project]
+name = "autoresearch-learning-user-simulators-with-turing-rewards-2026-09-09"
+version = "0.1.0"
+description = "Bare-minimum Turing-RL replica of Learning User Simulators with Turing Rewards."
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.uv]
+package = false

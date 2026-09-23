@@ -1,0 +1,42 @@
+{
+  "job_id": "6aa19ff25527934177ebd6ab",
+  "job_url": "https://huggingface.co/jobs/mtorres98/6aa19ff25527934177ebd6ab",
+  "owner": "mtorres98",
+  "flavor": "a100-large",
+  "timeout": "3h",
+  "estimated_cost_usd": "about $0.14 for a 199s A100-80GB run at $2.50/hr",
+  "base_model": "Qwen/Qwen3-8B",
+  "sft_repo": "mtorres98/turing-rl-qwen3-8b-sft",
+  "grpo_repo": "mtorres98/turing-rl-qwen3-8b-grpo",
+  "trackio_project": "turing-rl-qwen3-8b",
+  "trackio_url": "https://huggingface.co/spaces/mtorres98/trackio",
+  "previous_job_id": "6aa19f235527934177ebd67c",
+  "previous_job_url": "https://huggingface.co/jobs/mtorres98/6aa19f235527934177ebd67c",
+  "notes": "Completed on NVIDIA A100-SXM4-80GB. Loaded Qwen/Qwen3-8B (8.19B params), finished LoRA SFT (loss 0.599), then GRPO with gpt-4o-mini Turing rewards. Group rewards had zero variance on most steps, so GRPO loss stayed 0. Adapters are on the Hub. This is a short slice, not the paper's 1680 GPU-hour run.",
+  "paper_judge": "Qwen/Qwen3.5-397B-A17B via OpenRouter",
+  "job_judge": "gpt-4o-mini via OpenAI",
+  "job_judge_reason": "OPENROUTER_API_KEY is missing in this environment",
+  "scale_note": "LoRA SFT (24 steps) then GRPO (8 steps, G=4, max new tokens 256). Wall time 199s.",
+  "gpu": "NVIDIA A100-SXM4-80GB",
+  "gpu_mem_gb": 79.25,
+  "wall_s": 199.2,
+  "sft_metrics": {
+    "train_loss": 0.5987233859065478,
+    "train_runtime": 56.1274,
+    "epoch": 8.0
+  },
+  "grpo_metrics": {
+    "train_loss": 0.0,
+    "train_runtime": 63.3782,
+    "epoch": 0.6666666666666666,
+    "first_step_reward_mean": 0.5864
+  },
+  "s3_metrics": "s3://mind-technology-lab-experiments/autoresearch/learning_user_simulators_with_turing_rewards_2026_09_09/results/qwen3_8b_job_metrics.json",
+  "missing_keys": [
+    "OPENROUTER_API_KEY",
+    "LAB_AWS_ACCESS_KEY_ID",
+    "LAB_AWS_ACCESS_KEY_SECRET",
+    "VERCEL_TOKEN"
+  ],
+  "status": "COMPLETED"
+}
