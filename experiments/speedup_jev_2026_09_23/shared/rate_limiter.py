@@ -13,6 +13,7 @@ from collections import deque
 
 MAX_REQUEST_STARTS_PER_MINUTE = 1000
 WINDOW_SECONDS = 60.0
+MIN_WINDOW_SLEEP_SECONDS = 0.001
 
 
 class RequestStartLimiter:
@@ -33,8 +34,7 @@ class RequestStartLimiter:
                     self._start_times.append(now)
                     return
                 sleep_seconds = self._start_times[0] + WINDOW_SECONDS - now
-            if sleep_seconds > 0:
-                time.sleep(sleep_seconds)
+            time.sleep(max(sleep_seconds, MIN_WINDOW_SLEEP_SECONDS))
 
     def _drop_expired(self, now: float) -> None:
         window_start = now - WINDOW_SECONDS
