@@ -2,7 +2,7 @@
 
 ## 2026-09-23
 
-1. Ran a batched Jev moral-outrage scoring experiment on the PR 20 sample at batch sizes 1 through 40, reporting F1, latency, cost, and label drift against the single-post baseline and the PR 20 reference row. [PR #23](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/23)
+1. Ran a batched Jev moral-outrage scoring experiment on the PR 20 sample at batch sizes 1 through 40, reporting F1, latency, cost, and label drift against batch size 1 and the PR 20 reference row. [PR #23](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/23)
 
 ## 2026-09-19
 
