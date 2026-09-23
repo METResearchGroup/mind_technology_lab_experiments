@@ -1,0 +1,9 @@
+[project]
+name = "autoresearch-verbalized-eval-awareness-2026-09-12"
+version = "0.1.0"
+description = "Briefing and cheap PoC specs for Goodfire: Verbalized Eval Awareness Inflates Measured Safety."
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.uv]
+package = false
