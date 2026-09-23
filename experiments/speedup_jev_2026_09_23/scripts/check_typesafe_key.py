@@ -10,7 +10,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from typesafe_sdk import Noul, TypeSafeClient
+from typesafe_sdk import Noul, RetryPolicy, TypeSafeClient
 
 EXPERIMENT_ROOT = Path(__file__).resolve().parent.parent
 if str(EXPERIMENT_ROOT) not in sys.path:
@@ -23,6 +23,7 @@ from shared.secrets import load_typesafe_api_key  # noqa: E402
 JEV_MODEL_ID = "jev-1.13.0"
 JEV_QUESTION_ID = "moral_outrage"
 NOUL_DECIMAL_PLACES = 4
+REQUEST_TIMEOUT_SECONDS = 30.0
 
 
 def _first_post_text() -> str:
@@ -32,8 +33,13 @@ def _first_post_text() -> str:
 
 
 def _build_client() -> TypeSafeClient:
-    """Build a TypeSafe client using the loaded API key."""
-    return TypeSafeClient(api_key=load_typesafe_api_key(), model=JEV_MODEL_ID)
+    """Build a TypeSafe client with SDK retries disabled."""
+    return TypeSafeClient(
+        api_key=load_typesafe_api_key(),
+        model=JEV_MODEL_ID,
+        retry=RetryPolicy(max_retries=0),
+        timeout=REQUEST_TIMEOUT_SECONDS,
+    )
 
 
 def _score_one_post(client: TypeSafeClient, text: str) -> object:
