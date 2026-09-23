@@ -337,15 +337,31 @@ def _count_outstanding_deadletters(
 
 
 def _read_wall_time_seconds(runs_path: Path) -> float:
-    """Sum ``wall_time_seconds`` across all lines of ``runs.jsonl``."""
+    """Sum ``wall_time_seconds`` for ``runs.jsonl`` lines with ``n_requests > 0``.
+
+    Zero-request rerun lines are excluded because they do not contribute
+    scoring time.
+    """
     if not runs_path.is_file():
         return 0.0
-    total = 0.0
+    return _sum_wall_time_for_scoring_runs(_read_runs_jsonl(runs_path))
+
+
+def _read_runs_jsonl(runs_path: Path) -> list[dict[str, object]]:
+    """Load run summary records from ``runs.jsonl``."""
+    records: list[dict[str, object]] = []
     for line in runs_path.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        payload = json.loads(line)
-        total += float(payload["wall_time_seconds"])
+        if line.strip():
+            records.append(json.loads(line))
+    return records
+
+
+def _sum_wall_time_for_scoring_runs(runs: list[dict[str, object]]) -> float:
+    """Sum wall time for run lines that started at least one request."""
+    total = 0.0
+    for payload in runs:
+        if int(payload["n_requests"]) > 0:
+            total += float(payload["wall_time_seconds"])
     return total
 
 
