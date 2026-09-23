@@ -40,7 +40,11 @@ from shared.rate_limiter import MAX_REQUEST_STARTS_PER_MINUTE  # noqa: E402
 MAIN_REFERENCE_F1_BATCH1 = 0.752
 FULL_DATA_BASELINE_BATCH_SIZE = 10
 PROJECTION_REQUESTS_PER_MIN = 1000
+PROJECTION_TYPESAFE_REQUESTS_PER_MIN = 1200
 PROJECTION_POSTS_20M = 20_000_000
+BATCH_SIZE_10_CAP_FLOOR_SECONDS = 120.0
+CAP_BOUND_YES = "yes"
+CAP_BOUND_NO = "no"
 MODEL_VERSION = "jev-1.13.0"
 SAME_POSTS_BATCH_SIZES = (10, 20, 40)
 METRIC_DECIMALS = 3
@@ -89,8 +93,9 @@ class LatencyRow(BaseModel):
     request_p99_ms: float
     per_post_p50_ms: float
     wall_time_seconds: float
-    sustained_posts_per_min: float
+    measured_posts_per_min_burst: float
     projected_posts_per_min: float
+    cap_bound: bool
 
 
 class CostRow(BaseModel):
@@ -103,7 +108,7 @@ class CostRow(BaseModel):
     estimated_usd: float
     usd_per_1000_posts: float
     projected_hours_20m_cap: float
-    projected_hours_20m_measured: float
+    projected_hours_20m_typesafe: float
     projected_usd_20m: float
 
 
@@ -236,8 +241,8 @@ def _build_quality_rows(pass_results: dict[int, PassResults]) -> list[QualityRow
     return rows
 
 
-def _sustained_posts_per_min(results: PassResults) -> float:
-    """Return measured posts per minute for one pass."""
+def _measured_posts_per_min_burst(results: PassResults) -> float:
+    """Return measured posts per minute including the first-minute burst."""
     return results.n_scored / results.wall_time_seconds * 60.0
 
 
@@ -260,8 +265,12 @@ def _build_latency_rows(pass_results: dict[int, PassResults]) -> list[LatencyRow
                 request_p99_ms=latency.p99,
                 per_post_p50_ms=results.per_post_latency_ms_p50,
                 wall_time_seconds=results.wall_time_seconds,
-                sustained_posts_per_min=_sustained_posts_per_min(results),
+                measured_posts_per_min_burst=_measured_posts_per_min_burst(results),
                 projected_posts_per_min=_projected_posts_per_min(batch_size),
+                cap_bound=_rate_cap_bound(
+                    results.n_requests,
+                    results.wall_time_seconds,
+                ),
             )
         )
     return rows
@@ -278,9 +287,10 @@ def _projected_hours_20m_cap(batch_size: int) -> float:
     return requests_20m / PROJECTION_REQUESTS_PER_MIN / 60.0
 
 
-def _projected_hours_20m_measured(sustained_posts_per_min: float) -> float:
-    """Return projected wall hours for 20M posts at measured throughput."""
-    return PROJECTION_POSTS_20M / sustained_posts_per_min / 60.0
+def _projected_hours_20m_typesafe(batch_size: int) -> float:
+    """Return projected wall hours for 20M posts at the TypeSafe limit."""
+    requests_20m = PROJECTION_POSTS_20M / batch_size
+    return requests_20m / PROJECTION_TYPESAFE_REQUESTS_PER_MIN / 60.0
 
 
 def _projected_usd_20m(estimated_usd: float, n_scored: int) -> float:
@@ -293,7 +303,6 @@ def _build_cost_rows(pass_results: dict[int, PassResults]) -> list[CostRow]:
     rows: list[CostRow] = []
     for batch_size in ABLATION_BATCH_SIZES:
         results = pass_results[batch_size]
-        sustained = _sustained_posts_per_min(results)
         rows.append(
             CostRow(
                 batch_size=batch_size,
@@ -306,7 +315,7 @@ def _build_cost_rows(pass_results: dict[int, PassResults]) -> list[CostRow]:
                     results.n_scored,
                 ),
                 projected_hours_20m_cap=_projected_hours_20m_cap(batch_size),
-                projected_hours_20m_measured=_projected_hours_20m_measured(sustained),
+                projected_hours_20m_typesafe=_projected_hours_20m_typesafe(batch_size),
                 projected_usd_20m=_projected_usd_20m(
                     results.estimated_cost_usd,
                     results.n_scored,
@@ -385,21 +394,7 @@ def _rate_cap_bound(n_requests: int, wall_time_seconds: float) -> bool:
 
 def _build_notes(pass_results: dict[int, PassResults]) -> list[str]:
     """Build factual notes from constants and pass metrics."""
-    bound_sizes = [
-        str(batch_size)
-        for batch_size in ABLATION_BATCH_SIZES
-        if _rate_cap_bound(
-            pass_results[batch_size].n_requests,
-            pass_results[batch_size].wall_time_seconds,
-        )
-    ]
-    if bound_sizes:
-        cap_note = (
-            f"The 1,000 request starts per minute cap bound batch sizes "
-            f"{', '.join(bound_sizes)}."
-        )
-    else:
-        cap_note = "The 1,000 request starts per minute cap did not bind any pass."
+    batch_10 = pass_results[FULL_DATA_BASELINE_BATCH_SIZE]
     return [
         "This is a separate ablation from the main 1,000-post experiment.",
         "There is no batch size 1 pass on the full 26,000-post data.",
@@ -409,7 +404,22 @@ def _build_notes(pass_results: dict[int, PassResults]) -> list[str]:
             "Reference F1 0.752 is from the main run at batch size 1 on the "
             "1,000-post sample, not the full data."
         ),
-        cap_note,
+        (
+            "The request start cap counts starts in a rolling 60 s window, "
+            "so each pass starts with a burst of up to 1,000 requests."
+        ),
+        "Passes with fewer than 1,000 requests never waited on the cap.",
+        (
+            "Over 20M posts the burst is negligible, so the projection uses "
+            "the cap rate."
+        ),
+        (
+            f"Batch size 10 wall time of "
+            f"{_format_seconds(batch_10.wall_time_seconds)} s is consistent with "
+            "the cap floor of two full 60 s windows plus the remainder "
+            f"(about {_format_seconds(BATCH_SIZE_10_CAP_FLOOR_SECONDS)} s minimum "
+            f"for {batch_10.n_requests} starts)."
+        ),
     ]
 
 
@@ -523,10 +533,10 @@ def _latency_table_lines(rows: list[LatencyRow]) -> list[str]:
     """Build markdown lines for the latency comparison table."""
     header = (
         "| batch size | request p50 (ms) | request p90 (ms) | request p99 (ms) | "
-        "per-post p50 (ms) | wall time (s) | sustained posts/min | "
-        "projected posts/min |"
+        "per-post p50 (ms) | wall time (s) | measured posts per minute "
+        "(includes first-minute burst) | projected posts/min | cap bound |"
     )
-    separator = "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
+    separator = "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
     body = [_format_latency_row(row) for row in rows]
     return [header, separator, *body]
 
@@ -538,16 +548,25 @@ def _format_latency_row(row: LatencyRow) -> str:
         f"{_format_ms(row.request_p90_ms)} | {_format_ms(row.request_p99_ms)} | "
         f"{_format_ms(row.per_post_p50_ms)} | "
         f"{_format_seconds(row.wall_time_seconds)} | "
-        f"{_format_throughput(row.sustained_posts_per_min)} | "
-        f"{_format_throughput(row.projected_posts_per_min)} |"
+        f"{_format_throughput(row.measured_posts_per_min_burst)} | "
+        f"{_format_throughput(row.projected_posts_per_min)} | "
+        f"{_format_cap_bound(row.cap_bound)} |"
     )
+
+
+def _format_cap_bound(cap_bound: bool) -> str:
+    """Format cap-bound flag as yes or no."""
+    if cap_bound:
+        return CAP_BOUND_YES
+    return CAP_BOUND_NO
 
 
 def _cost_table_lines(rows: list[CostRow]) -> list[str]:
     """Build markdown lines for the cost comparison table."""
     header = (
         "| batch size | requests | input tokens | output tokens | estimated USD | "
-        "USD per 1,000 posts | 20M hours (cap) | 20M hours (measured) | 20M USD |"
+        "USD per 1,000 posts | 20M hours (1,000 req/min cap) | "
+        "20M hours (1,200 req/min limit) | 20M USD |"
     )
     separator = "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
     body = [_format_cost_row(row) for row in rows]
@@ -561,7 +580,7 @@ def _format_cost_row(row: CostRow) -> str:
         f"{row.output_tokens} | {_format_usd(row.estimated_usd)} | "
         f"{_format_usd(row.usd_per_1000_posts)} | "
         f"{_format_hours(row.projected_hours_20m_cap)} | "
-        f"{_format_hours(row.projected_hours_20m_measured)} | "
+        f"{_format_hours(row.projected_hours_20m_typesafe)} | "
         f"{_format_usd(row.projected_usd_20m)} |"
     )
 
