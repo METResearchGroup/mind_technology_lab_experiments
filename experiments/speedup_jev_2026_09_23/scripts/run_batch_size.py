@@ -333,15 +333,16 @@ def _count_outstanding_deadletters(
 
 
 def _read_wall_time_seconds(runs_path: Path) -> float:
-    """Read wall time from the last line of ``runs.jsonl``."""
+    """Sum ``wall_time_seconds`` across all lines of ``runs.jsonl``."""
     if not runs_path.is_file():
         return 0.0
-    text = runs_path.read_text(encoding="utf-8")
-    lines = [line for line in text.splitlines() if line.strip()]
-    if not lines:
-        return 0.0
-    payload = json.loads(lines[-1])
-    return float(payload["wall_time_seconds"])
+    total = 0.0
+    for line in runs_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        payload = json.loads(line)
+        total += float(payload["wall_time_seconds"])
+    return total
 
 
 if __name__ == "__main__":
