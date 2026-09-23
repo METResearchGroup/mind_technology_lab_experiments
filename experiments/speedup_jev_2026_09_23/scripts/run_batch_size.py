@@ -108,6 +108,7 @@ def main() -> None:
 
 
 def _parse_batch_size() -> int:
+    """Parse and validate the required ``--batch-size`` CLI argument."""
     parser = argparse.ArgumentParser(description="Run one Jev batch-size pass.")
     parser.add_argument(
         "--batch-size",
@@ -120,20 +121,24 @@ def _parse_batch_size() -> int:
 
 
 def _load_tasks() -> list[PostTask]:
+    """Load the full sample as scoring tasks."""
     sample = load_sample()
     return _frame_to_tasks(sample)
 
 
 def _output_dir(batch_size: int) -> Path:
+    """Return the output directory for one batch-size pass."""
     return OUTPUTS_ROOT / f"batch_{batch_size}"
 
 
 def _load_deduped_predictions(predictions_path: Path) -> list[PostPrediction]:
+    """Load predictions JSONL and keep the latest row per ``source_row_id``."""
     predictions = _read_predictions_jsonl(predictions_path)
     return _dedupe_predictions(predictions)
 
 
 def _load_requests(requests_path: Path) -> list[RequestLog]:
+    """Load request rows from ``requests.jsonl``."""
     return _read_requests_jsonl(requests_path)
 
 
@@ -142,6 +147,7 @@ def _write_parquet_outputs(
     requests: list[RequestLog],
     output_dir: Path,
 ) -> None:
+    """Write labels and requests parquet files for one pass."""
     _write_parquet(
         output_dir / LABELS_FILENAME,
         [prediction.model_dump() for prediction in predictions],
@@ -158,6 +164,7 @@ def _build_pass_results(
     requests: list[RequestLog],
     output_dir: Path,
 ) -> PassResults:
+    """Aggregate pass metrics into one ``PassResults`` payload."""
     prediction_summary = summarize_pass_predictions(predictions)
     request_summary = summarize_pass_requests(requests)
     latency = RequestLatencyMs.model_validate(request_summary["request_latency_ms"])
@@ -185,6 +192,7 @@ def _build_pass_results(
 
 
 def _write_results_json(output_dir: Path, results: PassResults) -> None:
+    """Write ``results.json`` for one batch-size pass."""
     path = output_dir / RESULTS_FILENAME
     path.write_text(
         json.dumps(results.model_dump(), indent=2) + "\n",
@@ -193,6 +201,7 @@ def _write_results_json(output_dir: Path, results: PassResults) -> None:
 
 
 def _write_score_histogram(predictions: list[PostPrediction], static_dir: Path) -> Path:
+    """Write a probability histogram PNG and return its path."""
     static_dir.mkdir(parents=True, exist_ok=True)
     hist_path = static_dir / HISTOGRAM_FILENAME
     values = [prediction.probability for prediction in predictions]
@@ -208,6 +217,7 @@ def _write_score_histogram(predictions: list[PostPrediction], static_dir: Path) 
 def _write_results_markdown(
     output_dir: Path, results: PassResults, hist_path: Path
 ) -> None:
+    """Write per-pass ``RESULTS.md`` with a metrics table and histogram link."""
     lines = [
         f"# Batch size {results.batch_size}",
         "",
@@ -222,6 +232,7 @@ def _write_results_markdown(
 
 
 def _results_table_rows(results: PassResults) -> list[str]:
+    """Build markdown table rows for one pass summary."""
     latency = results.request_latency_ms
     rows = [
         ("batch_size", results.batch_size),
@@ -247,12 +258,14 @@ def _results_table_rows(results: PassResults) -> list[str]:
 
 
 def _deadletter_line(n_deadletter: int) -> str:
+    """Return a short deadletter summary sentence for RESULTS markdown."""
     if n_deadletter == 0:
         return "No failures."
     return f"Deadletter rows: {n_deadletter}"
 
 
 def _frame_to_tasks(frame: pd.DataFrame) -> list[PostTask]:
+    """Convert a sample dataframe into scoring tasks."""
     tasks: list[PostTask] = []
     for row in frame.itertuples(index=False):
         tasks.append(
@@ -266,6 +279,7 @@ def _frame_to_tasks(frame: pd.DataFrame) -> list[PostTask]:
 
 
 def _read_predictions_jsonl(path: Path) -> list[PostPrediction]:
+    """Load prediction records from a JSONL file."""
     if not path.is_file():
         return []
     records: list[PostPrediction] = []
@@ -276,6 +290,7 @@ def _read_predictions_jsonl(path: Path) -> list[PostPrediction]:
 
 
 def _read_requests_jsonl(path: Path) -> list[RequestLog]:
+    """Load request log records from a JSONL file."""
     if not path.is_file():
         return []
     records: list[RequestLog] = []
@@ -286,6 +301,7 @@ def _read_requests_jsonl(path: Path) -> list[RequestLog]:
 
 
 def _dedupe_predictions(predictions: list[PostPrediction]) -> list[PostPrediction]:
+    """Keep the latest prediction per ``source_row_id``, sorted by row id."""
     latest: dict[str, PostPrediction] = {}
     for prediction in predictions:
         latest[prediction.source_row_id] = prediction
@@ -293,6 +309,7 @@ def _dedupe_predictions(predictions: list[PostPrediction]) -> list[PostPredictio
 
 
 def _write_parquet(path: Path, rows: list[dict[str, object]]) -> None:
+    """Write a list of row dicts to parquet."""
     frame = pd.DataFrame(rows)
     path.parent.mkdir(parents=True, exist_ok=True)
     frame.to_parquet(path)
@@ -301,6 +318,7 @@ def _write_parquet(path: Path, rows: list[dict[str, object]]) -> None:
 def _count_outstanding_deadletters(
     predictions: list[PostPrediction], deadletter_path: Path
 ) -> int:
+    """Count deadletter rows for posts that never received a prediction."""
     scored_ids = {prediction.source_row_id for prediction in predictions}
     if not deadletter_path.is_file():
         return 0
@@ -315,6 +333,7 @@ def _count_outstanding_deadletters(
 
 
 def _read_wall_time_seconds(runs_path: Path) -> float:
+    """Read wall time from the last line of ``runs.jsonl``."""
     if not runs_path.is_file():
         return 0.0
     text = runs_path.read_text(encoding="utf-8")

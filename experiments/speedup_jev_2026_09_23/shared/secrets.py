@@ -26,6 +26,8 @@ ACCESS_KEY_SECRET_ENV = "AWS_ACCESS_KEY_SECRET"
 
 
 class SecretsManagerClient(Protocol):
+    """Minimal Secrets Manager client surface for tests."""
+
     def get_secret_value(self, SecretId: str) -> dict[str, str]:
         """Return a Secrets Manager GetSecretValue response."""
 
@@ -54,6 +56,7 @@ def build_boto3_session() -> boto3.session.Session:
 
 
 def _secrets_client() -> SecretsManagerClient:
+    """Build a Secrets Manager client for the experiment region."""
     session = build_boto3_session()
     return session.client("secretsmanager", region_name=AWS_REGION)
 
@@ -91,6 +94,7 @@ def load_secret_field(
 
 
 def _read_secret_string(secret_id: str, client: SecretsManagerClient) -> str:
+    """Fetch the SecretString for ``secret_id`` or exit with a clear message."""
     try:
         response = client.get_secret_value(SecretId=secret_id)
     except ClientError as exc:
@@ -104,6 +108,7 @@ def _read_secret_string(secret_id: str, client: SecretsManagerClient) -> str:
 
 
 def _parse_secret_json(secret_id: str, secret_string: str) -> dict[str, str]:
+    """Parse ``secret_string`` as a JSON object or exit on invalid payload."""
     try:
         payload = json.loads(secret_string)
     except json.JSONDecodeError as exc:

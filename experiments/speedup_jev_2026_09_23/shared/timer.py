@@ -24,6 +24,7 @@ def timed(func: Callable[..., T]) -> Callable[..., tuple[T, float]]:
 
     @wraps(func)
     def wrapper(*args: object, **kwargs: object) -> tuple[T, float]:
+        """Call ``func`` and return its result with elapsed milliseconds."""
         started = time.perf_counter()
         try:
             result = func(*args, **kwargs)

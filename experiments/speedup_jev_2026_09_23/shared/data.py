@@ -59,15 +59,18 @@ REMOTE_INPUT_FILES: tuple[RemoteInputFile, ...] = (
 
 
 def _s3_client() -> object:
+    """Build an S3 client for the experiment region."""
     session = build_boto3_session()
     return session.client("s3", region_name=AWS_REGION)
 
 
 def _local_path(local_name: str) -> Path:
+    """Return the local ``data/`` path for one downloaded artifact."""
     return DATA_DIR / local_name
 
 
 def _download_if_missing(client: object, remote_file: RemoteInputFile) -> None:
+    """Download one S3 object when its local copy is absent."""
     local_path = _local_path(remote_file.local_name)
     if local_path.is_file():
         return
@@ -85,6 +88,7 @@ def download_inputs() -> None:
 def _validate_manifest_field(
     manifest: dict[str, object], key: str, expected: object, label: str
 ) -> None:
+    """Raise ``ValueError`` when one manifest field differs from ``expected``."""
     actual = manifest.get(key)
     if actual != expected:
         raise ValueError(f"manifest {label} {actual!r} != {expected!r}")
@@ -108,6 +112,7 @@ def validate_manifest(manifest: dict[str, object]) -> None:
 
 
 def _read_manifest() -> dict[str, object]:
+    """Load and return the sample manifest from ``data/``."""
     manifest_path = _local_path(SAMPLE_MANIFEST_NAME)
     payload = json.loads(manifest_path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
@@ -116,6 +121,7 @@ def _read_manifest() -> dict[str, object]:
 
 
 def _validate_gold_counts(frame: pd.DataFrame) -> None:
+    """Raise ``ValueError`` when row or gold-label counts differ from constants."""
     n_rows = len(frame)
     n_gold_0 = int((frame[GOLD_LABEL_COLUMN] == 0).sum())
     n_gold_1 = int((frame[GOLD_LABEL_COLUMN] == 1).sum())
@@ -133,6 +139,7 @@ def _validate_gold_counts(frame: pd.DataFrame) -> None:
 
 
 def _sort_sample_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """Sort the sample frame by integer ``source_row_id``."""
     row_ids = frame[ROW_ID_FIELD].astype(int)
     return frame.assign(_row_id_int=row_ids).sort_values("_row_id_int").drop(
         columns="_row_id_int"

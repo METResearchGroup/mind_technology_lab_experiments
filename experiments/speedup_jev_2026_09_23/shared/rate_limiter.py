@@ -20,6 +20,7 @@ class RequestStartLimiter:
     """Block until one more request start fits in the rolling window."""
 
     def __init__(self, max_starts_per_minute: int) -> None:
+        """Configure the rolling per-minute request-start cap."""
         self._max_starts = max_starts_per_minute
         self._lock = threading.Lock()
         self._start_times: deque[float] = deque()
@@ -37,6 +38,7 @@ class RequestStartLimiter:
             time.sleep(max(sleep_seconds, MIN_WINDOW_SLEEP_SECONDS))
 
     def _drop_expired(self, now: float) -> None:
+        """Remove request-start timestamps older than the rolling window."""
         window_start = now - WINDOW_SECONDS
         while self._start_times and self._start_times[0] <= window_start:
             self._start_times.popleft()

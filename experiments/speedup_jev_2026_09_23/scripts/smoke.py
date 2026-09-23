@@ -90,6 +90,7 @@ def _clear_smoke_output(batch_size: int) -> None:
 
 
 def _smoke_output_dir(batch_size: int) -> Path:
+    """Return the output directory for one smoke batch size."""
     return SMOKE_OUTPUT_ROOT / f"batch_{batch_size}"
 
 
@@ -160,6 +161,7 @@ def _print_table(rows: list[SmokeTableRow]) -> None:
 
 
 def _format_row(row: SmokeTableRow) -> str:
+    """Format one smoke summary row for stdout."""
     cost = format(row.estimated_cost_usd, f".{COST_DECIMAL_PLACES}f")
     latency = format(row.p50_request_ms, f".{LATENCY_DECIMAL_PLACES}f")
     return (

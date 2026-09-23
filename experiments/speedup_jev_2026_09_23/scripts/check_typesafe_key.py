@@ -26,15 +26,18 @@ NOUL_DECIMAL_PLACES = 4
 
 
 def _first_post_text() -> str:
+    """Return the text of the first sample post."""
     sample = load_sample()
     return str(sample.iloc[0]["text"])
 
 
 def _build_client() -> TypeSafeClient:
+    """Build a TypeSafe client using the loaded API key."""
     return TypeSafeClient(api_key=load_typesafe_api_key(), model=JEV_MODEL_ID)
 
 
 def _score_one_post(client: TypeSafeClient, text: str) -> object:
+    """Score one post with the Brady moral-outrage question."""
     return client.system_one(
         state=text,
         questions={

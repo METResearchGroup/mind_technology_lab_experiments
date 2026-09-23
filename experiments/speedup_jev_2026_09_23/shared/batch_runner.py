@@ -36,6 +36,8 @@ RUNS_FILENAME = "runs.jsonl"
 
 @dataclass(frozen=True)
 class _BatchSuccess:
+    """One scored batch with its request metadata."""
+
     batch: tuple[PostTask, ...]
     request_index: int
     result: BatchResult
@@ -44,6 +46,8 @@ class _BatchSuccess:
 
 @dataclass(frozen=True)
 class _BatchFailure:
+    """One batch that exhausted retries without a successful score."""
+
     batch: tuple[PostTask, ...]
     request_index: int
     error: str
@@ -52,14 +56,18 @@ class _BatchFailure:
 
 @dataclass
 class _OrderedOutcomeWriter:
+    """Buffer out-of-order worker outcomes until the next request index is ready."""
+
     request_indices: list[int]
     buffer: dict[int, _BatchSuccess | _BatchFailure]
     next_position: int
 
     def store(self, outcome: _BatchSuccess | _BatchFailure) -> None:
+        """Record one completed batch outcome by ``request_index``."""
         self.buffer[outcome.request_index] = outcome
 
     def ready_outcomes(self) -> list[_BatchSuccess | _BatchFailure]:
+        """Return consecutive ready outcomes starting at the next position."""
         ready: list[_BatchSuccess | _BatchFailure] = []
         while self.next_position < len(self.request_indices):
             request_index = self.request_indices[self.next_position]
@@ -114,6 +122,7 @@ def run_pass(
 def _pending_batches(
     tasks: list[PostTask], batch_size: int, output_dir: Path
 ) -> list[tuple[int, list[PostTask]]]:
+    """Return unscored batches, skipping rows already in ``predictions.jsonl``."""
     seen = _seen_source_row_ids(output_dir / PREDICTIONS_FILENAME)
     pending_batches: list[tuple[int, list[PostTask]]] = []
     for request_index, batch in enumerate(make_batches(tasks, batch_size)):
@@ -124,6 +133,7 @@ def _pending_batches(
 
 
 def _seen_source_row_ids(predictions_path: Path) -> set[str]:
+    """Collect ``source_row_id`` values already written to predictions JSONL."""
     if not predictions_path.is_file():
         return set()
     seen: set[str] = set()
@@ -142,6 +152,7 @@ def _run_batches(
     scorer: Callable[[list[str]], BatchResult],
     limiter: RequestStartLimiter,
 ) -> dict[str, int]:
+    """Score pending batches on worker threads and write ordered JSONL logs."""
     if not pending_batches:
         return {"n_scored": 0, "n_deadletter": 0}
     n_scored = 0
@@ -183,6 +194,7 @@ def _submit_batches(
     scorer: Callable[[list[str]], BatchResult],
     limiter: RequestStartLimiter,
 ) -> list[Future[_BatchSuccess | _BatchFailure]]:
+    """Submit one scoring job per pending batch."""
     futures: list[Future[_BatchSuccess | _BatchFailure]] = []
     for request_index, batch in pending_batches:
         future = executor.submit(
@@ -198,6 +210,7 @@ def _score_batch_job(
     scorer: Callable[[list[str]], BatchResult],
     limiter: RequestStartLimiter,
 ) -> _BatchSuccess | _BatchFailure:
+    """Score one batch with retries, honoring the request-start limiter."""
     texts = [task.text for task in batch]
     last_error = "unknown"
     total_attempts = MAX_EXTRA_ATTEMPTS + 1
@@ -222,6 +235,7 @@ def _write_outcome(
     batch_size: int,
     output_dir: Path,
 ) -> tuple[int, int]:
+    """Persist one batch outcome and return scored and deadletter counts."""
     if isinstance(outcome, _BatchSuccess):
         _write_success(outcome, batch_size, output_dir)
         return len(outcome.batch), 0
@@ -232,6 +246,7 @@ def _write_outcome(
 def _write_success(
     outcome: _BatchSuccess, batch_size: int, output_dir: Path
 ) -> None:
+    """Append prediction and request rows for one successful batch."""
     predictions = _build_predictions(outcome, batch_size)
     request_log = _build_request_log(outcome, batch_size)
     predictions_path = output_dir / PREDICTIONS_FILENAME
@@ -242,6 +257,7 @@ def _write_success(
 
 
 def _write_failure(outcome: _BatchFailure, output_dir: Path) -> None:
+    """Append deadletter rows for each post in a failed batch."""
     deadletter_path = output_dir / DEADLETTER_FILENAME
     for task in outcome.batch:
         line = {
@@ -256,6 +272,7 @@ def _write_failure(outcome: _BatchFailure, output_dir: Path) -> None:
 def _build_predictions(
     outcome: _BatchSuccess, batch_size: int
 ) -> list[PostPrediction]:
+    """Build per-post prediction records from one successful batch."""
     n_posts = len(outcome.batch)
     per_post_latency = outcome.result.latency_ms / n_posts
     predictions: list[PostPrediction] = []
@@ -285,6 +302,7 @@ def _build_predictions(
 
 
 def _build_request_log(outcome: _BatchSuccess, batch_size: int) -> RequestLog:
+    """Build one request log row from a successful batch."""
     result = outcome.result
     n_posts = len(outcome.batch)
     return RequestLog(
@@ -303,11 +321,13 @@ def _build_request_log(outcome: _BatchSuccess, batch_size: int) -> RequestLog:
 
 
 def _append_jsonl(path: Path, record: PostPrediction | RequestLog) -> None:
+    """Append one Pydantic record as a JSONL line."""
     with path.open("a", encoding="utf-8") as handle:
         handle.write(record.model_dump_json() + "\n")
 
 
 def _append_json_line(path: Path, payload: dict[str, object]) -> None:
+    """Append one JSON object as a line."""
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(payload) + "\n")
 
@@ -315,6 +335,7 @@ def _append_json_line(path: Path, payload: dict[str, object]) -> None:
 def _append_run_log(
     output_dir: Path, started_at: datetime, summary: PassSummary
 ) -> None:
+    """Append one pass summary row to ``runs.jsonl``."""
     line = {
         "batch_size": summary.batch_size,
         "started_at": started_at.isoformat(),
@@ -327,6 +348,7 @@ def _append_run_log(
 
 
 def _progress_step(n_batches: int) -> int:
+    """Return how many completed batches should elapse between progress prints."""
     if n_batches == 0:
         return 1
     return max(1, int(n_batches * PROGRESS_FRACTION))
@@ -335,16 +357,19 @@ def _progress_step(n_batches: int) -> int:
 def _should_report_progress(
     completed: int, total: int, progress_step: int
 ) -> bool:
+    """Return whether to print a progress line for the current completion count."""
     if completed == total:
         return True
     return completed % progress_step == 0
 
 
 def _print_progress(completed: int, total: int, batch_size: int) -> None:
+    """Print one in-flight progress line to stdout."""
     print(f"progress batch_size={batch_size} completed={completed}/{total}")
 
 
 def _print_final_line(summary: PassSummary) -> None:
+    """Print the final scored/deadletter summary line to stdout."""
     print(
         "batch_size="
         f"{summary.batch_size} scored={summary.n_scored} "
@@ -355,5 +380,6 @@ def _print_final_line(summary: PassSummary) -> None:
 def _cancel_futures(
     futures: list[Future[_BatchSuccess | _BatchFailure]],
 ) -> None:
+    """Cancel outstanding batch futures after an auth failure."""
     for future in futures:
         future.cancel()

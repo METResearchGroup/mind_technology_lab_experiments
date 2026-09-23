@@ -93,10 +93,12 @@ def _timed_system_one(
     state: dict[str, list[str]],
     questions: dict[str, Noul],
 ) -> object:
+    """Send one timed ``system_one`` call for a batched state and questions."""
     return client.system_one(state=state, questions=questions, model=JEV_MODEL_ID)
 
 
 def _thread_client(api_key: str) -> TypeSafeClient:
+    """Return a per-thread TypeSafe client, creating one on first use."""
     client = getattr(_thread_local, "client", None)
     if client is None:
         client = build_client(api_key)
@@ -105,12 +107,14 @@ def _thread_client(api_key: str) -> TypeSafeClient:
 
 
 def _usage_token_count(token_count: int | None) -> int:
+    """Coerce a nullable token count to zero."""
     if token_count is None:
         return 0
     return token_count
 
 
 def _extract_probabilities(response: object, n_posts: int) -> list[float]:
+    """Read per-post Noul probabilities from a batched response."""
     answers = response.answers
     probabilities: list[float] = []
     for index in range(n_posts):

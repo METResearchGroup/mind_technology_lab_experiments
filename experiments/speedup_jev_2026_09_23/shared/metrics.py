@@ -66,6 +66,7 @@ def classification_report(gold: list[int], pred: list[int]) -> dict[str, float]:
 
 
 def _ratio(numerator: float, denominator: float) -> float:
+    """Return ``numerator / denominator``, or 0.0 when the denominator is zero."""
     if denominator == 0:
         return 0.0
     return numerator / denominator

@@ -150,6 +150,7 @@ def main() -> None:
 
 
 def _load_all_pass_results() -> dict[int, PassResults]:
+    """Load ``results.json`` for every configured batch size."""
     results: dict[int, PassResults] = {}
     for batch_size in BATCH_SIZES:
         results[batch_size] = _load_pass_results(batch_size)
@@ -157,23 +158,27 @@ def _load_all_pass_results() -> dict[int, PassResults]:
 
 
 def _load_pass_results(batch_size: int) -> PassResults:
+    """Load one pass ``results.json`` by batch size."""
     path = OUTPUTS_DIR / f"batch_{batch_size}" / "results.json"
     payload = json.loads(path.read_text(encoding="utf-8"))
     return PassResults.model_validate(payload)
 
 
 def _load_pr20_results() -> Pr20Results:
+    """Load serialized PR 20 Jev metrics from ``data/``."""
     payload = json.loads(PR20_RESULTS_PATH.read_text(encoding="utf-8"))
     return Pr20Results.model_validate(payload)
 
 
 def _load_batch_labels(batch_size: int) -> pd.DataFrame:
+    """Load label columns for one batch-size pass."""
     path = OUTPUTS_DIR / f"batch_{batch_size}" / "labels.parquet"
     frame = pd.read_parquet(path)
     return frame[[ROW_ID_COLUMN, BINARY_LABEL_COLUMN, PROBABILITY_COLUMN]]
 
 
 def _load_pr20_labels() -> pd.DataFrame:
+    """Load PR 20 label columns for drift comparison."""
     frame = pd.read_parquet(PR20_LABELS_PATH)
     return frame[[ROW_ID_COLUMN, BINARY_LABEL_COLUMN, PROBABILITY_COLUMN]]
 
@@ -182,6 +187,7 @@ def _compute_drift(
     baseline_labels: pd.DataFrame,
     other_labels: pd.DataFrame,
 ) -> tuple[float, float]:
+    """Return label agreement and mean absolute probability difference."""
     merged = baseline_labels.merge(
         other_labels,
         on=ROW_ID_COLUMN,
@@ -197,6 +203,7 @@ def _compute_drift(
 
 
 def _build_drift_rows(baseline_labels: pd.DataFrame) -> list[DriftRow]:
+    """Build drift table rows against batch size 1."""
     rows: list[DriftRow] = []
     for batch_size in BATCH_SIZES:
         labels = _load_batch_labels(batch_size)
@@ -221,6 +228,7 @@ def _build_drift_rows(baseline_labels: pd.DataFrame) -> list[DriftRow]:
 
 
 def _build_quality_rows(pass_results: dict[int, PassResults]) -> list[QualityRow]:
+    """Build quality metrics rows for all batch sizes and PR 20."""
     rows = [
         _quality_row_from_pass(str(batch_size), pass_results[batch_size])
         for batch_size in BATCH_SIZES
@@ -230,6 +238,7 @@ def _build_quality_rows(pass_results: dict[int, PassResults]) -> list[QualityRow
 
 
 def _quality_row_from_pass(label: str, results: PassResults) -> QualityRow:
+    """Map one pass ``PassResults`` to a quality table row."""
     return QualityRow(
         label=label,
         f1=results.f1,
@@ -242,6 +251,7 @@ def _quality_row_from_pass(label: str, results: PassResults) -> QualityRow:
 
 
 def _quality_row_from_pr20(results: Pr20Results) -> QualityRow:
+    """Map PR 20 metrics to a quality table row."""
     return QualityRow(
         label=PR20_ROW_LABEL,
         f1=results.f1,
@@ -254,6 +264,7 @@ def _quality_row_from_pr20(results: Pr20Results) -> QualityRow:
 
 
 def _build_latency_rows(pass_results: dict[int, PassResults]) -> list[LatencyRow]:
+    """Build latency table rows for all batch sizes and PR 20."""
     rows = [
         _latency_row_from_pass(str(batch_size), pass_results[batch_size])
         for batch_size in BATCH_SIZES
@@ -263,6 +274,7 @@ def _build_latency_rows(pass_results: dict[int, PassResults]) -> list[LatencyRow
 
 
 def _latency_row_from_pass(label: str, results: PassResults) -> LatencyRow:
+    """Map one pass ``PassResults`` to a latency table row."""
     latency = results.request_latency_ms
     return LatencyRow(
         label=label,
@@ -275,6 +287,7 @@ def _latency_row_from_pass(label: str, results: PassResults) -> LatencyRow:
 
 
 def _latency_row_from_pr20(results: Pr20Results) -> LatencyRow:
+    """Map PR 20 latency metrics to a latency table row."""
     return LatencyRow(
         label=PR20_ROW_LABEL,
         request_p50_ms=results.p50,
@@ -286,6 +299,7 @@ def _latency_row_from_pr20(results: Pr20Results) -> LatencyRow:
 
 
 def _build_cost_rows(pass_results: dict[int, PassResults]) -> list[CostRow]:
+    """Build cost table rows for all batch sizes and PR 20."""
     rows = [
         _cost_row_from_pass(str(batch_size), pass_results[batch_size])
         for batch_size in BATCH_SIZES
@@ -295,6 +309,7 @@ def _build_cost_rows(pass_results: dict[int, PassResults]) -> list[CostRow]:
 
 
 def _cost_row_from_pass(label: str, results: PassResults) -> CostRow:
+    """Map one pass ``PassResults`` to a cost table row."""
     return CostRow(
         label=label,
         requests=results.n_requests,
@@ -306,6 +321,7 @@ def _cost_row_from_pass(label: str, results: PassResults) -> CostRow:
 
 
 def _cost_row_from_pr20(results: Pr20Results) -> CostRow:
+    """Map PR 20 token totals to a cost table row."""
     estimated_usd = estimate_jev_cost_usd(
         results.total_input_tokens,
         results.total_output_tokens,
@@ -321,10 +337,12 @@ def _cost_row_from_pr20(results: Pr20Results) -> CostRow:
 
 
 def _usd_per_1000_posts(estimated_usd: float) -> float:
+    """Scale one pass estimated USD to a per-1,000-post cost."""
     return estimated_usd * 1000 / POSTS_PER_RUN
 
 
 def _write_comparison_plot(pass_results: dict[int, PassResults]) -> Path:
+    """Write the F1 and per-post latency comparison plot."""
     COMPARISON_DIR.mkdir(parents=True, exist_ok=True)
     plot_path = COMPARISON_DIR / PLOT_FILENAME
     batch_sizes = list(BATCH_SIZES)
@@ -357,6 +375,7 @@ def _render_results_markdown(
     drift_rows: list[DriftRow],
     plot_path: Path,
 ) -> str:
+    """Render the root ``RESULTS.md`` markdown document."""
     lines = [
         "# Results",
         "",
@@ -395,6 +414,7 @@ def _render_results_markdown(
 
 
 def _batch_result_links() -> list[str]:
+    """Return markdown links to per-batch RESULTS files."""
     lines = ["Per-batch RESULTS:"]
     for batch_size in BATCH_SIZES:
         path = f"outputs/batch_{batch_size}/RESULTS.md"
@@ -403,6 +423,7 @@ def _batch_result_links() -> list[str]:
 
 
 def _quality_table_lines(rows: list[QualityRow]) -> list[str]:
+    """Build markdown lines for the quality comparison table."""
     header = (
         "| batch size | f1 | accuracy | precision | recall | scored | deadletter |"
     )
@@ -415,6 +436,7 @@ def _quality_table_lines(rows: list[QualityRow]) -> list[str]:
 
 
 def _format_quality_row(row: QualityRow) -> str:
+    """Format one quality table row."""
     return (
         f"| {row.label} | {_format_metric(row.f1)} | {_format_metric(row.accuracy)} | "
         f"{_format_metric(row.precision)} | {_format_metric(row.recall)} | "
@@ -423,6 +445,7 @@ def _format_quality_row(row: QualityRow) -> str:
 
 
 def _latency_table_lines(rows: list[LatencyRow]) -> list[str]:
+    """Build markdown lines for the latency comparison table."""
     header = (
         "| batch size | request p50 (ms) | request p90 (ms) | request p99 (ms) | "
         "per-post p50 (ms) | wall time (s) |"
@@ -433,6 +456,7 @@ def _latency_table_lines(rows: list[LatencyRow]) -> list[str]:
 
 
 def _format_latency_row(row: LatencyRow) -> str:
+    """Format one latency table row."""
     return (
         f"| {row.label} | {_format_ms(row.request_p50_ms)} | "
         f"{_format_ms(row.request_p90_ms)} | {_format_ms(row.request_p99_ms)} | "
@@ -441,6 +465,7 @@ def _format_latency_row(row: LatencyRow) -> str:
 
 
 def _cost_table_lines(rows: list[CostRow]) -> list[str]:
+    """Build markdown lines for the cost comparison table."""
     header = (
         "| batch size | requests | input tokens | output tokens | "
         "estimated USD | USD per 1,000 posts |"
@@ -451,6 +476,7 @@ def _cost_table_lines(rows: list[CostRow]) -> list[str]:
 
 
 def _format_cost_row(row: CostRow) -> str:
+    """Format one cost table row."""
     return (
         f"| {row.label} | {row.requests} | {row.input_tokens} | {row.output_tokens} | "
         f"{_format_usd(row.estimated_usd)} | {_format_usd(row.usd_per_1000_posts)} |"
@@ -458,6 +484,7 @@ def _format_cost_row(row: CostRow) -> str:
 
 
 def _drift_table_lines(rows: list[DriftRow]) -> list[str]:
+    """Build markdown lines for the drift comparison table."""
     header = "| batch size | label agreement | mean abs prob diff |"
     separator = "| --- | ---: | ---: |"
     body = [_format_drift_row(row) for row in rows]
@@ -465,6 +492,7 @@ def _drift_table_lines(rows: list[DriftRow]) -> list[str]:
 
 
 def _format_drift_row(row: DriftRow) -> str:
+    """Format one drift table row."""
     return (
         f"| {row.label} | {_format_metric(row.agreement)} | "
         f"{_format_metric(row.mean_abs_prob_diff)} |"
@@ -472,18 +500,22 @@ def _format_drift_row(row: DriftRow) -> str:
 
 
 def _format_metric(value: float) -> str:
+    """Format a metric value with fixed decimal places."""
     return f"{value:.{METRIC_DECIMALS}f}"
 
 
 def _format_ms(value: float) -> str:
+    """Format a millisecond value with fixed decimal places."""
     return f"{value:.{MS_DECIMALS}f}"
 
 
 def _format_seconds(value: float) -> str:
+    """Format a seconds value with fixed decimal places."""
     return f"{value:.{SECONDS_DECIMALS}f}"
 
 
 def _format_usd(value: float) -> str:
+    """Format a USD value with fixed decimal places."""
     return f"{value:.{USD_DECIMALS}f}"
 
 
