@@ -44,8 +44,34 @@ class EnvVarsContainer:
         -------
         str
             Cached secret value, or empty string when optional and missing.
+
+        Raises
+        ------
+        ValueError
+            When ``required`` is True and the name is unknown or the value is empty.
         """
-        raise NotImplementedError
+        if name in ALLOWLIST:
+            instance = cls._get_instance()
+            instance._ensure_initialized()
+            raw: str | None = instance._env_vars.get(name)
+        else:
+            raw = None
+
+        if required:
+            if raw is None:
+                raise ValueError(
+                    f"{name} is required but is missing. "
+                    f"Please set the {name} environment variable."
+                )
+            if isinstance(raw, str) and not raw.strip():
+                raise ValueError(
+                    f"{name} is required but is empty. "
+                    f"Please set the {name} environment variable to a non-empty value."
+                )
+
+        if raw is None:
+            return ""
+        return str(raw)
 
     @classmethod
     def _get_instance(cls) -> EnvVarsContainer:
