@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Experimental proof-of-concept work for Mind Technology Lab."
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "boto3",
+]
 
 [project.optional-dependencies]
 test = [
