@@ -7,7 +7,10 @@ Run from the repository root:
 
 from __future__ import annotations
 
+import json
 from typing import Protocol
+
+from botocore.exceptions import ClientError
 
 
 class SecretsManagerClient(Protocol):
@@ -57,9 +60,24 @@ def load_secret_field(
 
 def _read_secret_string(secret_id: str, client: SecretsManagerClient) -> str:
     """Fetch the SecretString for ``secret_id`` or exit with a clear message."""
-    raise NotImplementedError
+    try:
+        response = client.get_secret_value(SecretId=secret_id)
+    except ClientError as exc:
+        raise SystemExit(
+            f"Could not load {secret_id} from Secrets Manager: {exc}"
+        ) from exc
+    secret_string = response.get("SecretString")
+    if not secret_string:
+        raise SystemExit(f"Secret {secret_id} has no SecretString.")
+    return secret_string
 
 
 def _parse_secret_json(secret_id: str, secret_string: str) -> dict[str, str]:
     """Parse ``secret_string`` as a JSON object or exit on invalid payload."""
-    raise NotImplementedError
+    try:
+        payload = json.loads(secret_string)
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"Secret {secret_id} is not valid JSON.") from exc
+    if not isinstance(payload, dict):
+        raise SystemExit(f"Secret {secret_id} is not a JSON object.")
+    return payload
