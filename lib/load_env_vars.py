@@ -11,10 +11,7 @@ from __future__ import annotations
 import threading
 from typing import Final
 
-from shared.aws.secretsmanager import (  # noqa: F401
-    load_secret_field,
-    secrets_manager_client,
-)
+from shared.aws.secretsmanager import load_secret_field, secrets_manager_client
 
 ALLOWLIST: Final[dict[str, tuple[str, str]]] = {
     "GITHUB_PAT_TOKEN": ("kova-github-pat", "GITHUB_PAT_TOKEN"),
@@ -52,10 +49,22 @@ class EnvVarsContainer:
 
     @classmethod
     def _get_instance(cls) -> EnvVarsContainer:
-        raise NotImplementedError
+        if cls._instance is None:
+            with cls._instance_lock:
+                if cls._instance is None:
+                    cls._instance = cls()
+        return cls._instance
 
     def _ensure_initialized(self) -> None:
-        raise NotImplementedError
+        if self._initialized:
+            return
+        with self._init_lock:
+            if self._initialized:
+                return
+            self._initialize_env_vars()
+            self._initialized = True
 
     def _initialize_env_vars(self) -> None:
-        raise NotImplementedError
+        client = secrets_manager_client()
+        for env_name, (secret_id, field_name) in ALLOWLIST.items():
+            self._env_vars[env_name] = load_secret_field(secret_id, field_name, client)
