@@ -8,7 +8,7 @@ Run from the repository root:
 from __future__ import annotations
 
 import json
-from typing import Protocol
+from typing import Protocol, cast
 
 import boto3
 from botocore.exceptions import ClientError
@@ -21,6 +21,7 @@ class SecretsManagerClient(Protocol):
 
     def get_secret_value(self, SecretId: str) -> dict[str, str]:
         """Return a Secrets Manager GetSecretValue response."""
+        ...
 
 
 def secrets_manager_client() -> SecretsManagerClient:
@@ -31,7 +32,10 @@ def secrets_manager_client() -> SecretsManagerClient:
     SecretsManagerClient
         Boto3 Secrets Manager client for :data:`shared.aws.aws_region.AWS_REGION`.
     """
-    return boto3.client("secretsmanager", region_name=AWS_REGION)
+    return cast(
+        SecretsManagerClient,
+        boto3.client("secretsmanager", region_name=AWS_REGION),
+    )
 
 
 def load_secret_field(

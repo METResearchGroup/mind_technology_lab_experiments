@@ -57,7 +57,7 @@ indent-style = "space"
 [tool.pyright]
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
-include = ["tests"]
+include = ["shared", "lib", "tests"]
 exclude = [
     ".cursor",
     ".agents",
