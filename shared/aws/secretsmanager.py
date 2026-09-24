@@ -14,7 +14,7 @@ from typing import Protocol, cast
 import boto3
 from botocore.exceptions import ClientError
 
-from shared.aws.aws_region import AWS_REGION
+from shared.aws.constants import DEFAULT_REGION_NAME
 
 
 class SecretsManagerClient(Protocol):
@@ -42,11 +42,11 @@ def secrets_manager_client() -> SecretsManagerClient:
     Returns
     -------
     SecretsManagerClient
-        Boto3 Secrets Manager client for :data:`shared.aws.aws_region.AWS_REGION`.
+        Boto3 Secrets Manager client for ``DEFAULT_REGION_NAME``.
     """
     return cast(
         SecretsManagerClient,
-        boto3.client("secretsmanager", region_name=AWS_REGION),
+        boto3.client("secretsmanager", region_name=DEFAULT_REGION_NAME),
     )
 
 

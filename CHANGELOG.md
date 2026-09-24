@@ -3,6 +3,7 @@
 ## 2026-09-24
 
 1. Repo-root callers can load `GITHUB_PAT_TOKEN` from AWS Secrets Manager secret `github-pat-token` (JSON field `GH_TOKEN`) through `EnvVarsContainer`, with the value cached in memory after the first read. [PR #26](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/26)
+2. Added a shared S3 client for uploads, downloads, key listings, and CSV loads, with the default AWS region in `shared/aws/constants.py`. [PR #26](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/26)
 
 ## 2026-09-23
 
