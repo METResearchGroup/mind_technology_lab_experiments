@@ -55,7 +55,12 @@ def load_secret_field(
     SystemExit
         When the secret or field is missing. The message names the secret.
     """
-    raise NotImplementedError
+    secret_string = _read_secret_string(secret_id, client)
+    payload = _parse_secret_json(secret_id, secret_string)
+    field_value = payload.get(field_name)
+    if not field_value:
+        raise SystemExit(f"Secret {secret_id} is missing {field_name}.")
+    return field_value
 
 
 def _read_secret_string(secret_id: str, client: SecretsManagerClient) -> str:
