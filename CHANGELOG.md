@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2026-09-24
+
+1. Repo-root callers can load the GitHub token from AWS Secrets Manager secret `github-pat-token` (JSON field `GH_TOKEN`) through `EnvVarsContainer`, with the value cached in memory after the first read. [PR #26](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/26)
+
 ## 2026-09-23
 
 1. Ran a batched Jev moral-outrage scoring experiment on the PR 20 sample at batch sizes 1 through 40, reporting F1, latency, cost, and label drift against batch size 1 and the PR 20 reference row. [PR #23](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/23)
