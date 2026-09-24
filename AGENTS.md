@@ -2,7 +2,18 @@
 
 This is a repo where each folder is a series of experiments that are one-off. Unless stated otherwise, each experiment is independent of the rest.
 
-Local install, uv, pre-commit, and CI: **[SETUP.md](./SETUP.md)**.
+Local install, uv, pre-commit, and CI: **[SETUP.md](./SETUP.md)**. GitHub Actions is the only CI for this repository. Do not connect it to Vercel: this is a collection of independent experiments, not a web app, and Vercel Git links post failing deployment statuses that are not part of the quality checks.
+
+## Instructions for agents
+
+IF you are a local agent, this does NOT apply to you.
+
+If you are a remote agent (e.g., via Cursor Cloud, OpenHands, or other harnesses):
+
+When starting:
+
+1. Set up and authenticate to the AWS environment. This will give you the credentials that you need to access the AWS Secrets Manager, which stores all of our actual credentials and secrets. Verify that you can access AWS Secrets Manager, and hard-fail if not.
+2. Get the GitHub personal access token from the AWS Secrets Manager and use that to authenticate into GitHub. This is stored in the `kova-github-pat` secret as `GITHUB_PAT_TOKEN`.
 
 ## Filepaths
 

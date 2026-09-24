@@ -44,6 +44,8 @@ extend-exclude = [
     "ai_agent_simulation_networks",
     "mech_interp_reddit",
     "openai_rate_limit_scaling",
+    "experiments/moral_outrage_classification_2026_09_19",
+    "experiments/speedup_jev_2026_09_23",
 ]
 
 [tool.ruff.lint]
@@ -65,5 +67,7 @@ exclude = [
     "ai_agent_simulation_networks",
     "mech_interp_reddit",
     "openai_rate_limit_scaling",
+    "experiments/moral_outrage_classification_2026_09_19",
+    "experiments/speedup_jev_2026_09_23",
 ]
 reportMissingTypeStubs = false

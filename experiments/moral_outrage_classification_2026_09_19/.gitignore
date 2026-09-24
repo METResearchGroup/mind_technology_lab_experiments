@@ -1,0 +1,9 @@
+.venv/
+data/*.csv
+data/*.parquet
+data/*.json
+!data/.gitkeep
+outputs/**/*.parquet
+outputs/**/*.json
+outputs/**/deadletter.jsonl
+__pycache__/

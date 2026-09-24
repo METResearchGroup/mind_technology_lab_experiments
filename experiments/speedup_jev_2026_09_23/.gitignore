@@ -1,0 +1,13 @@
+.venv/
+data/*.parquet
+data/*.json
+!data/.gitkeep
+outputs/**/*.parquet
+outputs/**/*.json
+outputs/**/*.jsonl
+!outputs/.gitkeep
+ablation_full_dataset/data/*.csv
+ablation_full_dataset/outputs/**/*.parquet
+ablation_full_dataset/outputs/**/*.json
+ablation_full_dataset/outputs/**/*.jsonl
+__pycache__/
