@@ -15,16 +15,51 @@ class SecretsManagerClient(Protocol):
 
     def get_secret_value(self, SecretId: str) -> dict[str, str]:
         """Return a Secrets Manager GetSecretValue response."""
-        ...
 
 
 def secrets_manager_client() -> SecretsManagerClient:
-    """Build a Secrets Manager client using the default credential chain."""
+    """Build a Secrets Manager client using the default credential chain.
+
+    Returns
+    -------
+    SecretsManagerClient
+        Boto3 Secrets Manager client for :data:`shared.aws.aws_region.AWS_REGION`.
+    """
     raise NotImplementedError
 
 
 def load_secret_field(
     secret_id: str, field_name: str, client: SecretsManagerClient
 ) -> str:
-    """Read one JSON field from a Secrets Manager secret."""
+    """Read one JSON field from a Secrets Manager secret.
+
+    Parameters
+    ----------
+    secret_id
+        Secrets Manager secret name.
+    field_name
+        JSON key inside SecretString.
+    client
+        Secrets Manager client or test double.
+
+    Returns
+    -------
+    str
+        Field value. Never printed.
+
+    Raises
+    ------
+    SystemExit
+        When the secret or field is missing. The message names the secret.
+    """
+    raise NotImplementedError
+
+
+def _read_secret_string(secret_id: str, client: SecretsManagerClient) -> str:
+    """Fetch the SecretString for ``secret_id`` or exit with a clear message."""
+    raise NotImplementedError
+
+
+def _parse_secret_json(secret_id: str, secret_string: str) -> dict[str, str]:
+    """Parse ``secret_string`` as a JSON object or exit on invalid payload."""
     raise NotImplementedError
