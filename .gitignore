@@ -45,6 +45,9 @@ pnpm-debug.log*
 !.env.example
 *.pem
 
+# Local dataset caches
+cookbooks/how_to_use_wandb/shared/setup/*.csv
+
 # Coverage / reports
 coverage/
 *.lcov

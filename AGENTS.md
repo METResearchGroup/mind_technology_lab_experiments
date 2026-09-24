@@ -15,6 +15,10 @@ When starting:
 1. Set up and authenticate to the AWS environment. This will give you the credentials that you need to access the AWS Secrets Manager, which stores all of our actual credentials and secrets. Verify that you can access AWS Secrets Manager, and hard-fail if not.
 2. Get the GitHub personal access token from the AWS Secrets Manager and use that to authenticate into GitHub. This is stored in the `kova-github-pat` secret as `GITHUB_PAT_TOKEN`.
 
+## Filepaths
+
+Make all code runnable with `uv` from the repo root. Don't invent new filepaths or make code that's runnable from a subfolder, as this causes undesirable filepath conflicts. Never insert into sys.path or edit sys.path.
+
 ## Replications and autoresearch
 
 If a user asks for a replication or an autoresearch run, put it in the `autoresearch/` folder in a subfolder named `{paper name}_{YYYY_MM_DD}`, where the date is the date of the request in UTC. For example, a replication of "Attention Is All You Need" requested on 2026-09-09 goes in `autoresearch/attention_is_all_you_need_2026_09_09/`.
