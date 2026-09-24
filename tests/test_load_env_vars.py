@@ -80,6 +80,16 @@ class TestGetEnvVar:
 
         assert result == ""
 
+    def test_optional_whitespace_only_cached(self) -> None:
+        """Optional allowlisted name returns '' when cached value is whitespace-only."""
+        with patch("lib.load_env_vars.load_secret_field", return_value="   "):
+            with patch("lib.load_env_vars.secrets_manager_client"):
+                result = EnvVarsContainer.get_env_var(
+                    "GITHUB_PAT_TOKEN", required=False
+                )
+
+        assert result == ""
+
     def test_initialization_calls_load_secret_field(self) -> None:
         """First access loads each allowlisted secret exactly once."""
         client = MagicMock()

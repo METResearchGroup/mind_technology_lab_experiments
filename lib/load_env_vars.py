@@ -71,7 +71,10 @@ class EnvVarsContainer:
 
         if raw is None:
             return ""
-        return str(raw)
+        value = str(raw)
+        if not value.strip():
+            return ""
+        return value
 
     @classmethod
     def _get_instance(cls) -> EnvVarsContainer:
