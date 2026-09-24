@@ -9,6 +9,16 @@ Run from the repository root (requires AWS credentials for a live run):
 from __future__ import annotations
 
 import threading
+from typing import Final
+
+from shared.aws.secretsmanager import (  # noqa: F401
+    load_secret_field,
+    secrets_manager_client,
+)
+
+ALLOWLIST: Final[dict[str, tuple[str, str]]] = {
+    "GITHUB_PAT_TOKEN": ("kova-github-pat", "GITHUB_PAT_TOKEN"),
+}
 
 
 class EnvVarsContainer:
@@ -24,5 +34,28 @@ class EnvVarsContainer:
 
     @classmethod
     def get_env_var(cls, name: str, required: bool = False) -> str:
-        """Return an allowlisted value after one-time initialization."""
+        """Get an allowlisted value after container initialization.
+
+        Parameters
+        ----------
+        name
+            Allowlisted environment variable name.
+        required
+            When True, raise ValueError if the name is unknown or the value is empty.
+
+        Returns
+        -------
+        str
+            Cached secret value, or empty string when optional and missing.
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def _get_instance(cls) -> EnvVarsContainer:
+        raise NotImplementedError
+
+    def _ensure_initialized(self) -> None:
+        raise NotImplementedError
+
+    def _initialize_env_vars(self) -> None:
         raise NotImplementedError
