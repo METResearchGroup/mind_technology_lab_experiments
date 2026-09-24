@@ -1,8 +1,9 @@
+# ruff: noqa: E501
 """Load JSON fields from AWS Secrets Manager.
 
 Run from the repository root:
 
-    uv run python -c "from shared.aws.aws_region import AWS_REGION; print(AWS_REGION)"
+    uv run python -c "from shared.aws.secretsmanager import secrets_manager_client; print(secrets_manager_client().__class__.__name__)"
 """
 
 from __future__ import annotations
@@ -20,7 +21,18 @@ class SecretsManagerClient(Protocol):
     """Minimal Secrets Manager client surface for tests."""
 
     def get_secret_value(self, SecretId: str) -> dict[str, str]:
-        """Return a Secrets Manager GetSecretValue response."""
+        """Return a Secrets Manager GetSecretValue response.
+
+        Parameters
+        ----------
+        SecretId
+            Secrets Manager secret name or ARN.
+
+        Returns
+        -------
+        dict[str, str]
+            Boto3 response payload (includes ``SecretString`` when present).
+        """
         ...
 
 
