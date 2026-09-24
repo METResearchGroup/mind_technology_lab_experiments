@@ -29,7 +29,7 @@ class TestGetEnvVar:
             with patch("lib.load_env_vars.secrets_manager_client") as mock_client:
                 mock_client.return_value = MagicMock()
 
-                result = EnvVarsContainer.get_env_var("GH_TOKEN", required=True)
+                result = EnvVarsContainer.get_env_var("GITHUB_PAT_TOKEN", required=True)
 
         assert result == "fake-token"
         mock_load.assert_called_once_with(
@@ -50,17 +50,17 @@ class TestGetEnvVar:
         with patch("lib.load_env_vars.load_secret_field", return_value=""):
             with patch("lib.load_env_vars.secrets_manager_client"):
                 with pytest.raises(ValueError) as exc_info:
-                    EnvVarsContainer.get_env_var("GH_TOKEN", required=True)
+                    EnvVarsContainer.get_env_var("GITHUB_PAT_TOKEN", required=True)
 
-        assert "GH_TOKEN is required but is empty" in str(exc_info.value)
+        assert "GITHUB_PAT_TOKEN is required but is empty" in str(exc_info.value)
 
         EnvVarsContainer._instance = None
         with patch("lib.load_env_vars.load_secret_field", return_value="   "):
             with patch("lib.load_env_vars.secrets_manager_client"):
                 with pytest.raises(ValueError) as exc_info:
-                    EnvVarsContainer.get_env_var("GH_TOKEN", required=True)
+                    EnvVarsContainer.get_env_var("GITHUB_PAT_TOKEN", required=True)
 
-        assert "GH_TOKEN is required but is empty" in str(exc_info.value)
+        assert "GITHUB_PAT_TOKEN is required but is empty" in str(exc_info.value)
 
     def test_optional_missing_unknown(self) -> None:
         """Optional unknown name returns empty string without calling AWS."""
@@ -74,7 +74,9 @@ class TestGetEnvVar:
         """Optional allowlisted name returns empty string when secret is blank."""
         with patch("lib.load_env_vars.load_secret_field", return_value=""):
             with patch("lib.load_env_vars.secrets_manager_client"):
-                result = EnvVarsContainer.get_env_var("GH_TOKEN", required=False)
+                result = EnvVarsContainer.get_env_var(
+                    "GITHUB_PAT_TOKEN", required=False
+                )
 
         assert result == ""
 
@@ -82,7 +84,9 @@ class TestGetEnvVar:
         """Optional allowlisted name returns '' when cached value is whitespace-only."""
         with patch("lib.load_env_vars.load_secret_field", return_value="   "):
             with patch("lib.load_env_vars.secrets_manager_client"):
-                result = EnvVarsContainer.get_env_var("GH_TOKEN", required=False)
+                result = EnvVarsContainer.get_env_var(
+                    "GITHUB_PAT_TOKEN", required=False
+                )
 
         assert result == ""
 
@@ -93,7 +97,7 @@ class TestGetEnvVar:
             "lib.load_env_vars.load_secret_field", return_value="token"
         ) as mock_load:
             with patch("lib.load_env_vars.secrets_manager_client", return_value=client):
-                EnvVarsContainer.get_env_var("GH_TOKEN")
-                EnvVarsContainer.get_env_var("GH_TOKEN")
+                EnvVarsContainer.get_env_var("GITHUB_PAT_TOKEN")
+                EnvVarsContainer.get_env_var("GITHUB_PAT_TOKEN")
 
         mock_load.assert_called_once_with("github-pat-token", "GH_TOKEN", client)

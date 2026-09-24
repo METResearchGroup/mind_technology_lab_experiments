@@ -3,7 +3,7 @@
 
 Run from the repository root (requires AWS credentials for a live run):
 
-    uv run python -c "from lib.load_env_vars import EnvVarsContainer; value = EnvVarsContainer.get_env_var('GH_TOKEN', required=True); print('ok', len(value))"
+    uv run python -c "from lib.load_env_vars import EnvVarsContainer; value = EnvVarsContainer.get_env_var('GITHUB_PAT_TOKEN', required=True); print('ok', len(value))"
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from typing import Final
 from shared.aws.secretsmanager import load_secret_field, secrets_manager_client
 
 ALLOWLIST: Final[dict[str, tuple[str, str]]] = {
-    "GH_TOKEN": ("github-pat-token", "GH_TOKEN"),
+    "GITHUB_PAT_TOKEN": ("github-pat-token", "GH_TOKEN"),
 }
 
 
