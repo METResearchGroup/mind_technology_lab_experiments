@@ -10,7 +10,10 @@ from __future__ import annotations
 import json
 from typing import Protocol
 
+import boto3
 from botocore.exceptions import ClientError
+
+from shared.aws.aws_region import AWS_REGION
 
 
 class SecretsManagerClient(Protocol):
@@ -28,7 +31,7 @@ def secrets_manager_client() -> SecretsManagerClient:
     SecretsManagerClient
         Boto3 Secrets Manager client for :data:`shared.aws.aws_region.AWS_REGION`.
     """
-    raise NotImplementedError
+    return boto3.client("secretsmanager", region_name=AWS_REGION)
 
 
 def load_secret_field(
