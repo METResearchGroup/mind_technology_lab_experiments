@@ -1,0 +1,4 @@
+{
+  "name": "mind_technology_lab_experiments",
+  "install": "bash .cursor/install.sh"
+}
