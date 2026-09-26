@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "Experimental proof-of-concept work for Mind Technology Lab."
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "boto3",
+    "pandas",
+]
 
 [project.optional-dependencies]
 test = [
@@ -55,7 +58,7 @@ indent-style = "space"
 [tool.pyright]
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
-include = ["tests"]
+include = ["shared", "lib", "tests"]
 exclude = [
     ".cursor",
     ".agents",
