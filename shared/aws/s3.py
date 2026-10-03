@@ -15,8 +15,7 @@ import boto3
 import pandas as pd
 from botocore.exceptions import ClientError
 
-# Lab S3 bucket for experiment artifacts. Prefixes match the local folder path.
-DEFAULT_BUCKET = "mind-technology-lab-experiments"
+from shared.aws.constants import DEFAULT_BUCKET
 
 NOT_FOUND_ERROR_CODES = frozenset({"404", "NoSuchKey", "NotFound"})
 

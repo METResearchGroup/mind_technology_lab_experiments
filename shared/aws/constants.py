@@ -7,3 +7,6 @@ Run from the repository root:
 """
 
 DEFAULT_REGION_NAME = "us-east-2"
+
+# Lab S3 bucket for experiment artifacts. Prefixes match the local folder path.
+DEFAULT_BUCKET = "mind-technology-lab-experiments"

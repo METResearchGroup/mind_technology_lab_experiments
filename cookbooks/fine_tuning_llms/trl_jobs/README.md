@@ -86,3 +86,8 @@ Here's a peek at what some of these chats look like:
   }
 ]
 ```
+
+This folder has two key files:
+
+- `runner.py`: This handles submitting the `train.py` as a Hugging Face job. It manages uploading the script, dependencies, files, and configuration details that Hugging Face needs to execute the job.
+- `train.py`: defines the actual training run.

@@ -17,6 +17,8 @@ SECRET_TOKENS: Final[dict[str, tuple[str, str]]] = {
     "GITHUB_PAT_TOKEN": ("github-pat-token", "GH_TOKEN"),
     "HF_TOKEN": ("huggingface-token", "HF_TOKEN"),
     "WANDB_API_KEY": ("wandb-api-key", "WANDB_API_KEY"),
+    "AWS_ACCESS_KEY_ID": ("aws-credentials", "AWS_ACCESS_KEY_ID"),
+    "AWS_ACCESS_KEY_SECRET": ("aws-credentials", "AWS_ACCESS_KEY_SECRET"),
 }
 
 
