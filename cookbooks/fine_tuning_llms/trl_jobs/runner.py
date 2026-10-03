@@ -9,15 +9,20 @@ Launch from the repository root:
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from huggingface_hub import run_uv_job, sync_job_volume
 
-from lib.load_env_vars import EnvVarsContainer
-from shared.aws.constants import DEFAULT_REGION_NAME
+# annoying workaround for now.
+REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from lib.load_env_vars import EnvVarsContainer  # noqa: E402
+from shared.aws.constants import DEFAULT_REGION_NAME  # noqa: E402
 
 TRAIN_SCRIPT = Path(__file__).resolve().with_name("train.py")
-REPO_ROOT = Path(__file__).resolve().parents[3]
 SHARED_PACKAGE_DIR = REPO_ROOT / "shared"
 LIB_PACKAGE_DIR = REPO_ROOT / "lib"
 REPO_MOUNT_PATH = "/mnt/repo"

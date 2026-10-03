@@ -91,3 +91,15 @@ This folder has two key files:
 
 - `runner.py`: This handles submitting the `train.py` as a Hugging Face job. It manages uploading the script, dependencies, files, and configuration details that Hugging Face needs to execute the job.
 - `train.py`: defines the actual training run.
+
+When we run, we can check the status of the job in the [Hugging Face jobs page](https://huggingface.co/jobs/).
+
+![Screenshot of Hugging Face Jobs UI](static/hf_jobs_screen.png)
+
+We can take a look at the Wandb project page to see how it's looking:
+
+![Screenshot of Weights & Biases Projects Page](static/wandb_projects_page.png)
+
+With a few more clicks, we can see the logs related to the given project run:
+
+![Screenshot of Weights & Biases Training Job Run](static/wandb_training_job_run.png)
