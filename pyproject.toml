@@ -17,6 +17,13 @@ test = [
     "pytest>=8.0.0",
     "ruff>=0.9.0",
 ]
+fine_tuning_llms = [
+    "datasets>=3.0.0",
+    "huggingface_hub>=0.30.0",
+    "torch>=2.4.0",
+    "transformers>=4.45.0",
+    "trl>=0.12.0",
+]
 
 # The repository root is a uv workspace. The root itself is not a package; it
 # holds shared tooling and the single shared virtual environment. Each folder
