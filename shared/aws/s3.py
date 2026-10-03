@@ -2,7 +2,7 @@
 
 Run from the repository root:
 
-    uv run python -c "from shared.aws.s3 import S3; print(S3.__name__)"
+    uv run python -c "from shared.aws.s3 import DEFAULT_BUCKET; print(DEFAULT_BUCKET)"
 """
 
 from __future__ import annotations
@@ -15,13 +15,21 @@ import boto3
 import pandas as pd
 from botocore.exceptions import ClientError
 
+# Lab S3 bucket for experiment artifacts. Prefixes match the local folder path.
+DEFAULT_BUCKET = "mind-technology-lab-experiments"
+
 NOT_FOUND_ERROR_CODES = frozenset({"404", "NoSuchKey", "NotFound"})
 
 
 class S3:
-    """Boto3 S3 client bound to one bucket."""
+    """Boto3 S3 client bound to one bucket.
 
-    def __init__(self, bucket: str, *, region_name: str | None = None) -> None:
+    ``bucket`` defaults to :data:`DEFAULT_BUCKET`.
+    """
+
+    def __init__(
+        self, bucket: str = DEFAULT_BUCKET, *, region_name: str | None = None
+    ) -> None:
         client_kwargs: dict[str, Any] = {}
         if region_name is not None:
             client_kwargs["region_name"] = region_name
