@@ -13,8 +13,10 @@ from typing import Final
 
 from shared.aws.secretsmanager import load_secret_field, secrets_manager_client
 
-ALLOWLIST: Final[dict[str, tuple[str, str]]] = {
+SECRET_TOKENS: Final[dict[str, tuple[str, str]]] = {
     "GITHUB_PAT_TOKEN": ("github-pat-token", "GH_TOKEN"),
+    "HF_TOKEN": ("huggingface-token", "HF_TOKEN"),
+    "WANDB_API_KEY": ("wandb-api-key", "WANDB_API_KEY"),
 }
 
 
@@ -50,7 +52,7 @@ class EnvVarsContainer:
         ValueError
             When ``required`` is True and the name is unknown or the value is empty.
         """
-        if name in ALLOWLIST:
+        if name in SECRET_TOKENS:
             instance = cls._get_instance()
             instance._ensure_initialized()
             raw: str | None = instance._env_vars.get(name)
@@ -95,5 +97,5 @@ class EnvVarsContainer:
 
     def _initialize_env_vars(self) -> None:
         client = secrets_manager_client()
-        for env_name, (secret_id, field_name) in ALLOWLIST.items():
+        for env_name, (secret_id, field_name) in SECRET_TOKENS.items():
             self._env_vars[env_name] = load_secret_field(secret_id, field_name, client)
