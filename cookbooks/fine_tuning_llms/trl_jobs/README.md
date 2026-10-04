@@ -6,11 +6,11 @@ We'll go over some nuts-and-bolts for how to do fine-tuning for LLMs. First, let
 
 When LLMs are trained from scratch (i.e., pretraining), they're trained on predicting the next token. They're trained on large datasets, including all the data on the Internet, all books, basically anything that companies can get their hands on. But this by itself doesn't make an LLM useful, as just predicting the next token doesn't make an LLM actually good at doing work. The next step is often SFT (supervised fine-tuning), where models are trained on next-token completion, but on specifically formatted and curated text, to push the models to respond in a certain way.
 
-One (overly simplified) way to imagine the steps of building an LLM is something like:
+One (overly simplified) way to imagine the steps of building an LLM is something like building a sculpture:
 
-1. Pre-training: the model learns and memorizes large swaths of information. This is where the LLM is fed reams of information from the Internet. Concretely, this initializes the weights of the knowledge, which forms the bulk of the "knowledge" of the LLM.
+1. Pre-training: the model learns and memorizes large swaths of information. This is where the LLM is fed reams of information from the Internet. Concretely, this initializes the weights of the knowledge, which forms the bulk of the "knowledge" of the LLM. This is giving the model the "block" of knowledge that then needs to be sculpted to reveal the masterpiece underneath.
 2. **SFT (we're here)**: the LLM is trained on very specific datasets, to teach it what an assistant should sound like, what valid English syntax is, what kind of code compiles, etc. This is the first large chiseling step for LLMs.
-3. RLHF/RLVR (and other post-training methods): these are use-case specific methods for honing and refining the LLM to become experts at certain tasks, as well as refining the model's personality, expressions, and filters.
+3. RLHF/RLVR (and other post-training methods): these are use-case specific methods for honing and refining the LLM to become experts at certain tasks, as well as refining the model's personality, expressions, and filters. These are the fine chisels and cuts that add the detail and refinement to the final product.
 
 Our approach is motivated by [this tutorial](https://huggingface.co/docs/trl/jobs_training?script_type=python), which is a good overview for how to do SFT using Hugging Face Jobs.
 
@@ -273,7 +273,7 @@ Metrics are logged every 10 optimizer steps. We run this training run for 3 epoc
 
 Let's take a look at how model training turned out:
 
-![Model training loss and metrics](../static/model_training_results.png)
+![Model training loss and metrics](static/model_training_results.png)
 
 We measure two sets of metrics:
 
@@ -290,10 +290,16 @@ We see that throughout our brief training run, the loss and accuracy both improv
 
 We also see the model files saved in S3:
 
-![S3 Stored Experimental Artifacts](../static/s3_stored_experimental_artifacts.png)
+![S3 Stored Experimental Artifacts](static/s3_stored_experimental_artifacts.png)
 
 Let's compare how the fine-tuned model compares to the original Qwen model.
 
 ...
 
-Let's also run our model against some benchmarks (use DeepEval here).
+Let's also run our model against some benchmarks. We use [DeepEval](https://deepeval.com/docs/introduction), a framework that systematizes testing LLM applications with evaluations and benchmarks. Specifically, we'll use [MMLU](https://deepeval.com/docs/benchmarks-mmlu), a benchmark for evaluating LLMs through multiple-choice questions. Let's see how our new model does compared to the original model.
+
+(Put MMLU results here as a table).
+
+## Conclusion
+
+...
