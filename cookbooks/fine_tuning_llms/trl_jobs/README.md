@@ -1,20 +1,18 @@
-# SFT 101
+# Intro to fine-tuning methods: SFT 101
 
 ## Context
 
-Here, we'll be following [this tutorial](https://huggingface.co/docs/trl/jobs_training?script_type=python).
+We'll go over some nuts-and-bolts for how to do fine-tuning for LLMs. First, let's discuss SFT, which is often the first step of fine-tuning LLMs.
 
-### How does the LLM do out-of-the-box?
+When LLMs are trained from scratch (i.e., pretraining), they're trained on predicting the next token. They're trained on large datasets, including all the data on the Internet, all books, basically anything that companies can get their hands on. But this by itself doesn't make an LLM useful, as just predicting the next token doesn't make an LLM actually good at doing work. The next step is often SFT (supervised fine-tuning), where models are trained on next-token completion, but on specifically formatted and curated text, to push the models to respond in a certain way.
 
-...
+One (overly simplified) way to imagine the steps of building an LLM is something like:
 
-### Why do we need to fine-tune?
+1. Pre-training: the model learns and memorizes large swaths of information. This is where the LLM is fed reams of information from the Internet. Concretely, this initializes the weights of the knowledge, which forms the bulk of the "knowledge" of the LLM.
+2. **SFT (we're here)**: the LLM is trained on very specific datasets, to teach it what an assistant should sound like, what valid English syntax is, what kind of code compiles, etc. This is the first large chiseling step for LLMs.
+3. RLHF/RLVR (and other post-training methods): these are use-case specific methods for honing and refining the LLM to become experts at certain tasks, as well as refining the model's personality, expressions, and filters.
 
-...
-
-(take a regular auto-completion dataset and then get it to be chat-working)
-
-(simple example would be pasting an output from the regular Qwen model and then the post-trained version)
+Our approach is motivated by [this tutorial](https://huggingface.co/docs/trl/jobs_training?script_type=python), which is a good overview for how to do SFT using Hugging Face Jobs.
 
 ### What is Hugging Face Jobs?
 
@@ -113,8 +111,10 @@ To see more, check out the [Hugging Face dataset page](https://huggingface.co/da
 
 This folder has these files:
 
-- `runner.py`: This handles submitting the `train.py` as a Hugging Face job. It manages uploading the script, dependencies, files, and configuration details that Hugging Face needs to execute the job.
+- `runner.py`: Submits `train.py` or `evaluate.py` as a Hugging Face Job.
 - `train.py`: defines the actual training run.
+- `inference.py`: downloads the SFT checkpoint from S3 on the job machine and runs greedy chat generation.
+- `evaluate.py`: compares base vs fine-tuned replies on the first 50 Capybara training conversations, uploads JSON to S3, and the runner downloads it locally to `outputs/`.
 
 ## What happens when we run the code?
 
@@ -275,6 +275,25 @@ Let's take a look at how model training turned out:
 
 ![Model training loss and metrics](../static/model_training_results.png)
 
+We measure two sets of metrics:
+
+- **Training loss** is the average surprise of the correct token, $-\log p(\text{correct token})$. A loss of 0.85 means the correct token’s geometric-mean probability is about $e^{-0.85} \approx 0.43$. Lower is better.
+- **Mean token accuracy** is the fraction of positions where the single most likely token is the token that was actually in the example. It ignores how much probability the model put on that token. 0.78 means the top guess was right about 78 times out of 100.
+
+We see that throughout our brief training run, the loss and accuracy both improved per epoch:
+
+| Pass    | Mean loss | Mean token accuracy | Loss at the end of the pass | Accuracy at the end of the pass |
+|---------|-----------|--------------------|-----------------------------|---------------------------------|
+| Epoch 1 |   1.46    |       0.649        |           1.36              |             0.668               |
+| Epoch 2 |   1.09    |       0.721        |           1.06              |             0.729               |
+| Epoch 3 |   0.83    |       0.785        |           0.85              |             0.782               |
+
 We also see the model files saved in S3:
 
 ![S3 Stored Experimental Artifacts](../static/s3_stored_experimental_artifacts.png)
+
+Let's compare how the fine-tuned model compares to the original Qwen model.
+
+...
+
+Let's also run our model against some benchmarks (use DeepEval here).
