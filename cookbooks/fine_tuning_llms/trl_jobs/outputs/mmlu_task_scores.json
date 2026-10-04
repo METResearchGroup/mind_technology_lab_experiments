@@ -1,0 +1,30 @@
+{
+  "base_model": "Qwen/Qwen2.5-0.5B",
+  "sft_s3_uri": "s3://mind-technology-lab-experiments/cookbooks/fine_tuning_llms/trl_jobs/Qwen2.5-0.5B_2026_10_03-22:08:25",
+  "n_shots": 5,
+  "batch_size": 8,
+  "max_new_tokens": 16,
+  "tasks": [
+    "college_computer_science",
+    "philosophy",
+    "marketing",
+    "moral_scenarios",
+    "moral_disputes"
+  ],
+  "scores": {
+    "base": {
+      "college_computer_science": 0.43,
+      "philosophy": 0.4983922829581994,
+      "marketing": 0.7564102564102564,
+      "moral_scenarios": 0.24134078212290502,
+      "moral_disputes": 0.523121387283237
+    },
+    "fine_tuned": {
+      "college_computer_science": 0.38,
+      "philosophy": 0.4565916398713826,
+      "marketing": 0.6794871794871795,
+      "moral_scenarios": 0.23575418994413408,
+      "moral_disputes": 0.4913294797687861
+    }
+  }
+}

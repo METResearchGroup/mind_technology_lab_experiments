@@ -31,6 +31,11 @@ EVAL_RESULTS_S3_URI = (
     f"s3://{DEFAULT_BUCKET}/{ARTIFACT_PREFIX}/{DEFAULT_SFT_RUN_NAME}/"
     f"{EVAL_RESULTS_FILENAME}"
 )
+MMLU_RESULTS_FILENAME = "mmlu_task_scores.json"
+MMLU_RESULTS_S3_URI = (
+    f"s3://{DEFAULT_BUCKET}/{ARTIFACT_PREFIX}/{DEFAULT_SFT_RUN_NAME}/"
+    f"{MMLU_RESULTS_FILENAME}"
+)
 
 
 def default_device_and_dtype() -> tuple[str, torch.dtype]:
