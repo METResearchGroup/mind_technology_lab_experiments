@@ -24,7 +24,7 @@ All of this gets us to the point where we can focus on fine-tuning instead of in
 
 ## Model and dataset
 
-We'll be training the `Qwen/Qwen3-0.6B` model on the `trl-lib/Capybara` dataset. The `trl-lib/Capybara` dataset is Hugging Face's training-ready reformat of the Capybara instruciton-tuning dataset.
+We'll be training the `Qwen/Qwen3-0.6B` model on the `trl-lib/Capybara` dataset. The `trl-lib/Capybara` dataset is Hugging Face's training-ready reformat of the Capybara instruction-tuning dataset.
 
 The dataset is used for SFT of chat-oriented models. It lets us teach models what conversation-style interactions look like. The original Capybara dataset is designed to teach LLMs what "conversations" look like; the actual dataset is a synthetic multi-turn dataset. It's not useful for things like preference training or alignment, it's used for making sure that models can follow conversation-style interactions.
 
@@ -213,17 +213,13 @@ We calculate this scalar loss across each position in the text (so, a max of $S=
 
 #### What happens after we calculate the loss?
 
-After we calculate the loss, we ...
+After we calculate the loss, we take that single number and update the weights of the model using gradient descent. We use gradient checkpointing to recompute activations during the backwards pass, which reduces the number of values to save at runtime. We use clipping to make sure that the gradient length is 1. We use AdamW for the weight update step.
 
-First, we take a batch of conversations. It's computationally easier to
-1. Take a batch of 8 conversations.
-2. For each conversation, turn it into a 1,024-token sequence. We add padding to each sequence that's too short, and truncate the longer ones. We get a tensor, in our scenario, of shape `(8, 1,024)`.
-3. For each of the 8 conversations in the batch, we predict each token given
+Then, the step is done, and we move on to the next batch. Every 10 steps, we log the scalar loss.
 
 #### How does this all look in pseudocode?
 
 In pseudocode, what we're doing looks something like this:
-
 
 ```markdown
 for epoch in (1, 2, 3):
@@ -272,3 +268,13 @@ We're doing SFT, so we update all the weights in our model.
 ### When do we see logging?
 
 Metrics are logged every 10 optimizer steps. We run this training run for 3 epochs (~50 minutes of training on the A100). We have 15,808 training examples, and we run them in batches of 8 examples, which gives us 1,976 steps per epoch.
+
+## How did this turn out?
+
+Let's take a look at how model training turned out:
+
+![Model training loss and metrics](../static/model_training_results.png)
+
+We also see the model files saved in S3:
+
+![S3 Stored Experimental Artifacts](../static/s3_stored_experimental_artifacts.png)
