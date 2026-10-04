@@ -202,12 +202,25 @@ This new vector of softmax values gives us the predicted probabilities of the ne
 1. We can take the most likely token and just say that it's our next token.
 2. We can tell the model what token actually came next, and then see how likely the model thought that was (we call this the "surprise" metric).
 
-...
+#### What's the loss function?
+
+For any ML model, we need a loss function to minimize. For us, that metric is called **surprise**. We tell the model what comes next, and we measure how likely the model would've predicted that token. Concretely, let's say that for our example, $Z_{0,1,:}$ is the score vector for what follows "The quick" and $p_{0,1,:}$ is that vector after the softmax. Let's say that the true next token is token 15 (let's say token 15 = brown). Then, the surprise at that position is:
+
+$$\ell_{0,1} = -\log p_{\text{next word = 'brown'}}$$
+$$\ell_{0,1} = -\log p_{0,1,15}$$
+
+We calculate this scalar loss across each position in the text (so, a max of $S=1,024$ per text), across each text in the $B=8$ batch. Then we take the average loss.
+
+#### What happens after we calculate the loss?
+
+After we calculate the loss, we ...
 
 First, we take a batch of conversations. It's computationally easier to
 1. Take a batch of 8 conversations.
 2. For each conversation, turn it into a 1,024-token sequence. We add padding to each sequence that's too short, and truncate the longer ones. We get a tensor, in our scenario, of shape `(8, 1,024)`.
 3. For each of the 8 conversations in the batch, we predict each token given
+
+#### How does this all look in pseudocode?
 
 In pseudocode, what we're doing looks something like this:
 
@@ -215,7 +228,43 @@ In pseudocode, what we're doing looks something like this:
 ```markdown
 for epoch in (1, 2, 3):
     for batch in batches: # 1 batch = 8 conversations.
-        tokens = c
+        # real token counts s_1, ..., s_8, each s_b <= 1024
+        X      = chat_format(batch)          # int64,  (8, S)
+        M      = attention_mask(X)           # int64,  (8, S), 1 on real tokens, 0 on padding
+        L      = X                           # int64,  (8, S)
+        L[M == 0] = -100                     # padding is ignored; user tokens stay
+
+        H = transformer(X, M)                # bf16,   (8, S, 896)
+                                             # position t sees only tokens 0..t
+
+        # shift: hidden state t predicts label t+1
+        H_in = H[:, 0:S-1, :]                # bf16,   (8, S-1, 896)
+        Y    = L[:, 1:S]                     # int64,  (8, S-1)
+
+        # flatten, then pack the N valid pairs to the front
+        # N = sum_b (s_b - 1)  <= 8 * (S - 1)
+        h = pack_valid(H_in, Y)              # bf16,   (N, 896)
+        y = pack_valid(Y)                    # int64,  (N,)
+
+        loss = 0                             # float32 scalar, shape ()
+        for start in 0, 256, 512, ..., covering N:
+            h_k = h[start:start+256]         # bf16,   (256, 896)
+            y_k = y[start:start+256]         # int64,  (256,)
+            Z_k = h_k @ W.T                  # float32,(256, 151936)
+                                             # W is (151936, 896); this block is discarded after the sum
+            p_k = softmax(Z_k, dim=-1)       # float32,(256, 151936)
+            loss += sum(-log p_k[i, y_k[i]] for i with y_k[i] != -100)
+
+        loss = loss / N                      # float32 scalar, shape ()
+
+        backward(loss)                       # one gradient per weight, same shape as that weight
+        if ||gradients|| > 1:
+            gradients *= 1 / ||gradients||
+        adamw_update(every weight)           # fp32 Adam averages; weights used in the forward in bf16
+        learning_rate = linear_decay(step)   # scalar, from 2e-5 down to 0
+
+        if step % 10 == 0:
+            log loss                         # Python float
 ```
 
 We're doing SFT, so we update all the weights in our model.
