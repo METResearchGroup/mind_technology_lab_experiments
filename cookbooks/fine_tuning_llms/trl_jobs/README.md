@@ -185,12 +185,24 @@ Recall that the first dimension, $B$, corresponds to each of the $B$ sentences i
 
 > "The quick brown fox jumped over the lazy dog"
 
-For this sentence, its corresponding logit output has shape $(1, S, V)$. Let's zoom in at what's in the second entry of this tensor, at $(1, 1, V)$. These are scores that are assigned by the model. These scores aren't necessarily normalized nor can they be directly compared, so you can't look at a single logit value and interpret much without seeing the rest of the values.
+For this sentence, its corresponding logit output has shape $(1, S, V)$. Let's say this is the first sentence of our batch. Let's then zoom in at what's in the second entry of this tensor, at $(0, 1, V)$.
 
-To get the probabilities
+The scores that the LLM assigned to predict the next token for the substring "The quick" are defined in:
 
+$$Z_{0,1,V} \in \mathbb{R}^V$$
 
+The LLM considers and assigns a score for how likely each of the `V=151,936` tokens are to be the next token. These are scores that are assigned by the model. These scores aren't necessarily normalized nor can they be directly compared, so you can't look at a single logit value and interpret much without seeing the rest of the values.
 
+However, we can take that logit vector and get a vector of probabilities by taking the softmax over the vocabulary axis. Concretely, if $Z_{b,t,v}$ is one logit value, we can calculate the probability of a token, given its logit value, with the equation:
+
+$$p_{b,t,v} = \frac{\exp{Z_{b,t,v}}}{\sum_{u=0}^{V-1}\exp{Z_{b,t,u}}}$$
+
+This new vector of softmax values gives us the predicted probabilities of the next token, what the model thinks should come next after "The quick". We can do a few things here:
+
+1. We can take the most likely token and just say that it's our next token.
+2. We can tell the model what token actually came next, and then see how likely the model thought that was (we call this the "surprise" metric).
+
+...
 
 First, we take a batch of conversations. It's computationally easier to
 1. Take a batch of 8 conversations.
