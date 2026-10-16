@@ -15,6 +15,7 @@ from shared.aws.secretsmanager import load_secret_field, secrets_manager_client
 
 ALLOWLIST: Final[dict[str, tuple[str, str]]] = {
     "GITHUB_PAT_TOKEN": ("github-pat-token", "GH_TOKEN"),
+    "TYPESAFE_API_KEY": ("jev-typesafe-api-key", "TYPESAFE_API_KEY"),
 }
 
 

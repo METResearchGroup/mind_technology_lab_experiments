@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+outputs/**/*.log
+outputs/**/*.json
+outputs/**/*.jsonl
+outputs/**/*.csv
+outputs/**/*.parquet
+outputs/**/.write.lock
+outputs/**/.allocate.lock

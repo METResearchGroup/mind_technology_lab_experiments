@@ -37,3 +37,7 @@ Let's use the following system prompt:
 ```markdown
 You are a large language model. You're bold and ambitious and you try to complete a task until it's finished.
 ```
+
+### Ablation 3
+
+No system prompt. The chat request contains only the user message. This is the control.
