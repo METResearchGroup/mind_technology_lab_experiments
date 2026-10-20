@@ -59,7 +59,7 @@ Create or edit only these paths (eleven active templates plus archives):
    - **Do-Not-Answer, XSTest (deduped prompts), JailbreakBench, WildGuardMix, HarmBench:** no named dev split. Hold out twenty percent with the same hash of `example_id` rule.
    - **Selection within the dev pool:** sort by `example_id` ascending and take the first twenty rows so reruns pick the same items.
 
-3. **Confirm wording.** For each dataset, read twenty development `text` values alongside the template instructions. Placeholders in instructions must match the state field names the scorer passes (for example `` `text` ``, `` `prompt` ``, `` `comment` ``) as in the harness `build` methods. Adjust instructions until they are final for the study. This step does not call providers; confirmation is manual review against development rows.
+3. **Confirm wording.** For each dataset, read twenty development `text` values alongside the template instructions. Placeholders in instructions must match the state field names the scorer passes (for example `` `text` ``, `` `prompt` ``, `` `comment` ``) as in the harness `build` methods. Adjust instructions until they are final for the study. This step does not call providers. Confirmation is manual review against development rows.
 
 4. **Six overlapping harness datasets.** Start from the harness `build` question dicts (copy instruction strings and criteria structure, not row values):
    - `toxigen`: heads `toxic` (Noul) and `toxicity` (Score with five levels from `ToxiGen.levels` in `safety.py`).

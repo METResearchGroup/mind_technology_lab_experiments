@@ -4,7 +4,7 @@
 
 - **Depends on:** Step 1 (scaffold, loaders, scorers, cache stub) and Step 2 (one confirmed template per dataset under `data/templates/{dataset}.json`).
 - **Task:** Implement and run `experiments/safety_decision_models_2026_10_19/scripts/smoke.py` so 20 development `ExampleRecord` rows flow end to end through each decision arm, write predictions only into the gitignored cache, verify cache hits on a second pass, and compare Jev smoke metrics to the published harness primary metric for the overlapping datasets represented in the 20 items.
-- **Execution order (plan dependencies):** Step 5 creates the numbered guardrail in `us-east-2` after Step 4. Step 3 still ships one script that accepts all four arms (`jev`, `clef`, `clef-flash`, `guardrails`). For the first smoke pass in Step 3, run **Jev, Clef, and Clef-flash** only. Run the **Guardrails** arm with the same script **after Step 5** (detect-only `ApplyGuardrail` must return a band). Step 4 (harness check) may proceed once the three decision-model arms pass; Step 6 needs both the Step 3 decision-model smoke and the post-Step 5 Guardrails smoke.
+- **Execution order (plan dependencies):** Step 5 creates the numbered guardrail in `us-east-2` after Step 4. Step 3 still ships one script that accepts all four arms (`jev`, `clef`, `clef-flash`, `guardrails`). For the first smoke pass in Step 3, run **Jev, Clef, and Clef-flash** only. Run the **Guardrails** arm with the same script **after Step 5** because detect-only `ApplyGuardrail` must return a band. Step 4 (harness check) may proceed once the three decision-model arms pass. Step 6 needs both the Step 3 decision-model smoke and the post-Step 5 Guardrails smoke.
 - **Out of scope:** Full core-pack scoring (`run_score.py`), harness check on six full datasets (Step 4), guardrail creation (Step 5), pytest, any `tests/` directory, committing predictions or Do-Not-Answer question text.
 
 Proposal mapping: section 4 (smoke paragraph under Storage and checks), section 5 (`scripts/smoke.py`), section 10 step 3.
@@ -43,7 +43,7 @@ Do not change scorers except by importing and calling `DecisionScorer.score`. Do
 1. Replace the Step 1 stub in `scripts/smoke.py` with a CLI that:
    - Loads 20 development `ExampleRecord` rows (same development pool Step 2 used for template confirmation; stable selection documented in the script or `configs/study.json` smoke section if present).
    - For each requested arm, loads `QuestionSpec` from `data/templates/{dataset}.json` per row's `dataset` field and `template_version` from the template file hash.
-   - Invokes the matching scorer's `score(records, question)` once for the batch of 20 (or per dataset subgroup if the scorers require one question spec per dataset).
+   - Calls the matching scorer's `score(records, question)` once for the batch of 20 (or per dataset subgroup if the scorers require one question spec per dataset).
    - Asserts every `PredictionRecord` has the expected fields; decision-model arms must have non-null `probability`; Guardrails must have non-null `band`.
    - Runs the **same** 20 items a second time and proves each lookup uses `cache/responses.db` with **no new provider HTTP/API call** (log or count provider calls; second pass must be cache-only).
    - For Jev rows, computes the same **primary metric** as the published harness check for each dataset present in the 20 items and checks comparability (metric code path must run; stop if comparison to published intervals is impossible because templates or labels do not align).

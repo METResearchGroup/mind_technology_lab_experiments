@@ -1,6 +1,6 @@
 # Step 7: Fit thresholds, metrics, figures, and S3 upload
 
-Turn saved prediction files from step 6 into development-tuned thresholds, full metrics (including stack policies), eight figure PNGs, an updated run manifest, and an S3 mirror of the experiment tree. This step does not call providers and does not rescore rows.
+The implementer turns saved prediction files from step 6 into development-tuned thresholds, full metrics (including stack policies), eight figure PNGs, an updated run manifest, and an S3 mirror of the experiment tree. This step does not call providers and does not rescore rows.
 
 ## Scope
 
