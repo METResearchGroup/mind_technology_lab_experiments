@@ -1,12 +1,7 @@
 \section{Discussion}
 \label{sec:discussion}
 
-Publish the guardrail crosswalk with any headline miss rate: JailbreakBench shows that Prompt-Attack-only mapping dominates strength sweeps.
-Do not compare a single miss number across harm types when HarmBench configs and Do-Not-Answer risk areas pull in opposite directions.
-Use union when the guardrail still catches harmful rows and its benign FPR is low (XSTest); expect little from cascade when the deferral band is a single point on WildGuardMix.
-Stacking cannot rescue a guardrail that already misses 0.98 of harmful JailbreakBench rows under the registered mapping.
-Jev wins on latency and price in this pack but not on every miss metric.
-
-These rules describe prompt-level filters on public benchmarks.
-They are not a certification of a mental-health product, and they do not test users or downstream chat models.
+\textbf{Rule 1:} publish the category crosswalk with any guardrail miss rate (JailbreakBench shows Prompt-Attack-only mapping dominates registered strength sweeps).
+\textbf{Rule 2:} use union only when the guardrail still blocks harm and benign FPR stays low (XSTest); stacking cannot rescue a path that already misses 0.98 of harmful JailbreakBench rows under the registered mapping.
+We do not treat a pooled miss, a post-hoc any-filter number, or a low JailbreakBench miss under one mapping as certification of a mental-health product or of a deployed product.
 Miss means the screen allowed the text under stated thresholds; it is not attack success against a target LLM.

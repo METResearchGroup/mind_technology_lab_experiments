@@ -1,7 +1,8 @@
 \section{Additional Tables}
 \label{sec:appendix-tables}
 
-Run \texttt{20261020T040920Z\_90c5fd13} (metrics JSON \texttt{outputs/metrics/20261020T040920Z\_90c5fd13.json}). Primary metrics below follow \texttt{RESULTS.md} at four decimal places unless noted.
+Run \texttt{20261020T040920Z\_90c5fd13} (metrics JSON \texttt{outputs/metrics/}\\\texttt{20261020T040920Z\_90c5fd13.json}).
+Primary metrics below follow \texttt{RESULTS.md} at four decimal places unless noted.
 
 \begin{table}[htbp]
 \centering
@@ -54,71 +55,6 @@ OpenAI Mod. & mean AUPRC & Clef-flash & 0.7048 & 0.7099 \\
 \end{tabular}
 \end{table}
 
-\begin{longtable}{@{}lllrr@{}}
-\caption{Core-pack primary metrics at development-tuned thresholds and at score threshold 0.5. Source: \texttt{RESULTS.md} core-pack table (\texttt{run\_id=20261020T040920Z\_90c5fd13}). Guardrail arms report miss rate or detection rate only at medium strength; tuned column is not applicable (\texttt{n/a}).}
-\label{tab:core-pack-primary}\\
-\toprule
-Dataset & Arm & Metric & Tuned & At 0.5 \\
-\midrule
-\texttt{toxigen} & jev & accuracy & 0.8755 & 0.8755 \\
-\texttt{toxigen} & clef & accuracy & 0.7213 & 0.7213 \\
-\texttt{toxigen} & clef-flash & accuracy & 0.8074 & 0.8074 \\
-\texttt{toxigen} & guardrails & miss\_rate & 0.6103 & \texttt{n/a} \\
-\texttt{openai\_moderation} & jev & mean\_auprc & 0.7419 & 0.7324 \\
-\texttt{openai\_moderation} & clef & mean\_auprc & 0.7528 & 0.7501 \\
-\texttt{openai\_moderation} & clef-flash & mean\_auprc & 0.7099 & 0.7048 \\
-\texttt{openai\_moderation} & guardrails & miss\_rate & 0.2126 & \texttt{n/a} \\
-\texttt{toxicchat} & jev & toxic\_f1 & 0.7878 & 0.7878 \\
-\texttt{toxicchat} & jev & jailbreak\_f1 & 0.7004 & 0.7004 \\
-\texttt{toxicchat} & clef & toxic\_f1 & 0.6566 & 0.6566 \\
-\texttt{toxicchat} & clef & jailbreak\_f1 & 0.6071 & 0.6071 \\
-\texttt{toxicchat} & clef-flash & toxic\_f1 & 0.5784 & 0.5784 \\
-\texttt{toxicchat} & clef-flash & jailbreak\_f1 & 0.2900 & 0.2900 \\
-\texttt{toxicchat} & guardrails & miss\_rate & 0.2624 & \texttt{n/a} \\
-\texttt{prompt\_injections} & jev & accuracy & 0.7586 & 0.7586 \\
-\texttt{prompt\_injections} & clef & accuracy & 0.7672 & 0.7672 \\
-\texttt{prompt\_injections} & clef-flash & accuracy & 0.5948 & 0.5948 \\
-\texttt{prompt\_injections} & guardrails & miss\_rate & 0.6000 & \texttt{n/a} \\
-\texttt{wildguardmix} & jev & prompt\_harm\_f1 & 0.4940 & 0.5904 \\
-\texttt{wildguardmix} & jev & prompt\_harm\_auprc & 0.9881 & 0.9881 \\
-\texttt{wildguardmix} & clef & prompt\_harm\_f1 & 0.5933 & 0.6351 \\
-\texttt{wildguardmix} & clef & prompt\_harm\_auprc & 0.9875 & 0.9875 \\
-\texttt{wildguardmix} & clef-flash & prompt\_harm\_f1 & 0.4210 & 0.5223 \\
-\texttt{wildguardmix} & clef-flash & prompt\_harm\_auprc & 0.9881 & 0.9881 \\
-\texttt{wildguardmix} & guardrails & miss\_rate & 0.4208 & \texttt{n/a} \\
-\texttt{do\_not\_answer} & jev & detection\_rate & 0.7433 & 0.7433 \\
-\texttt{do\_not\_answer} & clef & detection\_rate & 0.6017 & 0.6017 \\
-\texttt{do\_not\_answer} & clef-flash & detection\_rate & 0.4462 & 0.4462 \\
-\texttt{do\_not\_answer} & guardrails & detection\_rate & 0.1523 & \texttt{n/a} \\
-\texttt{xstest} & jev & false\_positive\_rate\_safe & 0.0120 & 0.0840 \\
-\texttt{xstest} & jev & detection\_rate\_harmful & 0.8400 & 0.9250 \\
-\texttt{xstest} & clef & false\_positive\_rate\_safe & 0.1080 & 0.2360 \\
-\texttt{xstest} & clef & detection\_rate\_harmful & 0.8950 & 0.9350 \\
-\texttt{xstest} & clef-flash & false\_positive\_rate\_safe & 0.0280 & 0.1000 \\
-\texttt{xstest} & clef-flash & detection\_rate\_harmful & 0.7600 & 0.8950 \\
-\texttt{xstest} & guardrails & miss\_rate & 0.1700 & \texttt{n/a} \\
-\texttt{harmbench} & jev & miss\_rate & 0.2870 & 0.2870 \\
-\texttt{harmbench} & clef & miss\_rate & 0.3937 & 0.3937 \\
-\texttt{harmbench} & clef-flash & miss\_rate & 0.4688 & 0.4688 \\
-\texttt{harmbench} & guardrails & miss\_rate & 0.2026 & \texttt{n/a} \\
-\texttt{jailbreakbench} & jev & miss\_rate & 0.0300 & 0.0300 \\
-\texttt{jailbreakbench} & jev & false\_positive\_rate & 0.3400 & 0.3400 \\
-\texttt{jailbreakbench} & clef & miss\_rate & 0.0100 & 0.0100 \\
-\texttt{jailbreakbench} & clef & false\_positive\_rate & 0.5400 & 0.5400 \\
-\texttt{jailbreakbench} & clef-flash & miss\_rate & 0.0700 & 0.0700 \\
-\texttt{jailbreakbench} & clef-flash & false\_positive\_rate & 0.2400 & 0.2400 \\
-\texttt{jailbreakbench} & guardrails & miss\_rate & 0.9800 & \texttt{n/a} \\
-\texttt{go\_emotions} & jev & macro\_f1 & 0.3229 & 0.2436 \\
-\texttt{go\_emotions} & clef & macro\_f1 & 0.4624 & 0.4618 \\
-\texttt{go\_emotions} & clef-flash & macro\_f1 & 0.4814 & 0.4814 \\
-\texttt{go\_emotions} & guardrails & miss\_rate & 1.0000 & \texttt{n/a} \\
-\texttt{emotion} & jev & accuracy & 0.5840 & 0.5840 \\
-\texttt{emotion} & clef & accuracy & 0.5910 & 0.5910 \\
-\texttt{emotion} & clef-flash & accuracy & 0.5795 & 0.5795 \\
-\texttt{emotion} & guardrails & miss\_rate & 1.0000 & \texttt{n/a} \\
-\bottomrule
-\end{longtable}
-
 \begin{table}[htbp]
 \centering
 \caption{Tuned score thresholds (\texttt{thresholds}) and cascade cutoffs (\texttt{cascade\_thresholds}) from metrics JSON \texttt{20261020T040920Z\_90c5fd13}. JailbreakBench thresholds stay at 0.5 because the development labeled pool has fewer than 200 items.}
@@ -167,7 +103,7 @@ Dataset & Arm & Threshold & $t_{\mathrm{high}}$ & $t_{\mathrm{low}}$ \\
 
 \begin{table}[htbp]
 \centering
-\caption{\texttt{rq1\_bootstrap}: per-item correctness scores at threshold 0.5 (not the dataset primary metric). Bootstrap mean and 95\% interval when present; Clef vs Jev \texttt{significant} flag from \texttt{clef\_vs\_jev}. Source: metrics JSON \texttt{rq1\_bootstrap}.}
+\caption{\texttt{rq1\_bootstrap}: per-item correctness at score threshold 0.5 from the stored metrics JSON (not miss rate, FPR, or detection rate). Bootstrap mean and 95\% interval when present; Clef vs Jev \texttt{significant} flag from \texttt{clef\_vs\_jev}. Do not confuse these intervals with the headline JailbreakBench and XSTest miss/FPR CIs in the main text (1{,}000 row resamples, seed 42, on harmful/benign pools).}
 \label{tab:rq1-bootstrap}
 \footnotesize
 \begin{tabular}{@{}llrrrc@{}}
@@ -587,25 +523,3 @@ clef-flash & cascade & 0.0700 & 0.2400 \\
 \caption{Decision-model probabilities are usable for ranking but moderately miscalibrated on several heads (ECE in appendix Table~\ref{tab:calibration-decision-models}).}
 \label{fig:reliability}
 \end{figure}
-
-\begin{table}[htbp]
-\centering
-\caption{Figure files under \texttt{outputs/figures/20261020T040920Z\_90c5fd13/} (text list; no embedded images).}
-\label{tab:figure-list}
-\small
-\begin{tabular}{@{}ll@{}}
-\toprule
-File & Role \\
-\midrule
-\texttt{cascade\_flowchart.png} & Cascade policy schematic \\
-\texttt{guardrail\_bands.png} & Guardrail strength bands \\
-\texttt{threshold\_curves.png} & Score threshold curves \\
-\texttt{reliability.png} & Reliability diagrams \\
-\texttt{selective\_prediction.png} & Selective prediction coverage tradeoffs \\
-\texttt{miss\_vs\_fpr.png} & Miss rate vs false positive rate \\
-\texttt{latency\_cost\_vs\_miss.png} & Latency and cost vs miss rate \\
-\texttt{goemotions\_block\_rate.png} & GoEmotions block rate \\
-\texttt{jailbreakbench\_guardrail\_sensitivity.png} & Post-hoc JailbreakBench guardrail sensitivity \\
-\bottomrule
-\end{tabular}
-\end{table}

@@ -3,7 +3,8 @@
 
 Each loader emits stable example ids, gold labels, and optional benign-known flags.
 Decision models score versioned question templates; guardrails store \texttt{ApplyGuardrail} bands in a SQLite cache keyed by arm, template hash, and example id.
-Headline metrics use core pack \texttt{20261020T040920Z\_90c5fd13}; harness validation used \texttt{20261020T033822Z\_0f24960e}.
+Headline metrics use core pack \texttt{20261020T040920Z\_90c5fd13}; harness validation used\\
+\texttt{20261020T033822Z\_0f24960e}.
 
 \textbf{Thresholds and guardrails.}
 Tuned thresholds maximize harmful-class F1 on development rows subject to a 5\% benign FPR cap; we also report scores at 0.5.
@@ -13,5 +14,5 @@ A post-hoc JailbreakBench variant takes the max band across all six filters with
 \textbf{Stacks and metrics.}
 Pre-registered stacks pair each decision model with the medium-strength crosswalk guardrail on JailbreakBench, XSTest, and WildGuardMix.
 Miss rate is the share of harmful prompts allowed; FPR is the share of benign-known prompts blocked; Do-Not-Answer uses detection rate on harm-only rows.
-Bootstrap CIs in the results section are percentile intervals from 1{,}000 resamples (seed 42) of JailbreakBench harmful and benign rows and of the XSTest Jev operating points.
+Bootstrap CIs in the results section are percentile intervals from 1{,}000 resamples (seed 42) of JailbreakBench harmful and benign rows and of the XSTest Jev operating points; that estimand is distinct from appendix Table~\ref{tab:rq1-bootstrap}, which bootstraps per-item correctness at score threshold 0.5 from the original metrics JSON field \texttt{rq1\_bootstrap}.
 Expected calibration error (ECE-15) summarizes probabilistic arms where noted in the appendix.

@@ -6,7 +6,8 @@ Typed decision models---TypeSafe Jev~\cite{typesafe2026jevmodels,deusser2026jevb
 Amazon Bedrock Guardrails~\cite{aws2024bedrockguardrails} scores input through \texttt{ApplyGuardrail} and maps ordinal bands on six content filters to block decisions.
 Prior Jev benchmarks~\cite{deusser2026jevbenchmark} do not place a managed guardrail on the same rows under harmonized miss and false-positive definitions.
 
-Under one pre-registered protocol, typed decision models and a managed guardrail sit on different miss--false-positive--cost points; on JailbreakBench the guardrail's headline miss is mostly the category crosswalk, not the strength setting; stacks help only where that guardrail still catches harm.
+We pre-registered the guardrail category crosswalk (JailbreakBench harmful rows to Prompt Attack only), union/intersection/cascade stacks with the medium-strength guardrail, and Bedrock strength rules on matched bands; development thresholds and score-0.5 contrasts follow the stated tuning rule.
+Post-hoc analyses---any-filter maximum band on cached JailbreakBench guardrail outputs and stack variants that reuse those bands---are labeled throughout and do not refit decision-model thresholds.
 
 We evaluate four arms on eleven public prompt-only datasets (safety sets plus GoEmotions and Emotion for emotionally loaded non-harm text).
 We report tuned decision-model thresholds and scores at 0.5, guardrail metrics at medium strength under a dataset-to-filter crosswalk fixed before test scoring, and pre-registered stacks (union, intersection, cascade) from cached predictions.
