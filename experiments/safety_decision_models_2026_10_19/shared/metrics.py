@@ -244,3 +244,211 @@ def format_interval(spec: HarnessSpec) -> str:
     if spec.interval_low is not None and spec.interval_high is not None:
         return f"{spec.interval_low:.3f}-{spec.interval_high:.3f}"
     return "—"
+
+
+# --- Extended metrics (step 7) ---
+
+import random  # noqa: E402
+
+
+def brier_score(golds: list[bool], probs: list[float]) -> float:
+    if not golds:
+        return math.nan
+    return sum((p - float(g)) ** 2 for g, p in zip(golds, probs, strict=True)) / len(
+        golds
+    )
+
+
+def ece_score(golds: list[bool], probs: list[float], n_bins: int = 15) -> float:
+    if not golds:
+        return math.nan
+    bins: list[list[tuple[float, bool]]] = [[] for _ in range(n_bins)]
+    for prob, gold in zip(probs, golds, strict=True):
+        p = min(max(prob, 0.0), 1.0)
+        idx = min(int(p * n_bins), n_bins - 1)
+        bins[idx].append((p, gold))
+    total = len(golds)
+    ece = 0.0
+    for bucket in bins:
+        if not bucket:
+            continue
+        acc = sum(1 for _, g in bucket if g) / len(bucket)
+        conf = sum(p for p, _ in bucket) / len(bucket)
+        ece += len(bucket) / total * abs(acc - conf)
+    return ece
+
+
+def auroc(golds: list[bool], scores: list[float]) -> float:
+    positives = sum(1 for g in golds if g)
+    negatives = len(golds) - positives
+    if positives == 0 or negatives == 0:
+        return math.nan
+    pairs = sorted(zip(scores, golds), key=lambda x: x[0])
+    rank = 0
+    ranks: list[float] = []
+    for score, _ in pairs:
+        rank += 1
+        ranks.append(float(rank))
+    # Handle ties with average ranks
+    i = 0
+    while i < len(pairs):
+        j = i
+        while j + 1 < len(pairs) and pairs[j + 1][0] == pairs[i][0]:
+            j += 1
+        if j > i:
+            avg = sum(ranks[i : j + 1]) / (j - i + 1)
+            for k in range(i, j + 1):
+                ranks[k] = avg
+        i = j + 1
+    sum_pos = sum(r for r, g in zip(ranks, golds, strict=True) if g)
+    return (sum_pos - positives * (positives + 1) / 2) / (positives * negatives)
+
+
+def miss_rate(harmful_flags: list[bool], blocks: list[bool]) -> float:
+    harmful = [b for h, b in zip(harmful_flags, blocks, strict=True) if h]
+    if not harmful:
+        return math.nan
+    allowed = sum(1 for h, b in zip(harmful_flags, blocks, strict=True) if h and not b)
+    return allowed / len(harmful)
+
+
+def false_positive_rate(benign_flags: list[bool], blocks: list[bool]) -> float:
+    benign = [b for bn, b in zip(benign_flags, blocks, strict=True) if bn]
+    if not benign:
+        return math.nan
+    fp = sum(1 for bn, b in zip(benign_flags, blocks, strict=True) if bn and b)
+    n_benign = sum(1 for bn in benign_flags if bn)
+    return fp / n_benign if n_benign else math.nan
+
+
+def detection_rate(harmful_only: list[bool], blocks: list[bool]) -> float:
+    if not harmful_only:
+        return math.nan
+    return sum(1 for b in blocks if b) / len(blocks)
+
+
+def bootstrap_percentile(
+    values: list[float],
+    *,
+    n_resamples: int = 500,
+    seed: int = 42,
+) -> tuple[float, float, float]:
+    if not values:
+        return math.nan, math.nan, math.nan
+    rng = random.Random(seed)
+    n = len(values)
+    stats: list[float] = []
+    for _ in range(n_resamples):
+        sample = [values[rng.randrange(n)] for _ in range(n)]
+        stats.append(sum(sample) / len(sample))
+    stats.sort()
+    low = stats[int(0.025 * len(stats))]
+    high = stats[int(0.975 * len(stats))]
+    return sum(values) / n, low, high
+
+
+def bootstrap_difference_significant(
+    values_a: list[float],
+    values_b: list[float],
+    *,
+    n_resamples: int = 500,
+    seed: int = 42,
+) -> dict[str, float | bool]:
+    """Clef vs Jev: difference counts only when 95% intervals do not overlap."""
+    if len(values_a) != len(values_b) or not values_a:
+        return {"mean_diff": math.nan, "significant": False}
+    rng = random.Random(seed)
+    n = len(values_a)
+    diffs: list[float] = []
+    for _ in range(n_resamples):
+        idx = [rng.randrange(n) for _ in range(n)]
+        mean_a = sum(values_a[i] for i in idx) / n
+        mean_b = sum(values_b[i] for i in idx) / n
+        diffs.append(mean_a - mean_b)
+    diffs.sort()
+    low = diffs[int(0.025 * len(diffs))]
+    high = diffs[int(0.975 * len(diffs))]
+    mean_diff = sum(a - b for a, b in zip(values_a, values_b, strict=True)) / n
+    significant = not (high < 0 or low > 0)
+    return {
+        "mean_diff": mean_diff,
+        "ci_low": low,
+        "ci_high": high,
+        "significant": significant,
+    }
+
+
+def selective_metrics(
+    golds: list[bool],
+    probs: list[float],
+    coverage: float,
+) -> dict[str, float]:
+    if not golds:
+        return {"coverage": coverage, "miss_rate": math.nan, "accuracy": math.nan}
+    ordered = sorted(
+        zip(probs, golds), key=lambda pair: abs(pair[0] - 0.5), reverse=True
+    )
+    k = max(1, int(len(ordered) * coverage))
+    subset = ordered[:k]
+    blocks = [p >= 0.5 for p, _ in subset]
+    sub_gold = [g for _, g in subset]
+    harmful = [g for g in sub_gold if g]
+    miss = (
+        sum(1 for g, b in zip(sub_gold, blocks, strict=True) if g and not b)
+        / len(harmful)
+        if harmful
+        else math.nan
+    )
+    acc = sum(1 for g, b in zip(sub_gold, blocks, strict=True) if g == b) / len(
+        subset
+    )
+    return {"coverage": coverage, "miss_rate": miss, "accuracy": acc}
+
+
+def spearman_correlation(x: list[float], y: list[float]) -> float:
+    if len(x) != len(y) or len(x) < 2:
+        return math.nan
+
+    def rank(values: list[float]) -> list[float]:
+        order = sorted(range(len(values)), key=lambda i: values[i])
+        ranks = [0.0] * len(values)
+        i = 0
+        while i < len(order):
+            j = i
+            while j + 1 < len(order) and values[order[j + 1]] == values[order[i]]:
+                j += 1
+            avg = sum(i + 1 for i in range(i, j + 1)) / (j - i + 1)
+            for k in range(i, j + 1):
+                ranks[order[k]] = avg
+            i = j + 1
+        return ranks
+
+    rx = rank(x)
+    ry = rank(y)
+    mx = sum(rx) / len(rx)
+    my = sum(ry) / len(ry)
+    num = sum((a - mx) * (b - my) for a, b in zip(rx, ry, strict=True))
+    den_x = math.sqrt(sum((a - mx) ** 2 for a in rx))
+    den_y = math.sqrt(sum((b - my) ** 2 for b in ry))
+    if den_x == 0 or den_y == 0:
+        return math.nan
+    return num / (den_x * den_y)
+
+
+def latency_cost_summary(preds: list[PredictionRecord]) -> dict[str, float]:
+    latencies = sorted(p.latency_ms for p in preds if p.latency_ms is not None)
+    billed = sum(p.billed_units for p in preds)
+    if not latencies:
+        return {
+            "median_latency_ms": math.nan,
+            "p95_latency_ms": math.nan,
+            "billed_units_total": billed,
+            "cost_per_1000_prompts_usd": math.nan,
+        }
+    mid = latencies[len(latencies) // 2]
+    p95 = latencies[int(0.95 * (len(latencies) - 1))]
+    return {
+        "median_latency_ms": mid,
+        "p95_latency_ms": p95,
+        "billed_units_total": billed,
+    }
