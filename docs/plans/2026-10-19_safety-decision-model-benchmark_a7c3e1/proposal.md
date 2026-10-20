@@ -28,12 +28,12 @@ Bedrock Guardrails scores text through a separate API. `ApplyGuardrail` can run 
 | Arm | What is called | Role |
 | --- | --- | --- |
 | Jev | TypeSafe API, model `jev-1.13.0` | Zero-shot typed questions. Same primitive mapping as Deußer et al. where the dataset overlaps. |
-| Clef | Workers AI `@cf/cloudflare/clef` | Same JSON request as Jev. Pin the hosted model and the Hugging Face revision `Cloudflare/clef`. |
-| Clef-flash | Workers AI `@cf/cloudflare/clef-flash` | Same request as Clef. Hosted context is 24,576 tokens. A longer prompt is an error on this arm. A self-hosted rerun of the weights is future work. |
+| Clef | Workers AI `@cf/cloudflare/clef` | Body fields `model` (`clef`), `state`, and `questions`. `questions` is an object keyed by question id. Hosted context is 64,000 tokens. Workers AI shortens a longer state and still returns an answer, so the scorer marks that row truncated. Pin the Hugging Face revision `Cloudflare/clef`. |
+| Clef-flash | Workers AI `@cf/cloudflare/clef-flash` | Same body, with `model` set to `clef-flash`. Hosted context is 24,576 tokens. The same silent shortening applies, and the scorer marks the row truncated. A self-hosted rerun of the weights is future work. |
 | Guardrails | `ApplyGuardrail`, source `INPUT`, content filters only | Hate, Insults, Sexual, Violence, Misconduct, Prompt Attack. No denied topics, word lists, or grounding checks, so the bill and the decision stay on the six filters. |
 | Stack | One decision model plus the guardrail | Three policies, defined below. Each decision model gets its own stack. |
 
-Each decision-model request has a state (the text) and one or more questions. A Choice question picks one of a fixed set of labels. A Noul question returns the probability that the answer is yes. A Score question places the text on an ordered rubric of two to ten levels. The public harness documents 32,000 tokens for the state plus the longest question, and 64,000 tokens per request (`jev-benchmarking/docs/datasets.md`). Clef's hosted limit is 64,000 tokens. Clef-flash on Workers AI is 24,576 tokens. A prompt over that limit is an error on the hosted arm, and a self-hosted rerun is future work.
+Each decision-model request has a state (the text) and one or more questions. A Choice question picks one of a fixed set of labels. A Noul question returns the probability that the answer is yes. A Score question places the text on an ordered rubric of two to ten levels. The public harness documents 32,000 tokens for the state plus the longest question, and 64,000 tokens per request (`jev-benchmarking/docs/datasets.md`). Clef's hosted limit is 64,000 tokens. Clef-flash on Workers AI is 24,576 tokens. Workers AI shortens a longer `state` to fit and still returns an answer, so the scorer marks that row truncated. A self-hosted rerun of the Clef-flash weights is future work.
 
 ### Stack policies
 
@@ -157,7 +157,23 @@ class DecisionScorer(Protocol):
 
 The question spec is Choice, Noul, or Score, in the same JSON shape as `choice`, `noul`, and `score` in `jev_benchmarking/tasks/base.py`. On the six datasets the harness already runs, the first template is the `build` method in `safety.py` or `classification.py`, so the harness check uses that wording.
 
-A prediction record stores `example_id`, `arm`, `model_version`, `template_version`, the probability or the Guardrails band, the raw response, latency, billed usage, and an error status. A context-limit overflow is stored as an error, and the metric table keeps the row.
+The Clef and Clef-flash body, checked against the Workers AI Clef docs (https://developers.cloudflare.com/workers-ai/models/clef/) and a live call, has three fields. `model` is `clef` or `clef-flash`. `state` is the text. `questions` is an object keyed by question id. Each value has `type` (`noul`, `choice`, or `score`), `instructions`, and `criteria`. The answer for that id is `result.answers.<id>`, for example `{"type": "noul", "noul": 0.0039}`. Billed input tokens are `result.usage.input_tokens`.
+
+```python
+clef_request = {
+    "model": "clef",  # or "clef-flash"
+    "state": text,
+    "questions": {
+        "harm": {"type": "noul", "instructions": question, "criteria": None},
+    },
+}
+# result.answers["harm"] == {"type": "noul", "noul": 0.0039}
+# result.usage["input_tokens"] is the billed count
+```
+
+Workers AI shortens a `state` that does not fit the context and still returns that answer. The scorer counts tokens before the call, or compares `result.usage.input_tokens` with the limit (64,000 for Clef, 24,576 for Clef-flash), and sets `error_status` to `truncated` when the prompt does not fit. The metric table keeps the row.
+
+A prediction record stores `example_id`, `arm`, `model_version`, `template_version`, the probability or the Guardrails band, the raw response, latency, billed usage, and an error status. For a Noul, the probability is `result.answers.<id>.noul`. A context-limit overflow is stored as an error. On Jev that is the provider error. On Clef and Clef-flash it is the `truncated` status above.
 
 ```python
 class PredictionRecord(BaseModel):
@@ -204,7 +220,7 @@ The check before the full run is a smoke test. It sends 20 development items, en
 Secrets stay in AWS Secrets Manager in `us-east-2`, or in environment variables, and they are never committed. Names follow the kebab-case already used in this region.
 
 - TypeSafe. `load_typesafe_api_key` in `experiments/speedup_jev_2026_09_23/shared/secrets.py` reads secret `jev-typesafe-api-key`, JSON field `TYPESAFE_API_KEY`.
-- Cloudflare Workers AI, for Clef and Clef-flash. A new secret, `cloudflare-workers-ai`, holds JSON fields `account_id` and `api_token`. The token needs Workers AI read and edit permission.
+- Cloudflare Workers AI, for Clef and Clef-flash. Secret `cloudflare-workers-ai` already exists in `us-east-2` and holds JSON fields `account_id` and `api_token`. The token needs Workers AI read and edit permission.
 - AWS, for `ApplyGuardrail` and for creating the numbered guardrail. `experiments/speedup_jev_2026_09_23/shared/secrets.py` resolves `LAB_AWS_ACCESS_KEY_ID` and `LAB_AWS_ACCESS_KEY_SECRET`, then the standard AWS environment names. The identity needs `bedrock:ApplyGuardrail` and permission to create a guardrail in `us-east-2`.
 - Hugging Face, for datasets that require a form. Secret `hf-token` supplies the token. `lib/load_env_vars.py` loads the GitHub token only, so the loaders read `hf-token` themselves.
 
@@ -280,7 +296,7 @@ If those hypotheses hold, the block rule for a wellbeing assistant has to name t
 
 **What the miss rate is not.** We do not generate new jailbreak strings, and we do not measure whether a chat model would have complied. HarmBench's usual attack-success rate against a target model is a different quantity.
 
-**Input length.** HumanJailbreaks prompts can be long. Requests over the context limit are errors, the same treatment the harness gives HTTP 400 `max_tokens_exceeded`. On hosted Clef-flash the limit is 24,576 tokens, and a longer prompt is an error. A self-hosted rerun of those weights is future work. If the error rate exceeds 1% on any set, we report it beside the metric, and those rows stay in the table as errors.
+**Input length.** HumanJailbreaks prompts can be long. On Jev, a request over the context limit is an error, the same treatment the harness gives HTTP 400 `max_tokens_exceeded`. On Workers AI, Clef and Clef-flash shorten a long `state` to fit and still return an answer. The scorer counts tokens before the call, or compares `result.usage.input_tokens` with the limit, and stores those rows as `truncated`. Clef-flash's hosted limit is 24,576 tokens. Clef's is 64,000. A self-hosted rerun of the Clef-flash weights is future work. If the truncated or error rate exceeds 1% on any set, we report it beside the metric, and those rows stay in the table.
 
 ## 9. Plan and cost estimate
 
@@ -306,7 +322,7 @@ Steps, in order:
 3. Run the 20-item smoke test from section 4, once per arm. Stop if a probability or band is empty, if the rerun misses the cache, or if the Jev smoke metric cannot be compared with the published harness metric.
 4. Run `jev-1.13.0` on the six overlapping sets and compare to the published intervals. For OpenAI Moderation, that check uses all 1,680 rows at threshold 0.5. Stop if we are outside an interval.
 5. Create a numbered guardrail in `us-east-2` with the six content filters and the filter action set to `NONE`. Write the crosswalk. Fall back to three numbered versions only if detect mode omits the band.
-6. Score the core pack with Jev, Clef, Clef-flash, and `ApplyGuardrail`, through the cache in section 4. On hosted Clef-flash, count a prompt over 24,576 tokens as an error.
+6. Score the core pack with Jev, Clef, Clef-flash, and `ApplyGuardrail`, through the cache in section 4. On hosted Clef and Clef-flash, mark a prompt over the context limit as `truncated`, because Workers AI shortens the state and still returns an answer. Clef-flash's limit is 24,576 tokens.
 7. Fit thresholds on development splits. For OpenAI Moderation, fit the tuned threshold on the hash-stable 20% holdout and leave that holdout out of the tuned test number. Compute the metrics and the eight figures from the prediction records, using the union, intersection, and cascade functions.
 
 Future artifacts, when the study is run, would live under `experiments/safety_decision_models_2026_10_19/` and the same prefix in `s3://mind-technology-lab-experiments/`. This proposal does not add that folder. The layout inside it is in section 4.
@@ -323,6 +339,6 @@ Typed decision models return a probability for a fixed question, and they do not
 4. **Region.** `us-east-2`, the same value as `DEFAULT_REGION_NAME` in `shared/aws/constants.py`.
 5. **Dataset revisions.** Each Hugging Face dataset is pinned to the commit from the first successful load. That commit is written into the run manifest, and a later load with a different commit is refused.
 6. **OpenAI Moderation holdout.** The harness check scores all 1,680 rows at threshold 0.5. The tuned threshold is fit on a hash-stable 20% holdout, and that holdout is left out of the tuned test number.
-7. **Clef-flash context.** On the hosted arm, a prompt over 24,576 tokens is an error. A self-hosted rerun of the weights is future work.
+7. **Clef-flash context.** Workers AI shortens a `state` over 24,576 tokens and still returns an answer. The scorer counts tokens before the call, or compares `result.usage.input_tokens` with that limit, and stores the row as `truncated`. A self-hosted rerun of the weights is future work.
 
 No open questions remain.
