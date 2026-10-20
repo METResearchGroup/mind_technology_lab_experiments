@@ -2,7 +2,7 @@
 
 ## Region
 
-AWS Secrets Manager and Bedrock Guardrails calls use **us-east-2**.
+Use **us-east-2** for AWS Secrets Manager and for Bedrock Guardrails calls.
 
 ## Install
 
@@ -10,7 +10,7 @@ AWS Secrets Manager and Bedrock Guardrails calls use **us-east-2**.
 cd experiments/safety_decision_models_2026_10_19 && uv sync
 ```
 
-This experiment is **not** a root uv workspace member. Use the local `.venv` created by `uv sync` in this folder.
+This experiment is **not** a root uv workspace member. Run `uv sync` in this folder and use the local `.venv` that command creates.
 
 ## Secrets (AWS Secrets Manager or environment)
 
@@ -29,4 +29,4 @@ Never commit secret values.
 
 ## Do-Not-Answer
 
-Question text from `LibrAI/do-not-answer` is loaded only into gitignored `data/snapshots/` and `data/records/`. It is **not** committed to git or uploaded to S3.
+Question text from `LibrAI/do-not-answer` is written only to gitignored `data/snapshots/` and `data/records/`. Do not commit that text to git or upload it to S3.
