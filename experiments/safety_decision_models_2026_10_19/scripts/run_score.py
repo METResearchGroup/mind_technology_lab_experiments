@@ -323,7 +323,12 @@ def _write_predictions(
         for row in predictions:
             handle.write(row.model_dump_json())
             handle.write("\n")
-    frame = pd.DataFrame([row.model_dump() for row in predictions])
+    rows_payload = [row.model_dump() for row in predictions]
+    for payload in rows_payload:
+        raw = payload.get("raw_response")
+        if isinstance(raw, dict):
+            payload["raw_response"] = json.dumps(raw, sort_keys=True)
+    frame = pd.DataFrame(rows_payload)
     parquet_path = out_dir / f"{dataset}.parquet"
     frame.to_parquet(parquet_path, index=False)
     print(f"wrote {len(predictions)} rows to {jsonl_path} and {parquet_path}")
