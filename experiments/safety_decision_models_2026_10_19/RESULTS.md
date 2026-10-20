@@ -21,11 +21,11 @@ Manifest: `outputs/manifests/20261020T033822Z_0f24960e.json`.
 
 ## Core pack
 
-Run `run_id=20261020T040920Z_90c5fd13` (step 7 metrics). Threshold 0.5 and development-tuned values.
+Run `run_id=20261020T040920Z_90c5fd13` (step 7 metrics). The table uses threshold 0.5 and development-tuned values.
 
 Guardrail bands were recomputed from cached Bedrock assessments after content-filter name normalization to the study crosswalk. JailbreakBench still maps harmful labels to Prompt Attack only.
 
-Tuned score thresholds maximize harmful-class F1 on the development pool subject to benign false-positive rate at most 5%; otherwise the threshold is 0.5. JailbreakBench stays at 0.5 because the labeled development pool has fewer than 200 rows.
+Tuned score thresholds maximize harmful-class F1 on the development pool when benign false-positive rate is at most 5%. Otherwise the threshold is 0.5. JailbreakBench stays at 0.5 because the labeled development pool has fewer than 200 rows.
 
 In the cascade policy, scores between `t_low` and `t_high` defer to the guardrail block bit at medium strength. For Jev, cascade cutoffs are wildguardmix `t_high=0.78` and `t_low=0.77`, xstest `t_high=0.77` and `t_low=0.5`, and jailbreakbench `t_high=0.5` and `t_low=0.5`.
 
@@ -90,7 +90,7 @@ In the cascade policy, scores between `t_low` and `t_high` defer to the guardrai
 
 ## Post-hoc sensitivity analysis
 
-**post-hoc sensitivity analysis** — JailbreakBench Bedrock guardrails only. The core-pack headline remains the pre-registered crosswalk (harmful → Prompt Attack only). Below, the any-filter variant takes the maximum confidence band across Hate, Insults, Sexual, Violence, Misconduct, and Prompt Attack, then applies the usual strength rule. Stacks reuse development-tuned model and cascade thresholds fit on the crosswalk guardrail bit at medium strength.
+JailbreakBench Bedrock guardrails are the only target of the sensitivity tables below. The core-pack headline uses the pre-registered crosswalk (harmful → Prompt Attack only). The any-filter variant takes the maximum confidence band across Hate, Insults, Sexual, Violence, Misconduct, and Prompt Attack, then applies the usual strength rule. The stacks reuse development-tuned model and cascade thresholds fit on the crosswalk guardrail bit at medium strength.
 
 | Variant | Strength | Miss rate | FPR |
 | --- | --- | ---: | ---: |
@@ -99,9 +99,9 @@ In the cascade policy, scores between `t_low` and `t_high` defer to the guardrai
 | Any content filter (max band) | medium | 0.2300 | 0.1900 |
 | Any content filter (max band) | high | 0.1500 | 0.3900 |
 
-Model and cascade cutoffs were fit on the development pool using pre-registered crosswalk guardrail bands at medium strength; sensitivity bands are applied only in this post-hoc analysis.
+Model and cascade cutoffs were fit on the development pool using pre-registered crosswalk guardrail bands at medium strength. Sensitivity bands are applied only in this post-hoc analysis.
 
-The pre-registered JailbreakBench stack intersection miss rate is 0.9800; the post-hoc sensitivity intersection miss rate in the table below is 0.2300, so the sensitivity stacks are not a replacement for the registered stack metrics.
+The pre-registered JailbreakBench stack intersection miss rate is 0.9800. The post-hoc sensitivity intersection miss rate in the table below is 0.2300, so the sensitivity stacks are not a replacement for the registered stack metrics.
 
 | Model arm | Stack | Miss rate | FPR |
 | --- | --- | ---: | ---: |
