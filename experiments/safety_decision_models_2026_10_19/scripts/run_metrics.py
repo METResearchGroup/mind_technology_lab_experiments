@@ -105,7 +105,9 @@ def main() -> None:
     for arm in (*MODEL_ARMS, GUARDRAIL_ARM):
         preds_by_arm[arm] = {}
         for dataset in DATASET_ORDER:
-            preds_by_arm[arm][dataset] = load_predictions(arm, dataset)
+            preds_by_arm[arm][dataset] = align_predictions(
+                records_by_dataset[dataset], load_predictions(arm, dataset)
+            )
 
     study = json.loads(STUDY_CONFIG.read_text(encoding="utf-8"))
     metrics: dict[str, Any] = {
@@ -246,8 +248,23 @@ def load_predictions(arm: str, dataset: str) -> list[PredictionRecord]:
         if row.get("probability") is not None and isinstance(row["probability"], float) and math.isnan(row["probability"]):
             row["probability"] = None
         preds.append(PredictionRecord.model_validate(row))
-    preds.sort(key=lambda p: p.example_id)
     return preds
+
+
+def align_predictions(
+    rows: list[ExampleRecord], preds: list[PredictionRecord]
+) -> list[PredictionRecord]:
+    """Match harness scoring: one prediction per row in record loader order."""
+    by_id = {pred.example_id: pred for pred in preds}
+    missing = [row.example_id for row in rows if row.example_id not in by_id]
+    if missing:
+        raise ValueError(
+            f"missing predictions for {len(missing)} rows (first: {missing[0]})"
+        )
+    extra = len(preds) - len(by_id)
+    if extra:
+        raise ValueError(f"duplicate example_id in predictions ({extra} duplicates)")
+    return [by_id[row.example_id] for row in rows]
 
 
 def go_emotions_primary_metrics(
@@ -1217,7 +1234,7 @@ def append_results(metrics: dict[str, Any]) -> None:
     results_path = EXPERIMENT_ROOT / "RESULTS.md"
     text = results_path.read_text(encoding="utf-8")
     if "## Core pack" in text:
-        return
+        text = text[: text.index("## Core pack")].rstrip() + "\n"
     lines = [
         "",
         "## Core pack",
