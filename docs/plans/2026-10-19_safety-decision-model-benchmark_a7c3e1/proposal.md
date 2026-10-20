@@ -33,8 +33,6 @@ Bedrock Guardrails scores text through a separate API. `ApplyGuardrail` can run 
 | Guardrails | `ApplyGuardrail`, source `INPUT`, content filters only | Hate, Insults, Sexual, Violence, Misconduct, Prompt Attack. No denied topics, word lists, or grounding checks, so the bill and the decision stay on the six filters. |
 | Stack | One decision model plus the guardrail | Three policies, defined below. Each decision model gets its own stack. |
 
-Kev 9B (`jaredpalmer/kev-9b`) and Laya (`convaiinnovations/laya`) are optional. The Clef blog (Chen, Reneau, and Flansburg, 1 October 2026) lists both on the Jev Decision Index, a routing and tool suite. Laya's scores on that index are far below the others. Laya's own card documents a default English context of 512 tokens, which is a plausible reason those scores are low. We keep an optional arm only if a 20-example pilot returns a probability for every legal option, and the pilot includes one long jailbreak prompt so truncation is visible. If the pilot fails, that model is dropped and the failure is reported.
-
 Each decision-model request has a state (the text) and one or more questions. A Choice question picks one of a fixed set of labels. A Noul question returns the probability that the answer is yes. A Score question places the text on an ordered rubric of two to ten levels. The public harness documents 32,000 tokens for the state plus the longest question, and 64,000 tokens per request (`jev-benchmarking/docs/datasets.md`). Clef's hosted limit is 64,000 tokens. Clef-flash on Workers AI is 24,576 tokens. A prompt over that limit is an error on the hosted arm, and a self-hosted rerun is future work.
 
 ### Stack policies
@@ -114,7 +112,7 @@ The public harness at https://github.com/AppliedMachineLearning-Lab/jev-benchmar
 
 WildGuardMix, Do-Not-Answer, XSTest, HarmBench, and JailbreakBench are absent from the harness. `jev_benchmarking/docs/datasets.md` says `walledai/XSTest` and `allenai/wildguardmix` were left out because they require a Hugging Face form and because they overlap the moderation sets. The study loads `allenai/xstest-response` and `allenai/wildguardmix`, because the false-positive rate on safe prompts and the adversarial flag are questions in section 2.
 
-In this repository, `shared/aws/constants.py` sets `DEFAULT_REGION_NAME` to `us-east-2`, and `shared/aws/s3.py` can upload bytes to one bucket. Experiment scripts upload with boto3 instead, from `experiments/moral_outrage_classification_2026_09_19/scripts/upload_s3.py` and `experiments/speedup_jev_2026_09_23/scripts/upload_s3.py`, to bucket `mind-technology-lab-experiments`, with a prefix equal to the experiment folder. `experiments/speedup_jev_2026_09_23/shared/rate_limiter.py` defines `RequestStartLimiter`. `experiments/speedup_jev_2026_09_23/shared/secrets.py` loads the TypeSafe key (`load_typesafe_api_key`). `experiments/moral_outrage_classification_2026_09_19/shared/records.py` is a pydantic prediction row for a different labeling task, so the field list is the pattern and the model for this study is new. `AGENTS.md` says Hugging Face access uses the `HF_TOKEN` environment variable. `lib/load_env_vars.py` loads the GitHub token only, so the new loaders read `HF_TOKEN` from the environment.
+In this repository, `shared/aws/constants.py` sets `DEFAULT_REGION_NAME` to `us-east-2`, and `shared/aws/s3.py` can upload bytes to one bucket. Experiment scripts upload with boto3 instead, from `experiments/moral_outrage_classification_2026_09_19/scripts/upload_s3.py` and `experiments/speedup_jev_2026_09_23/scripts/upload_s3.py`, to bucket `mind-technology-lab-experiments`, with a prefix equal to the experiment folder. `experiments/speedup_jev_2026_09_23/shared/rate_limiter.py` defines `RequestStartLimiter`. `experiments/speedup_jev_2026_09_23/shared/secrets.py` loads the TypeSafe key (`load_typesafe_api_key`). `experiments/moral_outrage_classification_2026_09_19/shared/records.py` is a pydantic prediction row for a different labeling task, so the field list is the pattern and the model for this study is new. `AGENTS.md` names `HF_TOKEN` for Hugging Face access. `lib/load_env_vars.py` loads the GitHub token only, so the loaders read secret `hf-token` themselves, as in the credentials subsection.
 
 ### Example records
 
@@ -140,7 +138,7 @@ HarmBench uses `swiss-ai/harmbench`, once for config `DirectRequest` and once fo
 
 JailbreakBench uses `JailbreakBench/JBB-Behaviors`, config `behaviors`. The `harmful` split and the `benign` split are both loaded. `is_benign_known` is true on the benign split.
 
-Access-controlled datasets receive `HF_TOKEN` from the environment. A missing token fails that dataset and leaves the others loadable.
+Access-controlled datasets use the token from secret `hf-token`. A missing token fails that dataset and leaves the others loadable.
 
 Where the harness already names a development split, we use it. ToxiGen, ToxicChat, and prompt injections use `train`. GoEmotions and Emotion use `validation`. OpenAI Moderation sets `dev` to `None` in `safety.py`. Do-Not-Answer, the XSTest prompts after duplicate removal, and JailbreakBench have no development split. For those, a hash of `example_id` holds out 20% as development. The Jev harness check on OpenAI Moderation scores all 1,680 rows at threshold 0.5. The tuned threshold is fit on the 20% holdout, and that holdout is left out of the tuned test number.
 
@@ -148,7 +146,7 @@ Do-Not-Answer keeps `risk_area` and the type of harm on the row, and that datase
 
 ### Scorers
 
-`DecisionScorer` is a Python `Protocol` with one method. The method takes example records and a question spec, and it returns prediction records. Jev, Clef, Clef-flash, Guardrails, and the optional Kev and Laya arms each implement it.
+`DecisionScorer` is a Python `Protocol` with one method. The method takes example records and a question spec, and it returns prediction records. Jev, Clef, Clef-flash, and Guardrails each implement it.
 
 ```python
 class DecisionScorer(Protocol):
@@ -199,16 +197,16 @@ When the study is run, local files would live under `experiments/safety_decision
 
 The S3 prefix is `experiments/safety_decision_models_2026_10_19/` in `s3://mind-technology-lab-experiments/`, matching the bucket and prefix in the upload scripts above. Do-Not-Answer question text is not committed to git. The paper reports detection rate by risk area and by type of harm.
 
-Before a paid run, the checks are:
+The check before the full run is a smoke test. It sends 20 development items, end to end, once per arm (Jev, Clef, Clef-flash, and Guardrails). Each returned row has the example-record fields. Jev, Clef, and Clef-flash return a non-empty probability, and Guardrails returns a non-empty band. A second pass of the same 20 items hits the cache and makes no new provider call. The Jev smoke rows are scored with the same primary metric as the published harness check, so a broken template shows up before the full run.
 
-- Every loader row validates as an example record, and `is_benign_known` is false when the dataset has no benign class.
-- XSTest prompt ids are unique after duplicate removal.
-- JailbreakBench has 100 harmful rows and 100 benign rows, and HarmBench has both configs.
-- A fake scorer serves the second call from the cache.
-- Stack-policy tests use fake prediction records and make no network call.
-- Jev on the six overlapping sets falls inside the published intervals before Clef or Guardrails are scored.
+### Credentials
 
-`jev-benchmarking/tests/test_metrics.py` is the pattern for the metric checks. Root CI today runs `tests/test_scaffold.py` only, so these checks live with the experiment.
+Secrets stay in AWS Secrets Manager in `us-east-2`, or in environment variables, and they are never committed. Names follow the kebab-case already used in this region.
+
+- TypeSafe. `load_typesafe_api_key` in `experiments/speedup_jev_2026_09_23/shared/secrets.py` reads secret `jev-typesafe-api-key`, JSON field `TYPESAFE_API_KEY`.
+- Cloudflare Workers AI, for Clef and Clef-flash. A new secret, `cloudflare-workers-ai`, holds JSON fields `account_id` and `api_token`. The token needs Workers AI read and edit permission.
+- AWS, for `ApplyGuardrail` and for creating the numbered guardrail. `experiments/speedup_jev_2026_09_23/shared/secrets.py` resolves `LAB_AWS_ACCESS_KEY_ID` and `LAB_AWS_ACCESS_KEY_SECRET`, then the standard AWS environment names. The identity needs `bedrock:ApplyGuardrail` and permission to create a guardrail in `us-east-2`.
+- Hugging Face, for datasets that require a form. Secret `hf-token` supplies the token. `lib/load_env_vars.py` loads the GitHub token only, so the loaders read `hf-token` themselves.
 
 ```mermaid
 flowchart LR
@@ -276,7 +274,7 @@ If those hypotheses hold, the block rule for a wellbeing assistant has to name t
 
 **Labels.** WildGuardTest prompt-harm labels have Fleiss' kappa 0.55 across three annotators (moderate agreement), as stated on the dataset card. Emotion labels are hashtag-derived and noisy, which is why published accuracy is 0.585 and ECE is 0.279. GoEmotions can mark several emotions on one comment, and a single Noul does not know that most of the other 27 are false, which is the over-prediction Deußer et al. measured (mean `P(yes)` 0.209 against an observed rate of 0.041 on multi-label Nouls).
 
-**License.** Do-Not-Answer is in the core pack. The study is academic research, so non-commercial use fits CC BY-NC-SA 4.0. The card also names Apache 2.0 for source files, and the GitHub license field is Apache 2.0. The run follows the stricter card statement. Question text stays out of the paper, the git repository, and any public upload. The paper reports detection rate by risk area and by type of harm, from the dataset's own file, so a later draft can include those aggregates or leave them out. `allenai/xstest-response` requires the Allen Institute form and `HF_TOKEN`. If that form stalls, XSTest is omitted and the rest of the pack still runs. The public harness also marks `allenai/wildguardmix` as requiring a form, so WildGuard uses the same token.
+**License.** Do-Not-Answer is in the core pack. The study is academic research, so non-commercial use fits CC BY-NC-SA 4.0. The card also names Apache 2.0 for source files, and the GitHub license field is Apache 2.0. The run follows the stricter card statement. Question text stays out of the paper, the git repository, and any public upload. The paper reports detection rate by risk area and by type of harm, from the dataset's own file, so a later draft can include those aggregates or leave them out. `allenai/xstest-response` requires the Allen Institute form and secret `hf-token`. If that form stalls, XSTest is omitted and the rest of the pack still runs. The public harness also marks `allenai/wildguardmix` as requiring a form, so WildGuard uses the same token.
 
 **Versions.** `jev-1.13.0` is pinned. Clef and Clef-flash are pinned by hosted model id and by Hugging Face commit. Each dataset revision is the commit from the first successful load, stored in the run manifest, and a later load with a different commit is refused. The guardrail is a numbered version, in `us-east-2`, which is `DEFAULT_REGION_NAME` in `shared/aws/constants.py`. Filter strength is recorded from the detect-only bands. A later vendor update is a different study.
 
@@ -297,19 +295,19 @@ Row count for one pass of the core pack, counting one request per example and co
 | Clef-flash | US$0.038 per million input tokens, output free (same page) | about US$0.49 | about US$1.50 |
 | Guardrails content filters | US$0.15 per 1,000 text units. A text unit is up to 1,000 characters. Prompt Attack is included in this price on `ApplyGuardrail`. (https://aws.amazon.com/bedrock/pricing/) | about US$3.10 if each prompt is one text unit | about US$9 to US$20 |
 
-A stack pays for the decision model and the guardrail. Three decision models plus one guardrail pass, short prompts, is on the order of US$8. The long-prompt case is on the order of US$15 to US$30. Three separate strength calls, used only if detect mode omits the band, push the upper end toward US$50. A 20-example pilot and a development tune add a small fraction on top. Planning number for the required arms on the core pack: under US$50. Optional Kev and Laya are self-hosted, and their GPU time is not in this number. The optional preference-data pool is not in this number, because a full pass of `hh-rlhf` would dominate the bill and needs its own estimate after a subsample is chosen.
+A stack pays for the decision model and the guardrail. Three decision models plus one guardrail pass, short prompts, is on the order of US$8. The long-prompt case is on the order of US$15 to US$30. Three separate strength calls, used only if detect mode omits the band, push the upper end toward US$50. The 20-item smoke run and the development tune add a small fraction on top. Planning number for the required arms on the core pack: under US$50. The optional preference-data pool is not in this number, because a full pass of `hh-rlhf` would dominate the bill and needs its own estimate after a subsample is chosen.
 
 At 1,100 requests per minute, the cap Deußer et al. actually hit, about 21,000 requests take on the order of 20 minutes of API time, before retries. The cache in section 4 keeps a retry from paying twice, so the estimate counts one call per example. The 20 minutes are API time only.
 
 Steps, in order:
 
-1. Write the loaders and the `DecisionScorer` interface from section 4, including the XSTest dedupe, the HarmBench configs, the JailbreakBench splits, and the `HF_TOKEN` path. On the first successful load, pin each dataset revision to that commit and write it into the manifest. Run the schema checks on local rows before any paid call.
+1. Write the loaders and the `DecisionScorer` interface from section 4, including the XSTest dedupe, the HarmBench configs, the JailbreakBench splits, and the `hf-token` load. On the first successful load, pin each dataset revision to that commit and write it into the manifest.
 2. Confirm one template per dataset on 20 development items. For the six overlapping sets, start from the `build` methods in the public harness so the harness check uses the same wording. Store the confirmed JSON under `data/templates/`.
-3. Run `jev-1.13.0` on those six sets and compare to the published intervals. For OpenAI Moderation, that check uses all 1,680 rows at threshold 0.5. Stop if we are outside an interval.
-4. Create a numbered guardrail in `us-east-2` with the six content filters and the filter action set to `NONE`. Write the crosswalk. Fall back to three numbered versions only if detect mode omits the band.
-5. Score the core pack with Jev, Clef, Clef-flash, and `ApplyGuardrail`, through the cache in section 4. On hosted Clef-flash, count a prompt over 24,576 tokens as an error.
-6. Fit thresholds on development splits. For OpenAI Moderation, fit the tuned threshold on the hash-stable 20% holdout and leave that holdout out of the tuned test number. Compute the metrics and the eight figures from the prediction records, using the union, intersection, and cascade functions.
-7. Run the Kev and Laya pilot only after step 3 succeeds. The pilot is 20 examples and includes one long jailbreak prompt. Include a model in the tables only if its probabilities come back well-formed.
+3. Run the 20-item smoke test from section 4, once per arm. Stop if a probability or band is empty, if the rerun misses the cache, or if the Jev smoke metric cannot be compared with the published harness metric.
+4. Run `jev-1.13.0` on the six overlapping sets and compare to the published intervals. For OpenAI Moderation, that check uses all 1,680 rows at threshold 0.5. Stop if we are outside an interval.
+5. Create a numbered guardrail in `us-east-2` with the six content filters and the filter action set to `NONE`. Write the crosswalk. Fall back to three numbered versions only if detect mode omits the band.
+6. Score the core pack with Jev, Clef, Clef-flash, and `ApplyGuardrail`, through the cache in section 4. On hosted Clef-flash, count a prompt over 24,576 tokens as an error.
+7. Fit thresholds on development splits. For OpenAI Moderation, fit the tuned threshold on the hash-stable 20% holdout and leave that holdout out of the tuned test number. Compute the metrics and the eight figures from the prediction records, using the union, intersection, and cascade functions.
 
 Future artifacts, when the study is run, would live under `experiments/safety_decision_models_2026_10_19/` and the same prefix in `s3://mind-technology-lab-experiments/`. This proposal does not add that folder. The layout inside it is in section 4.
 
@@ -321,11 +319,10 @@ Typed decision models return a probability for a fixed question, and they do not
 
 1. **Guardrail strength.** One detect-only `ApplyGuardrail` call, with the filter action set to `NONE`. Low, medium, and high are applied after the call. Low blocks only a HIGH band, medium blocks HIGH and MEDIUM, and high blocks HIGH, MEDIUM, and LOW. Three numbered versions are the fallback only if detect mode omits the band.
 2. **Do-Not-Answer.** Included in the core pack. Academic research fits non-commercial use under CC BY-NC-SA 4.0. Question text is not republished. Results are aggregates by risk area and by type of harm. The dataset is its own file, so a paper can include it or leave it out later.
-3. **Optional models.** A 20-example pilot for `jaredpalmer/kev-9b` and `convaiinnovations/laya`, including one long jailbreak prompt. A model is included only if its probabilities come back well-formed.
-4. **Emotion pair.** GoEmotions and `dair-ai/emotion`. Dreaddit is a possible later separate task, with its own label definition.
-5. **Region.** `us-east-2`, the same value as `DEFAULT_REGION_NAME` in `shared/aws/constants.py`.
-6. **Dataset revisions.** Each Hugging Face dataset is pinned to the commit from the first successful load. That commit is written into the run manifest, and a later load with a different commit is refused.
-7. **OpenAI Moderation holdout.** The harness check scores all 1,680 rows at threshold 0.5. The tuned threshold is fit on a hash-stable 20% holdout, and that holdout is left out of the tuned test number.
-8. **Clef-flash context.** On the hosted arm, a prompt over 24,576 tokens is an error. A self-hosted rerun of the weights is future work.
+3. **Emotion pair.** GoEmotions and `dair-ai/emotion`. Dreaddit is a possible later separate task, with its own label definition.
+4. **Region.** `us-east-2`, the same value as `DEFAULT_REGION_NAME` in `shared/aws/constants.py`.
+5. **Dataset revisions.** Each Hugging Face dataset is pinned to the commit from the first successful load. That commit is written into the run manifest, and a later load with a different commit is refused.
+6. **OpenAI Moderation holdout.** The harness check scores all 1,680 rows at threshold 0.5. The tuned threshold is fit on a hash-stable 20% holdout, and that holdout is left out of the tuned test number.
+7. **Clef-flash context.** On the hosted arm, a prompt over 24,576 tokens is an error. A self-hosted rerun of the weights is future work.
 
 No open questions remain.
