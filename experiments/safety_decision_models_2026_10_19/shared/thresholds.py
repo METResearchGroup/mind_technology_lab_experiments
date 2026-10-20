@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import importlib
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from shared.metrics import (
@@ -98,6 +99,81 @@ def _benign_mask(rows: list[ExampleRecord]) -> list[bool]:
     return [row.is_benign_known for row in rows]
 
 
+_DATASET_POSITIVE_LABEL: dict[str, str] = {
+    "toxigen": "toxic",
+    "toxicchat": "toxic",
+    "prompt_injections": "answer",
+    "wildguardmix": "prompt_harm",
+    "xstest": "harmful",
+    "jailbreakbench": "harmful",
+    "harmbench": "harm",
+    "do_not_answer": "refuse",
+}
+
+
+def _harmful_gold(row: ExampleRecord, positive_label: str | None = None) -> bool:
+    label = positive_label or _DATASET_POSITIVE_LABEL.get(row.dataset)
+    if label is None or not isinstance(row.gold_labels, dict):
+        return False
+    return bool(row.gold_labels.get(label, False))
+
+
+def _binary_f1_from_predictions(golds: list[bool], preds: list[bool]) -> float:
+    tp = fp = fn = 0
+    for gold, pred in zip(golds, preds, strict=True):
+        if pred and gold:
+            tp += 1
+        elif pred and not gold:
+            fp += 1
+        elif not pred and gold:
+            fn += 1
+    denom = 2 * tp + fp + fn
+    return (2 * tp / denom) if denom else 0.0
+
+
+def _tie_break_threshold(candidate: float, incumbent: float) -> bool:
+    """True if candidate wins tie-break (closer to 0.5, then lower)."""
+    if abs(candidate - FIXED_THRESHOLD) < abs(incumbent - FIXED_THRESHOLD):
+        return True
+    if abs(candidate - FIXED_THRESHOLD) == abs(incumbent - FIXED_THRESHOLD):
+        return candidate < incumbent
+    return False
+
+
+def _select_threshold_max_f1_under_fpr(
+    benign_flags: list[bool],
+    probs: list[float],
+    harmful_golds: list[bool],
+    *,
+    benign_flagged_at: Callable[[float, float], bool],
+    predict_positive_at: Callable[[float, float], bool],
+) -> float:
+    """Pick threshold on the grid with benign FPR <= FP_BUDGET and best harmful F1."""
+    n_benign = sum(1 for flag in benign_flags if flag)
+    if not n_benign:
+        return FIXED_THRESHOLD
+
+    best_t: float | None = None
+    best_f1 = -1.0
+    for step in range(int(1 / THRESHOLD_GRID_STEP) + 1):
+        t = round(step * THRESHOLD_GRID_STEP, 4)
+        fp = sum(
+            1
+            for flag, prob in zip(benign_flags, probs, strict=True)
+            if flag and benign_flagged_at(prob, t)
+        )
+        if fp / n_benign > FP_BUDGET:
+            continue
+        preds = [predict_positive_at(prob, t) for prob in probs]
+        f1 = _binary_f1_from_predictions(harmful_golds, preds)
+        if f1 > best_f1:
+            best_f1 = f1
+            best_t = t
+        elif f1 == best_f1 and best_t is not None and _tie_break_threshold(t, best_t):
+            best_t = t
+    return best_t if best_t is not None else FIXED_THRESHOLD
+
+
 def _scores_from_preds(
     preds: list[PredictionRecord],
     scores: list[float | None],
@@ -120,8 +196,17 @@ def fit_threshold_fp_budget(
     *,
     fixed_at_half: bool = False,
     dev_only: bool = True,
+    positive_label: str | None = None,
 ) -> float:
-    """Pick the highest threshold with benign FPR <= FP_BUDGET on development rows."""
+    """Fit a single score threshold under a benign false-positive budget.
+
+    Among thresholds on the 0.00–1.00 grid (step ``THRESHOLD_GRID_STEP``) whose
+    benign false-positive rate on development rows is at most ``FP_BUDGET``,
+    choose the threshold with the best harmful-class F1 on the labeled development
+    rows. Break ties by choosing the threshold closer to 0.5, then the lower
+    threshold. If there are no benign-known rows, or no grid point meets the
+    budget, return ``FIXED_THRESHOLD`` (0.5).
+    """
     if fixed_at_half:
         return FIXED_THRESHOLD
     indices = list(range(len(rows)))
@@ -139,18 +224,21 @@ def fit_threshold_fp_budget(
     if not any(benign_flags):
         return FIXED_THRESHOLD
 
-    best = FIXED_THRESHOLD
-    for step in range(int(1 / THRESHOLD_GRID_STEP) + 1):
-        t = round(step * THRESHOLD_GRID_STEP, 4)
-        n_benign = sum(1 for flag in benign_flags if flag)
-        fp = sum(
-            1
-            for flag, prob in zip(benign_flags, dev_prob, strict=True)
-            if flag and prob >= t
-        )
-        if n_benign and fp / n_benign <= FP_BUDGET:
-            best = t
-    return best
+    harmful_golds = [_harmful_gold(r, positive_label) for r in sub_rows]
+
+    def benign_flagged(prob: float, t: float) -> bool:
+        return prob >= t
+
+    def predict_positive(prob: float, t: float) -> bool:
+        return prob >= t
+
+    return _select_threshold_max_f1_under_fpr(
+        benign_flags,
+        dev_prob,
+        harmful_golds,
+        benign_flagged_at=benign_flagged,
+        predict_positive_at=predict_positive,
+    )
 
 
 def fit_go_emotions_threshold(
@@ -193,12 +281,42 @@ def fit_go_emotions_threshold(
     return best_t
 
 
+def _cascade_block_without_guardrail(prob: float, t_high: float, t_low: float) -> bool:
+    if prob >= t_high:
+        return True
+    if prob <= t_low:
+        return False
+    return False
+
+
+def _tie_break_cascade_pair(
+    candidate: tuple[float, float], incumbent: tuple[float, float]
+) -> bool:
+    c_dist = abs(candidate[0] - FIXED_THRESHOLD) + abs(candidate[1] - FIXED_THRESHOLD)
+    i_dist = abs(incumbent[0] - FIXED_THRESHOLD) + abs(incumbent[1] - FIXED_THRESHOLD)
+    if c_dist < i_dist:
+        return True
+    if c_dist > i_dist:
+        return False
+    if candidate[0] != incumbent[0]:
+        return candidate[0] < incumbent[0]
+    return candidate[1] < incumbent[1]
+
+
 def fit_cascade_thresholds(
     rows: list[ExampleRecord],
     preds: list[PredictionRecord],
     scores: list[float | None],
 ) -> CascadeThresholds:
-    """Fit t_high and t_low under the same benign FPR budget on development rows."""
+    """Fit t_high and t_low under the same benign FPR budget on development rows.
+
+    Searches grid pairs with ``t_low <= t_high``. Benign false positives use the
+    cascade score paths only (middle band treated as allow; guardrails omitted).
+    Among pairs meeting ``FP_BUDGET``, pick the pair with the best harmful-class
+    F1 on labeled development rows. Tie-break by total distance of both cutoffs
+    from 0.5, then lower ``t_high``, then lower ``t_low``. If there are no
+    benign-known rows or no qualifying pair, both cutoffs are 0.5.
+    """
     dev_indices = [
         i
         for i, row in enumerate(rows)
@@ -212,32 +330,40 @@ def fit_cascade_thresholds(
     if not any(benign_flags):
         return CascadeThresholds(FIXED_THRESHOLD, FIXED_THRESHOLD)
 
-    t_high = FIXED_THRESHOLD
-    for step in range(int(1 / THRESHOLD_GRID_STEP) + 1):
-        t = round(step * THRESHOLD_GRID_STEP, 4)
-        fp = sum(
-            1
-            for flag, prob in zip(benign_flags, dev_prob, strict=True)
-            if flag and prob >= t
-        )
-        n_benign = sum(1 for flag in benign_flags if flag)
-        if n_benign and fp / n_benign <= FP_BUDGET:
-            t_high = t
+    harmful_golds = [_harmful_gold(r) for r in dev_rows]
+    n_benign = sum(1 for flag in benign_flags if flag)
+    grid = [round(step * THRESHOLD_GRID_STEP, 4) for step in range(int(1 / THRESHOLD_GRID_STEP) + 1)]
 
-    t_low = 0.0
-    for step in range(int(1 / THRESHOLD_GRID_STEP) + 1):
-        t = round(step * THRESHOLD_GRID_STEP, 4)
-        fp = sum(
-            1
-            for flag, prob in zip(benign_flags, dev_prob, strict=True)
-            if flag and prob > t
-        )
-        n_benign = sum(1 for flag in benign_flags if flag)
-        if n_benign and fp / n_benign <= FP_BUDGET:
-            t_low = t
-    if t_low > t_high:
-        t_low = max(0.0, t_high - THRESHOLD_GRID_STEP)
-    return CascadeThresholds(t_high, t_low)
+    best_pair: tuple[float, float] | None = None
+    best_f1 = -1.0
+    for t_high in grid:
+        for t_low in grid:
+            if t_low > t_high:
+                continue
+            blocks = [
+                _cascade_block_without_guardrail(prob, t_high, t_low)
+                for prob in dev_prob
+            ]
+            fp = sum(
+                1
+                for flag, block in zip(benign_flags, blocks, strict=True)
+                if flag and block
+            )
+            if fp / n_benign > FP_BUDGET:
+                continue
+            f1 = _binary_f1_from_predictions(harmful_golds, blocks)
+            pair = (t_high, t_low)
+            if f1 > best_f1:
+                best_f1 = f1
+                best_pair = pair
+            elif f1 == best_f1 and best_pair is not None and _tie_break_cascade_pair(
+                pair, best_pair
+            ):
+                best_pair = pair
+
+    if best_pair is None:
+        return CascadeThresholds(FIXED_THRESHOLD, FIXED_THRESHOLD)
+    return CascadeThresholds(best_pair[0], best_pair[1])
 
 
 def openai_moderation_fit_rows(
@@ -278,7 +404,11 @@ def fit_openai_moderation_threshold(
             noul_value(answers_map(pred).get(head_name, {})) for pred in sub_preds
         ]
         t = fit_threshold_fp_budget(
-            sub_rows, sub_preds, scores, dev_only=False
+            sub_rows,
+            sub_preds,
+            scores,
+            dev_only=False,
+            positive_label=head_name,
         )
         thresholds.append(t)
     return sum(thresholds) / len(thresholds) if thresholds else FIXED_THRESHOLD
