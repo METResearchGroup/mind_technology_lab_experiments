@@ -1,0 +1,18 @@
+{
+  "region": "us-east-2",
+  "arms": ["jev", "clef", "clef-flash", "guardrails"],
+  "models": {
+    "jev": "jev-1.13.0",
+    "clef": "@cf/cloudflare/clef",
+    "clef-flash": "@cf/cloudflare/clef-flash",
+    "clef_weights_repo": "Cloudflare/clef"
+  },
+  "guardrail_id": "",
+  "prices_usd": {
+    "jev_per_million_input_tokens": 0.042,
+    "clef_per_million_input_tokens": 0.24,
+    "clef_flash_per_million_input_tokens": 0.038,
+    "guardrails_per_1000_text_units": 0.15
+  },
+  "dataset_revisions": {}
+}
