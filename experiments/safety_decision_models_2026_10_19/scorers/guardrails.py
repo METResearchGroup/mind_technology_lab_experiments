@@ -113,6 +113,24 @@ def band_blocks_at_strength(band: str, strength: GuardrailStrength) -> bool:
     return rank >= threshold
 
 
+def guardrail_band_from_response(
+    raw_response: dict[str, Any],
+    crosswalk_filter_names: list[str],
+) -> str:
+    """Recompute detect band from a stored ApplyGuardrail payload and crosswalk labels."""
+    if not crosswalk_filter_names:
+        return "NONE"
+    by_token = _filter_bands(raw_response)
+    relevant: list[str] = []
+    for name in crosswalk_filter_names:
+        token = _normalize_filter_label(name)
+        if token in by_token:
+            relevant.append(by_token[token])
+    if relevant:
+        return _max_band(relevant)
+    return "NONE"
+
+
 def _read_study_config() -> dict[str, Any]:
     if not STUDY_CONFIG.is_file():
         return {}
@@ -157,30 +175,36 @@ def _unique_preserve(names: list[str]) -> list[str]:
 
 
 def _band_for_filters(raw: dict[str, Any], filter_names: list[str]) -> str:
-    by_type = _filter_bands(raw)
-    if filter_names:
-        relevant = [by_type[name] for name in filter_names if name in by_type]
-        if relevant:
-            return _max_band(relevant)
-        return "NONE"
-    if by_type:
-        return _max_band(by_type.values())
-    return "NONE"
+    return guardrail_band_from_response(raw, filter_names)
+
+
+def _normalize_filter_label(name: str) -> str:
+    """Case-insensitive token; ignores spaces, hyphens, and underscores."""
+    return "".join(ch for ch in str(name).upper() if ch.isalnum())
 
 
 def _filter_bands(raw: dict[str, Any]) -> dict[str, str]:
     bands: dict[str, str] = {}
     for assessment in raw.get("assessments", []):
-        filters = assessment.get("contentPolicy", {}).get("filters", [])
+        if not isinstance(assessment, dict):
+            continue
+        content_policy = assessment.get("contentPolicy", {})
+        if not isinstance(content_policy, dict):
+            continue
+        filters = content_policy.get("filters", [])
+        if not isinstance(filters, list):
+            continue
         for filt in filters:
-            filter_type = str(filt.get("type", "")).upper()
-            if not filter_type:
+            if not isinstance(filt, dict):
+                continue
+            token = _normalize_filter_label(str(filt.get("type", "")))
+            if not token:
                 continue
             confidence = str(filt.get("confidence", "NONE")).upper()
             if confidence not in BAND_ORDER:
                 confidence = "NONE"
-            prior = bands.get(filter_type, "NONE")
-            bands[filter_type] = _max_band([prior, confidence])
+            prior = bands.get(token, "NONE")
+            bands[token] = _max_band([prior, confidence])
     return bands
 
 
