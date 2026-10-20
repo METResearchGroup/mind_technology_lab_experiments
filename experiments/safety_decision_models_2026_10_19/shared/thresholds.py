@@ -4,12 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import importlib
-import math
 from collections.abc import Callable
 from dataclasses import dataclass
 
 from shared.metrics import (
-    binary_f1,
     macro_f1_multilabel,
     noul_value,
     answers_map,
@@ -72,9 +70,19 @@ def load_development_records(dataset: str) -> list[ExampleRecord]:
 
 def development_labeled_count(dataset: str, rows: list[ExampleRecord]) -> int:
     """Count development rows with usable labels for threshold tuning."""
-    if dataset in SMALL_DEV_TUNED_DATASETS:
-        return len(rows)
-    return len(rows)
+    positive_label = _DATASET_POSITIVE_LABEL.get(dataset)
+    count = 0
+    for row in rows:
+        if row.is_benign_known:
+            count += 1
+            continue
+        if (
+            positive_label is not None
+            and isinstance(row.gold_labels, dict)
+            and positive_label in row.gold_labels
+        ):
+            count += 1
+    return count
 
 
 def tuned_threshold_fixed_at_half(dataset: str, dev_rows: list[ExampleRecord]) -> bool:
@@ -93,10 +101,6 @@ def is_openai_moderation_holdout(example_id: str) -> bool:
 class CascadeThresholds:
     threshold_high: float
     threshold_low: float
-
-
-def _benign_mask(rows: list[ExampleRecord]) -> list[bool]:
-    return [row.is_benign_known for row in rows]
 
 
 _DATASET_POSITIVE_LABEL: dict[str, str] = {

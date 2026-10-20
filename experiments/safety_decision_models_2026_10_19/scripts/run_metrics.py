@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import importlib
 import json
 import math
 import sys
@@ -26,8 +24,8 @@ from policies.intersection import intersection_decisions  # noqa: E402
 from policies.union import union_decisions  # noqa: E402
 from scorers.guardrails import (  # noqa: E402
     GuardrailStrength,
-    _crosswalk_filters_for_record,
     band_blocks_at_strength,
+    crosswalk_filters_for_record,
     guardrail_band_from_response,
 )
 from shared.metrics import (  # noqa: E402
@@ -597,6 +595,28 @@ def align_predictions(
     return [by_id[row.example_id] for row in rows]
 
 
+def _update_guardrail_cache_row(
+    cache: ResponseCache,
+    pred: PredictionRecord,
+    new_pred: PredictionRecord,
+    default_model_version: str,
+) -> int:
+    if new_pred.band == pred.band:
+        return 0
+    model_version = new_pred.model_version or default_model_version
+    template_version = new_pred.template_version or ""
+    key = ResponseCache.cache_key(
+        GUARDRAIL_ARM,
+        model_version,
+        template_version,
+        new_pred.example_id,
+    )
+    if cache.get(key) is None:
+        return 0
+    cache.put(key, new_pred)
+    return 1
+
+
 def _reband_one_guardrail_pred(
     row: ExampleRecord,
     pred: PredictionRecord,
@@ -605,7 +625,7 @@ def _reband_one_guardrail_pred(
     raw = pred.raw_response
     if not isinstance(raw, dict):
         return pred
-    filter_names = _crosswalk_filters_for_record(row, crosswalk)
+    filter_names = crosswalk_filters_for_record(row, crosswalk)
     new_band = guardrail_band_from_response(raw, filter_names)
     if pred.band == new_band:
         return pred
@@ -633,18 +653,9 @@ def reband_guardrail_predictions(
         for row, pred in zip(aligned_rows, preds, strict=True):
             new_pred = _reband_one_guardrail_pred(row, pred, crosswalk)
             rebanded.append(new_pred)
-            if new_pred.band != pred.band:
-                model_version = new_pred.model_version or default_model_version
-                template_version = new_pred.template_version or ""
-                if template_version:
-                    key = ResponseCache.cache_key(
-                        GUARDRAIL_ARM,
-                        model_version,
-                        template_version,
-                        new_pred.example_id,
-                    )
-                    cache.put(key, new_pred)
-                    updated_cache += 1
+            updated_cache += _update_guardrail_cache_row(
+                cache, pred, new_pred, default_model_version
+            )
         test_preds_by_dataset[dataset] = rebanded
         _write_predictions(RUN_ID, GUARDRAIL_ARM, dataset, rebanded)
 
@@ -656,18 +667,9 @@ def reband_guardrail_predictions(
         for row, pred in zip(dev_rows, dev_preds, strict=True):
             new_pred = _reband_one_guardrail_pred(row, pred, crosswalk)
             rebanded_dev.append(new_pred)
-            if new_pred.band != pred.band:
-                model_version = new_pred.model_version or default_model_version
-                template_version = new_pred.template_version or ""
-                if template_version:
-                    key = ResponseCache.cache_key(
-                        GUARDRAIL_ARM,
-                        model_version,
-                        template_version,
-                        new_pred.example_id,
-                    )
-                    cache.put(key, new_pred)
-                    updated_cache += 1
+            updated_cache += _update_guardrail_cache_row(
+                cache, pred, new_pred, default_model_version
+            )
         dev_preds_by_dataset[dataset] = rebanded_dev
         if rebanded_dev:
             _write_dev_predictions_parquet(GUARDRAIL_ARM, dataset, rebanded_dev)
@@ -1534,14 +1536,10 @@ def _head_to_filter(head: str) -> str:
 
 
 def _filter_band(pred: PredictionRecord, filter_name: str) -> str:
-    raw = pred.raw_response or {}
-    for assessment in raw.get("assessments", []):
-        cp = assessment.get("contentPolicy", {})
-        for filt in cp.get("filters", []):
-            ftype = str(filt.get("type", "")).replace("_", " ").title()
-            if ftype.replace(" ", "") == filter_name.replace(" ", ""):
-                return str(filt.get("confidence", "NONE")).upper()
-    return "NONE"
+    raw = pred.raw_response
+    if not isinstance(raw, dict):
+        return "NONE"
+    return guardrail_band_from_response(raw, [filter_name])
 
 
 def _fig_selective(

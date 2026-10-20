@@ -85,7 +85,7 @@ class GuardrailsScorer:
                 error_status=type(exc).__name__,
             )
         latency_ms = (time.perf_counter() - started) * 1000.0
-        filter_names = _crosswalk_filters_for_record(record, self._crosswalk)
+        filter_names = crosswalk_filters_for_record(record, self._crosswalk)
         band = _band_for_filters(raw, filter_names)
         return PredictionRecord(
             example_id=record.example_id,
@@ -117,13 +117,16 @@ def guardrail_band_from_response(
     raw_response: dict[str, Any],
     crosswalk_filter_names: list[str],
 ) -> str:
-    """Recompute detect band from a stored ApplyGuardrail payload and crosswalk labels."""
+    """Recompute detect band from a stored ApplyGuardrail payload and crosswalk labels.
+
+    An empty ``crosswalk_filter_names`` list yields band ``NONE``.
+    """
     if not crosswalk_filter_names:
         return "NONE"
     by_token = _filter_bands(raw_response)
     relevant: list[str] = []
     for name in crosswalk_filter_names:
-        token = _normalize_filter_label(name)
+        token = normalize_filter_label(name)
         if token in by_token:
             relevant.append(by_token[token])
     if relevant:
@@ -140,7 +143,7 @@ def _read_study_config() -> dict[str, Any]:
     return payload
 
 
-def _crosswalk_filters_for_record(
+def crosswalk_filters_for_record(
     record: ExampleRecord, crosswalk: dict[str, Any]
 ) -> list[str]:
     dataset_map = crosswalk.get(record.dataset, {})
@@ -178,7 +181,7 @@ def _band_for_filters(raw: dict[str, Any], filter_names: list[str]) -> str:
     return guardrail_band_from_response(raw, filter_names)
 
 
-def _normalize_filter_label(name: str) -> str:
+def normalize_filter_label(name: str) -> str:
     """Case-insensitive token; ignores spaces, hyphens, and underscores."""
     return "".join(ch for ch in str(name).upper() if ch.isalnum())
 
@@ -197,7 +200,7 @@ def _filter_bands(raw: dict[str, Any]) -> dict[str, str]:
         for filt in filters:
             if not isinstance(filt, dict):
                 continue
-            token = _normalize_filter_label(str(filt.get("type", "")))
+            token = normalize_filter_label(str(filt.get("type", "")))
             if not token:
                 continue
             confidence = str(filt.get("confidence", "NONE")).upper()
