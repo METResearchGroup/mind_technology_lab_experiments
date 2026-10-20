@@ -23,14 +23,6 @@ Manifest: `outputs/manifests/20261020T033822Z_0f24960e.json`.
 
 Run `run_id=20261020T040920Z_90c5fd13` (step 7 metrics). Threshold 0.5 and development-tuned values.
 
-Guardrail bands were recomputed offline from cached Bedrock guardrail assessments. Content-filter names were normalized to the study crosswalk before that step. JailbreakBench still maps harmful labels to Prompt Attack only. GoEmotions and Emotion have no content-filter crosswalk, so the guardrail band is NONE at all strengths.
-
-Tuned score thresholds pick the harmful-class F1 that is best on the development pool while the benign false-positive rate stays at most 5%. When no threshold meets that constraint, the score threshold is 0.5. JailbreakBench stays at 0.5 because the labeled development pool has fewer than 200 rows.
-
-Cascade fitting uses the same false-positive rate budget. When a score falls between `t_low` and `t_high`, the decision follows the guardrail block bit at medium strength.
-
-For Jev, tuned cutoffs are wildguardmix `t_high=0.78` and `t_low=0.77`, xstest `t_high=0.77` and `t_low=0.5`, and jailbreakbench `t_high=0.5` and `t_low=0.5` (held).
-
 | Dataset | Arm | Metric | Tuned | At 0.5 |
 | --- | --- | --- | ---: | ---: |
 | toxigen | jev | accuracy | 0.8755 | 0.8755 |
@@ -89,6 +81,32 @@ For Jev, tuned cutoffs are wildguardmix `t_high=0.78` and `t_low=0.77`, xstest `
 | emotion | clef | accuracy | 0.5910 | 0.5910 |
 | emotion | clef-flash | accuracy | 0.5795 | 0.5795 |
 | emotion | guardrails | miss_rate | 1.0000 | — |
+## Post-hoc sensitivity analysis
+
+**post-hoc sensitivity analysis** — JailbreakBench Bedrock guardrails only. The core-pack headline remains the pre-registered crosswalk (harmful → Prompt Attack only). Below, the any-filter variant takes the maximum confidence band across Hate, Insults, Sexual, Violence, Misconduct, and Prompt Attack, then applies the usual strength rule. Stacks reuse development-tuned model and cascade thresholds fit on the crosswalk guardrail bit at medium strength.
+
+| Variant | Strength | Miss rate | FPR |
+| --- | --- | ---: | ---: |
+| Pre-registered crosswalk | medium | 0.9800 | 0.0000 |
+| Any content filter (max band) | low | 0.3900 | 0.0900 |
+| Any content filter (max band) | medium | 0.2300 | 0.1900 |
+| Any content filter (max band) | high | 0.1500 | 0.3900 |
+
+Model and cascade cutoffs were fit on the development pool using pre-registered crosswalk guardrail bands at medium strength; sensitivity bands are applied only in this post-hoc analysis.
+
+| Model arm | Stack | Miss rate | FPR |
+| --- | --- | ---: | ---: |
+| jev | union | 0.0300 | 0.4200 |
+| jev | intersection | 0.2300 | 0.1100 |
+| jev | cascade | 0.0300 | 0.3400 |
+| clef | union | 0.0100 | 0.5700 |
+| clef | intersection | 0.2300 | 0.1600 |
+| clef | cascade | 0.0100 | 0.5400 |
+| clef-flash | union | 0.0500 | 0.3300 |
+| clef-flash | intersection | 0.2500 | 0.1000 |
+| clef-flash | cascade | 0.0700 | 0.2400 |
+
+Figure: `outputs/figures/20261020T040920Z_90c5fd13/jailbreakbench_guardrail_sensitivity.png`.
 
 ## Spend
 

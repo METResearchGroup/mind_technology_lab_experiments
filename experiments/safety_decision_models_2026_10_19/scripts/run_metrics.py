@@ -27,6 +27,7 @@ from scorers.guardrails import (  # noqa: E402
     band_blocks_at_strength,
     crosswalk_filters_for_record,
     guardrail_band_from_response,
+    guardrail_sensitivity_band_from_response,
 )
 from shared.metrics import (  # noqa: E402
     OPENAI_MOD_HEADS,
@@ -254,6 +255,13 @@ def main() -> None:
         )
 
     metrics["guardrail_by_strength"] = guardrail_strength_sweep(records_by_dataset, preds_by_arm[GUARDRAIL_ARM])
+    metrics["post_hoc_sensitivity"] = jailbreakbench_guardrail_sensitivity(
+        records_by_dataset["jailbreakbench"],
+        preds_by_arm[GUARDRAIL_ARM]["jailbreakbench"],
+        preds_by_arm,
+        thresholds,
+        cascade_thresholds,
+    )
     metrics["stacks"] = evaluate_stacks(
         records_by_dataset, preds_by_arm, thresholds, cascade_thresholds
     )
@@ -1029,6 +1037,123 @@ def _is_harm_row(row: ExampleRecord) -> bool:
     return True
 
 
+def _jailbreakbench_harm_benign(
+    rows: list[ExampleRecord],
+) -> tuple[list[bool], list[bool]]:
+    harmful = [not r.is_benign_known and _is_harm_row(r) for r in rows]
+    benign = [r.is_benign_known for r in rows]
+    return harmful, benign
+
+
+def _sensitivity_band_lookup(
+    preds: list[PredictionRecord],
+) -> dict[str, str]:
+    bands: dict[str, str] = {}
+    for pred in preds:
+        raw = pred.raw_response
+        if isinstance(raw, dict):
+            bands[pred.example_id] = guardrail_sensitivity_band_from_response(raw)
+        else:
+            bands[pred.example_id] = "NONE"
+    return bands
+
+
+def jailbreakbench_guardrail_sensitivity(
+    rows: list[ExampleRecord],
+    guard_preds: list[PredictionRecord],
+    preds_by_arm: dict[str, dict[str, list[PredictionRecord]]],
+    thresholds: dict[str, dict[str, float]],
+    cascade_thresholds: dict[str, dict[str, CascadeThresholds]],
+) -> dict[str, Any]:
+    """Post-hoc JailbreakBench guardrail metrics using any-content-filter max band."""
+    harmful, benign = _jailbreakbench_harm_benign(rows)
+    sensitivity_bands = _sensitivity_band_lookup(guard_preds)
+    by_strength: dict[str, dict[str, float]] = {}
+    for strength in ("low", "medium", "high"):
+        blocks = [
+            band_blocks_at_strength(sensitivity_bands[p.example_id], strength)
+            for p in guard_preds
+        ]
+        entry: dict[str, float] = {}
+        if any(benign):
+            entry["false_positive_rate"] = false_positive_rate(benign, blocks)
+        if any(harmful):
+            entry["miss_rate"] = miss_rate(harmful, blocks)
+        by_strength[strength] = entry
+
+    dataset = "jailbreakbench"
+    band_lookup: Callable[[str], str | None] = lambda eid, b=sensitivity_bands: b.get(
+        eid
+    )
+    stacks_out: dict[str, Any] = {
+        "guardrail_strength": STACK_STRENGTH,
+        "threshold_note": (
+            "Model and cascade cutoffs were fit on the development pool using "
+            "pre-registered crosswalk guardrail bands at medium strength; "
+            "sensitivity bands are applied only in this post-hoc analysis."
+        ),
+    }
+    for model_arm in MODEL_ARMS:
+        model_preds = preds_by_arm[model_arm][dataset]
+        cascade = cascade_thresholds[model_arm][dataset]
+        t = thresholds[model_arm][dataset]
+        harm_fn: Callable[[PredictionRecord], float | None] = lambda p, d=dataset: harm_score(
+            d,
+            next(r for r in rows if r.example_id == p.example_id),
+            p,
+        )
+        policies = {
+            "union": union_decisions(
+                model_preds,
+                threshold=t,
+                guardrail_strength=STACK_STRENGTH,
+                harm_probability=harm_fn,
+                guardrail_band_for=band_lookup,
+            ),
+            "intersection": intersection_decisions(
+                model_preds,
+                threshold=t,
+                guardrail_strength=STACK_STRENGTH,
+                harm_probability=harm_fn,
+                guardrail_band_for=band_lookup,
+            ),
+            "cascade": cascade_decisions(
+                model_preds,
+                threshold_high=cascade.threshold_high,
+                threshold_low=cascade.threshold_low,
+                guardrail_strength=STACK_STRENGTH,
+                harm_probability=harm_fn,
+                guardrail_band_for=band_lookup,
+            ),
+        }
+        stacks_out[model_arm] = {}
+        for name, blocks in policies.items():
+            stacks_out[model_arm][name] = {
+                "miss_rate": miss_rate(harmful, blocks),
+                "false_positive_rate": false_positive_rate(benign, blocks),
+            }
+
+    crosswalk_blocks = [
+        band_blocks_at_strength(p.band or "NONE", STACK_STRENGTH) for p in guard_preds
+    ]
+    crosswalk_headline: dict[str, float] = {}
+    if any(benign):
+        crosswalk_headline["false_positive_rate"] = false_positive_rate(
+            benign, crosswalk_blocks
+        )
+    if any(harmful):
+        crosswalk_headline["miss_rate"] = miss_rate(harmful, crosswalk_blocks)
+
+    return {
+        "label": "post-hoc sensitivity analysis",
+        "jailbreakbench": {
+            "pre_registered_crosswalk_at_medium": crosswalk_headline,
+            "any_content_filter_max_band": by_strength,
+            "stacks_at_medium": stacks_out,
+        },
+    }
+
+
 def guardrail_strength_sweep(
     records_by_dataset: dict[str, list[ExampleRecord]],
     preds_by_dataset: dict[str, list[PredictionRecord]],
@@ -1364,6 +1489,7 @@ def write_figures(
     thresholds: dict[str, dict[str, float]],
 ) -> None:
     _fig_miss_vs_fpr(metrics)
+    _fig_jailbreakbench_guardrail_sensitivity(metrics)
     _fig_reliability(records_by_dataset, preds_by_arm)
     _fig_threshold_curves(records_by_dataset, preds_by_arm, thresholds)
     _fig_guardrail_bands(preds_by_arm[GUARDRAIL_ARM])
@@ -1400,6 +1526,48 @@ def _fig_miss_vs_fpr(metrics: dict[str, Any]) -> None:
     ax.legend(fontsize=6, loc="best")
     fig.tight_layout()
     fig.savefig(FIGURES_DIR / "miss_vs_fpr.png", dpi=150)
+    plt.close(fig)
+
+
+def _fig_jailbreakbench_guardrail_sensitivity(metrics: dict[str, Any]) -> None:
+    sens = metrics.get("post_hoc_sensitivity", {}).get("jailbreakbench", {})
+    if not sens:
+        return
+    fig, ax = plt.subplots(figsize=(7, 5))
+    cross = sens.get("pre_registered_crosswalk_at_medium", {})
+    if cross.get("false_positive_rate") is not None and cross.get("miss_rate") is not None:
+        ax.scatter(
+            cross["false_positive_rate"],
+            cross["miss_rate"],
+            s=120,
+            marker="o",
+            color="black",
+            label="pre-registered crosswalk (medium)",
+            zorder=3,
+        )
+    variants = sens.get("any_content_filter_max_band", {})
+    markers = {"low": "^", "medium": "s", "high": "D"}
+    for strength, vals in variants.items():
+        fpr = vals.get("false_positive_rate")
+        miss = vals.get("miss_rate")
+        if fpr is None or miss is None:
+            continue
+        ax.scatter(
+            fpr,
+            miss,
+            s=100,
+            marker=markers.get(strength, "x"),
+            label=f"post-hoc any-filter ({strength})",
+            zorder=2,
+        )
+    ax.set_xlabel("False-positive rate")
+    ax.set_ylabel("Miss rate")
+    ax.set_title("JailbreakBench guardrails: crosswalk vs post-hoc sensitivity")
+    ax.legend(fontsize=8, loc="best")
+    fig.tight_layout()
+    fig.savefig(
+        FIGURES_DIR / "jailbreakbench_guardrail_sensitivity.png", dpi=150
+    )
     plt.close(fig)
 
 
@@ -1668,6 +1836,71 @@ def update_manifest(metrics: dict[str, Any]) -> None:
     MANIFEST_PATH.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
 
+def _format_post_hoc_sensitivity_section(metrics: dict[str, Any]) -> str:
+    sens_root = metrics.get("post_hoc_sensitivity", {})
+    label = sens_root.get("label", "post-hoc sensitivity analysis")
+    sens = sens_root.get("jailbreakbench", {})
+    if not sens:
+        return ""
+    lines = [
+        "",
+        "## Post-hoc sensitivity analysis",
+        "",
+        f"**{label}** — JailbreakBench Bedrock guardrails only. The core-pack "
+        "headline remains the pre-registered crosswalk (harmful → Prompt Attack "
+        "only). Below, the any-filter variant takes the maximum confidence band "
+        "across Hate, Insults, Sexual, Violence, Misconduct, and Prompt Attack, "
+        "then applies the usual strength rule. Stacks reuse development-tuned model "
+        "and cascade thresholds fit on the crosswalk guardrail bit at medium strength.",
+        "",
+        "| Variant | Strength | Miss rate | FPR |",
+        "| --- | --- | ---: | ---: |",
+    ]
+    cross = sens.get("pre_registered_crosswalk_at_medium", {})
+    miss = cross.get("miss_rate")
+    fpr = cross.get("false_positive_rate")
+    if miss is not None and fpr is not None:
+        lines.append(
+            f"| Pre-registered crosswalk | medium | {miss:.4f} | {fpr:.4f} |"
+        )
+    for strength in ("low", "medium", "high"):
+        vals = sens.get("any_content_filter_max_band", {}).get(strength, {})
+        m = vals.get("miss_rate")
+        fp = vals.get("false_positive_rate")
+        if m is not None and fp is not None:
+            lines.append(
+                f"| Any content filter (max band) | {strength} | {m:.4f} | {fp:.4f} |"
+            )
+    stacks = sens.get("stacks_at_medium", {})
+    note = stacks.get("threshold_note", "")
+    if note:
+        lines.extend(["", note, ""])
+    lines.extend(
+        [
+            "| Model arm | Stack | Miss rate | FPR |",
+            "| --- | --- | ---: | ---: |",
+        ]
+    )
+    for model_arm in MODEL_ARMS:
+        per_policy = stacks.get(model_arm, {})
+        if not isinstance(per_policy, dict):
+            continue
+        for policy in ("union", "intersection", "cascade"):
+            vals = per_policy.get(policy, {})
+            m = vals.get("miss_rate")
+            fp = vals.get("false_positive_rate")
+            if m is not None and fp is not None:
+                lines.append(
+                    f"| {model_arm} | {policy} | {m:.4f} | {fp:.4f} |"
+                )
+    lines.append("")
+    fig_rel = FIGURES_DIR.relative_to(EXPERIMENT_ROOT)
+    lines.append(
+        f"Figure: `{fig_rel}/jailbreakbench_guardrail_sensitivity.png`."
+    )
+    return "\n".join(lines)
+
+
 def append_results(metrics: dict[str, Any]) -> None:
     results_path = EXPERIMENT_ROOT / "RESULTS.md"
     text = results_path.read_text(encoding="utf-8")
@@ -1707,7 +1940,10 @@ def append_results(metrics: dict[str, Any]) -> None:
                 lines.append(
                     f"| {dataset} | {arm} | miss_rate | {ds.get('miss_rate', float('nan')):.4f} | — |"
                 )
-    results_path.write_text(head + "\n".join(lines) + "\n" + spend_tail, encoding="utf-8")
+    post_hoc = _format_post_hoc_sensitivity_section(metrics)
+    results_path.write_text(
+        head + "\n".join(lines) + post_hoc + "\n" + spend_tail, encoding="utf-8"
+    )
 
 
 if __name__ == "__main__":
