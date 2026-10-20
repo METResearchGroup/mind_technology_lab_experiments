@@ -1,0 +1,44 @@
+\section{Datasets}
+\label{sec:datasets}
+
+The benchmark scores eleven public Hugging Face datasets: nine safety or jailbreak sets plus GoEmotions and Emotion \citep{hartvigsen2022toxigen,markov2023holistic,lin2023toxicchat,deepset2024promptinjections,han2024wildguard,wang2024donotanswer,rottger2024xstest,mazeika2024harmbench,chao2024jailbreakbench,demszky2020goemotions,saravia2018carer}. We evaluate the prompt or user message only, never a model reply, and never measure chat-model compliance. Each loader pins a dataset revision on first successful download. Table~\ref{tab:dataset_sizes} lists test-set row counts $n$ from the primary run (Jev arm) and development-pool sizes used for threshold tuning.
+
+\begin{table}[t]
+  \centering
+  \caption{Test rows ($n$) and development-pool row counts for threshold fitting.}
+  \label{tab:dataset_sizes}
+  \begin{tabular}{lrr}
+    \toprule
+    Dataset & Test $n$ & Dev pool \\
+    \midrule
+    ToxiGen & 940 & 8{,}960 \\
+    OpenAI Moderation & 1{,}338 & 342 \\
+    ToxicChat & 5{,}083 & 5{,}082 \\
+    Prompt injections & 116 & 546 \\
+    WildGuardMix (WildGuardTest) & 1{,}725 & 342 \\
+    Do-Not-Answer & 939 & 193 \\
+    XSTest (deduped prompts) & 450 & 81 \\
+    HarmBench (both configs) & 1{,}920 & 385 \\
+    JailbreakBench & 200 & 50 \\
+    GoEmotions & 5{,}427 & 5{,}426 \\
+    Emotion & 2{,}000 & 2{,}000 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{Development splits.}
+Where the upstream benchmark defines a training or validation split for tuning, we use it: ToxiGen, ToxicChat, and prompt injections use \texttt{train}; GoEmotions and Emotion use \texttt{validation}. HarmBench validation rows (80 DirectRequest and 400 HumanJailbreaks in the source release) form the development pool; they are harmful-only and do not supply a benign false-positive budget. OpenAI Moderation has no harness development split; we hold out 20\% of examples by a hash of \texttt{example\_id} (342 development rows, 1{,}338 test rows; 1{,}680 rows appear in fixed-threshold reporting). Do-Not-Answer, deduplicated XSTest prompts, and JailbreakBench likewise use a 20\% hash holdout when no native dev split exists. JailbreakBench contributes only 50 labeled development rows, so tuned thresholds stay at the default 0.5 for all decision-model arms (fewer than 200 labeled development items).
+
+\textbf{Safety and jailbreak tasks.}
+ToxiGen test toxicity uses a Noul plus a five-level offensiveness Score as in prior Jev work \citep{deusser2026jevbenchmark}. OpenAI Moderation uses eight category Nouls. ToxicChat test reports toxicity and jailbreak F1 separately. Prompt injections is a small binary test (116 rows). WildGuardMix WildGuardTest scores prompt harm (F1 and AUPRC) and a second Noul on the adversarial flag; on the test split Jev achieves adversarial accuracy 0.6696 at tuned thresholds (0.6690 at 0.5). Benign-known rows exist for prompt-harm FPR tuning, but the WildGuardMix development pool (342 rows) contains very few prompts with known benign harm labels, which limits how aggressively thresholds can target a benign false-positive cap.
+
+HarmBench merges \texttt{DirectRequest} and \texttt{HumanJailbreaks} test splits (1{,}920 rows). We report overall miss rate and split-specific miss rates on the test set (for Jev, miss rate 0.2870 overall, 0.3406 on DirectRequest and 0.2763 on HumanJailbreaks). JailbreakBench loads 100 harmful and 100 benign goals; metrics are miss rate on harmful rows and false-positive rate on benign rows.
+
+\textbf{Over-refusal and affect.}
+XSTest uses \texttt{allenai/xstest-response}: we deduplicate prompts, keep \texttt{prompt\_type}, and score safe versus harmful prompt types \citep{rottger2024xstest}. GoEmotions test issues 28 emotion Nouls in one request; Emotion test is a six-way Choice \citep{demszky2020goemotions,saravia2018carer}. For these corpora, decision models are judged on classification accuracy or macro-F1, while the guardrail arm records block rate on emotionally labeled text that carries no harm label in the dataset.
+
+\textbf{Do-Not-Answer (aggregates only).}
+Do-Not-Answer contains 939 risky questions \citep{wang2024donotanswer}. We report detection rate (share scored as refuse) and never reproduce question text in the paper, repository, or public artifacts. The primary metric for Jev is detection rate 0.7433 at tuned and 0.5 thresholds. Aggregates break detection rate by risk area and by type of harm (for example, Malicious Uses: Jev 0.9671, Clef 0.9753, Clef-flash 0.8395, guardrails 0.5556; Information Hazards: Jev 0.8306 versus guardrails 0.0081). These tables contain counts and rates only.
+
+\textbf{Metrics tied to labels.}
+Sets without a benign class report miss rate or detection rate, not false-positive rate. Sets with both harmful and benign rows report miss and false-positive rate separately. Probability outputs also receive calibration and selective-prediction analyses where applicable; guardrail bands are ordinal and are not forced into expected calibration error. All test metrics use thresholds chosen on development data only, then frozen before scoring the test rows listed in Table~\ref{tab:dataset_sizes}.

@@ -1,0 +1,13 @@
+Typed decision models answer fixed questions about text and return calibrated probabilities; managed guardrails return ordinal confidence bands on named content filters.
+We benchmark TypeSafe Jev (\texttt{jev-1.13.0})~\cite{typesafe2026jevmodels,deusser2026jevbenchmark}, Cloudflare Clef and Clef-flash~\cite{cloudflare2026clef,cloudflare2026clefflash}, and Amazon Bedrock Guardrails (input content filters only)~\cite{aws2024bedrockguardrails}, alone and in union, intersection, and cascade stacks, on eleven public prompt-level benchmarks: ToxiGen~\cite{hartvigsen2022toxigen}, OpenAI Moderation~\cite{markov2023holistic}, ToxicChat~\cite{lin2023toxicchat}, prompt injections~\cite{deepset2024promptinjections}, WildGuardMix~\cite{han2024wildguard}, Do-Not-Answer~\cite{wang2024donotanswer}, XSTest~\cite{rottger2024xstest}, HarmBench~\cite{mazeika2024harmbench}, JailbreakBench~\cite{chao2024jailbreakbench}, GoEmotions~\cite{demszky2020goemotions}, and Emotion~\cite{saravia2018carer}.
+Harmful prompts are described by dataset and metric only.
+
+A harness check reproduced published Jev intervals on six overlapping sets before the full pack was scored~\cite{deusser2026jevbenchmark}.
+On ToxiGen, tuned Jev accuracy is 0.8755.
+ToxicChat toxic F1 is 0.7878.
+On Do-Not-Answer, Jev detection rate is 0.7433 (aggregates only; no question text).
+On XSTest safe prompts at tuned thresholds, Jev false-positive rate is 0.0120.
+HarmBench miss rate is 0.2026 for guardrails versus 0.2870 for Jev.
+On JailbreakBench, the pre-registered guardrail crosswalk yields miss rate 0.9800 versus 0.0300 for Jev; a post-hoc mapping that takes the maximum band across all content filters lowers medium-strength miss rate to 0.2300 at false-positive rate 0.1900.
+Median latency is 88.9\,ms for Jev versus 359\,ms for guardrails.
+Cost per 1{,}000 prompts is \$0.023 for Jev, \$0.230 for Clef, and \$0.179 for guardrails; total provider spend is \$18.38.

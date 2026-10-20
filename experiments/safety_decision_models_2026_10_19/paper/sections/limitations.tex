@@ -1,0 +1,18 @@
+\section{Limitations}
+\label{sec:limitations}
+
+Several protocol choices narrow how far these results generalize. Sample size is the first constraint. The prompt-injection test set has only $n=116$ rows, so accuracy and F1 intervals are wide and small ranking differences are unstable. JailbreakBench uses 100 harmful and 100 benign prompts; HarmBench and other harmful-only sets contribute miss rate or detection rate without a paired false-positive rate. We do not headline a single winner from the smallest benchmarks.
+
+Threshold fitting follows pre-registered rules that sometimes confirm the operating point at 0.5. When a labeled development pool has fewer than 200 rows, tuned thresholds are not applied and metrics are reported at 0.5. JailbreakBench falls in that bucket, so all decision-model and stack numbers on that set use the fixed 0.5 cutoffs on test. That choice avoids overfitting a threshold to a tiny split but may understate what development tuning could achieve elsewhere.
+
+WildGuardMix shows a second threshold issue. The benign development pool for prompt-harm tuning is very small. The rule that tunes score thresholds to maximize harmful-class F1 subject to at most 5\% benign false-positive rate on development data can move the cutoff away from 0.5 and lower test F1 relative to the 0.5 baseline. On this run Jev prompt-harm F1 is 0.4940 tuned versus 0.5904 at 0.5, even though prompt-harm AUPRC stays high. That gap is a limitation of the tuning budget and pool size, not proof that 0.5 is always better on WildGuardMix in production.
+
+Input length is handled differently by provider. Jev records provider context overflow as an error and keeps the row in the metric table. Clef and Clef-flash on Workers AI silently shorten an over-long \texttt{state} and still return an answer; the scorer marks those rows \texttt{truncated} when token counts exceed the hosted limits (24{,}576 tokens for Clef-flash and 64{,}000 for Clef). We do not separately measure whether truncation changes scores on the truncated tail of long prompts, and we do not rerun Clef-flash with self-hosted weights at a different context window.
+
+The study scores prompts only. We do not generate new attacks and we do not measure whether a downstream chat model would comply with a harmful instruction if the screen allowed it. HarmBench attack-success rates against a target model are out of scope. Miss rate here means the screen allowed the text; it is a filter outcome, not an end-to-end safety outcome.
+
+Guardrail outputs are ordinal confidence bands, not calibrated probabilities. We do not compute expected calibration error or Brier scores for Guardrails, and we do not claim that a band is ``better calibrated'' than Jev \texttt{P(yes)}. Comparisons across arms mix probabilistic decision-model scores with vendor-specific band rules at low, medium, and high strength.
+
+Guardrails run in \texttt{us-east-2} on a pinned version. Costs use 2026-10-19 list prices. Latency uses stored \texttt{latency\_ms} from the original call; cache replays keep that value rather than zeroing it.
+
+Dataset label noise and possible training-data overlap on public benchmarks further limit causal claims about unseen deployment traffic.

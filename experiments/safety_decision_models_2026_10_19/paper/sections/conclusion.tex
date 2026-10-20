@@ -1,0 +1,8 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We benchmarked TypeSafe Jev, Cloudflare Clef and Clef-flash, and Amazon Bedrock Guardrails on a shared core pack of safety and emotion datasets, with union, intersection, and cascade stacks where both harm classes exist.
+
+The public Jev harness check passed on six overlapping sets before the full pack run, so Jev scores in this paper sit on a validated baseline rather than an ad hoc reimplementation. No single arm wins every primary metric: Clef leads some tasks such as OpenAI Moderation mean AUPRC, Jev leads on several yes/no safety tasks and on Do-Not-Answer detection, Clef-flash trades accuracy for speed, and Guardrails miss rate is best on HarmBench but weak on ToxiGen and Do-Not-Answer. Guardrail category mapping drives JailbreakBench scores: the pre-registered Prompt Attack crosswalk yields guardrail miss rate 0.9800 at medium strength, while a post-hoc any-filter aggregation at medium strength yields miss 0.2300 at false-positive rate 0.1900. That contrast is a sensitivity fact about mapping, not a replacement registered endpoint. Cost and latency on this run favor Jev (\$0.023 per 1{,}000 prompts, median 88.9~ms) over Clef (about ten times the per-1{,}000 cost at \$0.230), with total study spend \$18.38 at 2026-10-19 list prices.
+
+Choosing a screen for a live product still requires naming the stack, the threshold, the guardrail strength, and the crosswalk, then measuring false positives on the traffic that matters. This benchmark supplies comparable numbers for that decision; it does not test chat-model compliance or user outcomes.
