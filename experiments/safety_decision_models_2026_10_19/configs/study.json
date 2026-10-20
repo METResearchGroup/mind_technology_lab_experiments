@@ -7,7 +7,8 @@
     "clef-flash": "@cf/cloudflare/clef-flash",
     "clef_weights_repo": "Cloudflare/clef"
   },
-  "guardrail_id": "",
+  "guardrail_id": "b4119czfeoh1",
+  "guardrail_version": "1",
   "crosswalk_notes": "OpenAI moderation harassment (HR) maps only partly to Insults; self-harm (SH) is intentionally unmapped. GoEmotions and Emotion labels are affect, not Bedrock harm filters.",
   "crosswalk": {
     "openai_moderation": {
