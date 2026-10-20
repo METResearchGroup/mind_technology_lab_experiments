@@ -46,7 +46,7 @@ Proposal mapping: section 4, section 5, section 10 step 2.
 
 ### Step 3: Run the 20-item smoke test
 
-Run `experiments/safety_decision_models_2026_10_19/scripts/smoke.py` on 20 development items, end to end, once per arm (Jev, Clef, Clef-flash, Guardrails). Stop if any probability or band is empty, if a rerun misses the cache in `cache/responses.db`, or if the Jev smoke metric cannot be compared with the published harness metric.
+Implement the Step 1 stub in `experiments/safety_decision_models_2026_10_19/scripts/smoke.py` and run it on 20 development items, end to end. In Step 3, run arms `jev`, `clef`, and `clef-flash` first; re-run the same script for arm `guardrails` after Step 5 creates the numbered guardrail. Stop if any probability or band is empty, if a rerun misses the cache in `cache/responses.db`, or if the Jev smoke metric cannot be compared with the published harness metric.
 
 Proposal mapping: section 4, section 5, section 10 step 3.
 
@@ -58,13 +58,13 @@ Proposal mapping: section 3, section 5, section 10 step 4.
 
 ### Step 5: Create guardrail and publish crosswalk
 
-Create one numbered guardrail in `us-east-2` with the six content filters (Hate, Insults, Sexual, Violence, Misconduct, Prompt Attack) and filter action `NONE`. Write the dataset-label-to-filter crosswalk in `experiments/safety_decision_models_2026_10_19/` before any test score from the full pack. The crosswalk does not use harness-check numbers from step 4. Create three numbered guardrail versions only if detect mode omits the band. Store the guardrail version id in the run manifest.
+Create one numbered guardrail in `us-east-2` with the six content filters (Hate, Insults, Sexual, Violence, Misconduct, Prompt Attack) and filter action `NONE`. Write the dataset-label-to-filter crosswalk into `experiments/safety_decision_models_2026_10_19/configs/study.json` (committed; no separate crosswalk file) before any test score from the full pack. The crosswalk does not use harness-check numbers from step 4. Create three numbered guardrail versions only if detect mode omits the band. Store the guardrail version id in the run manifest and re-run `scripts/smoke.py` for arm `guardrails`.
 
 Proposal mapping: section 4, section 6, Decisions made item 1, section 10 step 5.
 
 ### Step 6: Score the core pack through the cache
 
-Score all core-pack rows with Jev, Clef, Clef-flash, and `ApplyGuardrail` via `experiments/safety_decision_models_2026_10_19/scripts/run_score.py`, writing `outputs/predictions/{run_id}/{arm}/{dataset}.parquet` and `.jsonl` and using `cache/responses.db`. Clef request body uses fields `model`, `state`, and `questions` as an object keyed by question id (not a list). Workers AI shortens an over-limit `state` and still returns an answer. Mark those rows `truncated` (Clef 64,000 tokens, Clef-flash 24,576 tokens). Jev still records provider error `max_tokens_exceeded` for context overflow.
+Score all core-pack rows with Jev, Clef, Clef-flash, and `ApplyGuardrail` via `experiments/safety_decision_models_2026_10_19/scripts/run_score.py`, writing `outputs/predictions/{run_id}/{arm}/{dataset}.parquet` and `.jsonl` and using `cache/responses.db`. Do not upload to S3 in this step (Step 7). Clef request body uses fields `model`, `state`, and `questions` as an object keyed by question id (not a list). Workers AI shortens an over-limit `state` and still returns an answer. Mark those rows `truncated` (Clef 64,000 tokens, Clef-flash 24,576 tokens). Jev still records provider error `max_tokens_exceeded` for context overflow.
 
 Proposal mapping: section 4, section 5, Decisions made item 7, section 10 step 6.
 
@@ -92,7 +92,7 @@ Proposal mapping: section 5, section 6, section 7, Decisions made item 6, sectio
 | 2 | Development rows; harness `build` methods | `experiments/safety_decision_models_2026_10_19/data/templates/{dataset}.json` |
 | 3 | Templates; 20 development items | Smoke log; no new committed predictions |
 | 4 | Six overlapping datasets | Harness-check numbers in `experiments/safety_decision_models_2026_10_19/RESULTS.md`; stop if outside published interval |
-| 5 | Six filter names | Guardrail version id in manifest; crosswalk table |
+| 5 | Six filter names | Guardrail version id in manifest; committed `crosswalk` in `configs/study.json` |
 | 6 | Core pack rows | `outputs/predictions/{run_id}/{arm}/{dataset}.parquet`, `.jsonl`; `cache/responses.db` |
 | 7 | Prediction files | `outputs/metrics/{run_id}.json`, `outputs/figures/{run_id}/*.png`, `outputs/manifests/{run_id}.json`; S3 prefix `s3://mind-technology-lab-experiments/experiments/safety_decision_models_2026_10_19/` |
 
@@ -110,7 +110,7 @@ Proposal mapping: section 5, section 6, section 7, Decisions made item 6, sectio
 3. One confirmed template per dataset lives under `data/templates/{dataset}.json` with archives under `data/templates/archive/`; Do-Not-Answer question text is absent from git.
 4. `scripts/smoke.py` passes for Jev, Clef, Clef-flash, and Guardrails on 20 development items with cache hit on rerun.
 5. Jev `jev-1.13.0` harness-check metrics for the six overlapping sets sit inside published intervals in `RESULTS.md`, including OpenAI Moderation at 0.5 on all 1,680 rows.
-6. A numbered guardrail exists in `us-east-2`; the crosswalk was fixed before full-pack test scores; manifest records the guardrail version id.
+6. A numbered guardrail exists in `us-east-2`; the crosswalk in `configs/study.json` was fixed before full-pack test scores; manifest records the guardrail version id; guardrails smoke passed after Step 5.
 7. Core-pack predictions exist under `outputs/predictions/{run_id}/` for arms `jev`, `clef`, `clef-flash`, and `guardrails`; truncated Clef rows are marked; Jev overflow rows record `max_tokens_exceeded`.
 8. `outputs/metrics/{run_id}.json` includes stack policy numbers; eight figure PNGs sit under `outputs/figures/{run_id}/`.
 9. `outputs/manifests/{run_id}.json` records dataset commits, template versions, arms, prices, and region.

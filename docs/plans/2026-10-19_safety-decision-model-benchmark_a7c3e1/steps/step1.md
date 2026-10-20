@@ -4,7 +4,7 @@
 
 - **Caller:** Later scripts under `experiments/safety_decision_models_2026_10_19/scripts/` (`run_score.py` in steps 3, 4, and 6; `smoke.py` in step 3; `run_metrics.py` and `upload_s3.py` in step 7). Dataset loaders and scorers are imported by those runners.
 - **Task:** Create the standalone experiment tree, eleven Hugging Face dataset loaders, `DecisionScorer` implementations for arms `jev`, `clef`, `clef-flash`, and `guardrails`, shared record and cache types, stub policy package, committed `configs/study.json`, docs, `.gitignore`, local `pyproject.toml`, and root ruff/pyright excludes. Implement `scripts/run_score.py` as the scoring entry point. Create stub scripts for smoke, metrics, and S3 upload.
-- **Out of scope:** Question templates (`data/templates/`, step 2). Live smoke or harness runs (step 3 and 4). Creating the numbered Bedrock guardrail resource (step 5). Union, intersection, and cascade policy logic (`policies/union.py`, `intersection.py`, `cascade.py`, step 7). Metrics and threshold fitting (`shared/metrics.py`, `shared/thresholds.py`, step 7). Filling `scripts/smoke.py`, `scripts/run_metrics.py`, or `scripts/upload_s3.py` beyond stubs (steps 3 and 7). Paid scorer API calls in this step. A `tests/` directory, pytest, unit tests, or any `test_*.py` file. Do-Not-Answer question text in any committed file or upload.
+- **Out of scope:** Question templates (`data/templates/`, step 2). Live smoke or harness runs (step 3 and 4). Creating the numbered Bedrock guardrail resource (step 5). Union, intersection, and cascade policy logic (`policies/union.py`, `intersection.py`, `cascade.py`, step 7). Metrics and threshold fitting (`shared/metrics.py`, `shared/thresholds.py`, step 7). Filling `scripts/smoke.py` beyond its stub (step 3) or `scripts/run_metrics.py` and `scripts/upload_s3.py` beyond their stubs (step 7). Paid scorer API calls in this step. A `tests/` directory, pytest, unit tests, or any `test_*.py` file. Do-Not-Answer question text in any committed file or upload.
 
 ## Files to inspect
 
@@ -142,7 +142,7 @@ experiments/safety_decision_models_2026_10_19/
 
 16. `scripts/run_score.py`: CLI that loads records for a dataset, loads the template `QuestionSpec` from `data/templates/{dataset}.json` when present (step 2), runs the chosen scorer, writes through `shared/cache.py`, and is the entry steps 3, 4, and 6 will call. Stub or no-op paid calls until templates exist.
 
-17. `scripts/smoke.py`, `scripts/run_metrics.py`, `scripts/upload_s3.py`: create files with `main` guard and docstring stating they are filled in steps 3 and 7. No full smoke or upload logic yet.
+17. `scripts/smoke.py`, `scripts/run_metrics.py`, `scripts/upload_s3.py`: create files with `main` guard and docstring stating `smoke.py` is filled in step 3 and `run_metrics.py` and `upload_s3.py` in step 7. No full smoke, metrics, or upload logic yet.
 
 18. In `/workspace/pyproject.toml`, add `"experiments/safety_decision_models_2026_10_19"` to `tool.ruff.extend-exclude` and `tool.pyright.exclude`, matching the `experiments/moral_outrage_classification_2026_09_19` entries.
 

@@ -2,7 +2,7 @@
 
 ## Scope
 
-- **Depends on:** Step 3 (`scripts/smoke.py` passed for all four arms with cache hit on rerun).
+- **Depends on:** Step 3 (`scripts/smoke.py` passed for arms `jev`, `clef`, and `clef-flash` with cache hit on rerun; arm `guardrails` is re-run after Step 5, before Step 6).
 - **Caller:** `experiments/safety_decision_models_2026_10_19/scripts/run_score.py`, limited to arm `jev` and datasets `toxigen`, `openai_moderation`, `toxicchat`, `prompt_injections`, `go_emotions`, `emotion`.
 - **Task:** Score every test (or full-set) row for those six datasets with TypeSafe Jev model `jev-1.13.0`, using the confirmed templates from Step 2. Compute each dataset's **primary metric** at threshold **0.5** (no development-tuned thresholds; tuning is Step 7). Compare each number to the published figures in [proposal.md](../proposal.md) section 3 ("Published Jev numbers we will use as a harness check"). Write the comparison into the harness-check table in `RESULTS.md`.
 - **Stop rule:** If any primary metric for these six sets falls **outside** its published 95% interval (where the paper gives an interval), **stop the study** and fix the template or harness before Clef, Clef-flash, or Guardrails are scored. Do not reinterpret intervals or tune thresholds to pass this step.
@@ -40,7 +40,7 @@
 
 ## Work
 
-1. **Prerequisite:** Confirm Step 3 is recorded as passed (smoke log or `RESULTS.md` note). Do not start paid Jev scoring if Step 3 failed.
+1. **Prerequisite:** Confirm Step 3 is recorded as passed for `jev`, `clef`, and `clef-flash` (smoke log or `RESULTS.md` note). Do not start paid Jev scoring if that smoke failed.
 2. **Allocate `run_id`:** At UTC start, set `run_id` to `{YYYYMMDD}T{HHMMSS}Z_{8 hex characters}`. The 8 hex characters are a deterministic hash of pinned Hugging Face revision per dataset, template version hash per dataset, and the arm list `["jev"]` for this run. Write the same `run_id` into `outputs/manifests/{run_id}.json`.
 3. **Run scoring:** Run `run_score.py` with `--arm jev` and `--datasets toxigen,openai_moderation,toxicchat,prompt_injections,go_emotions,emotion` (see Commands). Model version must be `jev-1.13.0`. Use confirmed `QuestionSpec` JSON per dataset. Respect the request cache so retries do not double-bill.
 4. **Splits and row counts (score all rows in the harness split):**

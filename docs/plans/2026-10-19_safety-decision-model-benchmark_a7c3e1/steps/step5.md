@@ -81,7 +81,7 @@ The implementer creates one numbered Amazon Bedrock guardrail in `us-east-2`, pu
 
 2. **Create the guardrail (after step 4 passes).** In `us-east-2`, create one guardrail with exactly six content filters (the names above), each enabled for input. Set filter action to **`NONE`** (detect-only; no automatic block from the filter config). Create a **numbered guardrail version** and capture its version identifier (ARN or id string Bedrock returns).
 
-   **Detect-only call pattern (Decisions made item 1):** At scoring time, one `ApplyGuardrail` call per example with `source` `INPUT`, filter action `NONE`, and the published guardrail version id. Do not rely on three separate Apply calls for low, medium, and high unless the fallback in step 3 applies.
+   **Detect-only call pattern (Decisions made item 1):** At scoring time, one `ApplyGuardrail` call per example with `source` `INPUT`, filter action `NONE`, and the published guardrail version id. Do not rely on three separate Apply calls for low, medium, and high unless the fallback in this step applies.
 
    **Strength is applied after the call** to the returned confidence band (`NONE`, `LOW`, `MEDIUM`, `HIGH`):
 
@@ -164,7 +164,7 @@ cd /workspace/experiments/safety_decision_models_2026_10_19 && uv run python scr
 **Cost:**
 
 - **Creating** the guardrail and a numbered version is not billed as Guardrails **text units**. Treat create as a one-time control-plane operation with negligible or zero per-text-unit metering in the study budget.
-- **Per-call** Guardrails pricing is **US$0.15 per 1,000 text units** on `ApplyGuardrail`. That charge applies in **step 3** (smoke, all arms) and **step 6** (full core pack), not to the guardrail create API itself. This step's guardrails smoke re-run adds at most 20 text units (negligible).
+- **Per-call** Guardrails pricing is **US$0.15 per 1,000 text units** on `ApplyGuardrail`. That charge applies in this step's guardrails smoke re-run (up to 20 text units) and in **step 6** (full core pack), not to the guardrail create API itself.
 
 ## Done when
 

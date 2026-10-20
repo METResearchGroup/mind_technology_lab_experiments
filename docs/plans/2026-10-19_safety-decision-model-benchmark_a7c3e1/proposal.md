@@ -279,7 +279,7 @@ experiments/safety_decision_models_2026_10_19/
     snapshots/                                       # gitignored raw text, one file per HF commit
       {dataset}/rev_{commit}.parquet
   configs/
-    study.json                                       # committed; pins, prices, region; no secrets
+    study.json                                       # committed; pins, prices, region, crosswalk; no secrets
   cache/                                             # gitignored
     responses.db
   scripts/                                           # committed
@@ -317,7 +317,7 @@ s3://mind-technology-lab-experiments/experiments/safety_decision_models_2026_10_
 
 The upload skips `.venv`, `__pycache__`, `.pytest_cache`, `.git`, and `.env`, as those two scripts do. It also skips every Do-Not-Answer snapshot, every Do-Not-Answer records file, and every cache entry that stores that question text. Aggregates by risk area and by type of harm still upload, inside the metrics file, with the question text left out.
 
-`run_id` is the UTC start time and 8 hex characters, written as `{YYYYMMDD}T{HHMMSS}Z_{hash}`. The hash covers the dataset revisions, the template versions, and the arm list. A later run gets a new id, so the earlier run stays in place. The moral outrage folder partitions by engine, under `outputs/jev/` and `outputs/bedrock/{model}/`. The speedup folder partitions by batch size, under `outputs/batch_{n}/`. Neither folder uses a run id. [PR 31](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/31) uses one directory per run under `outputs/`, and each directory holds `results.jsonl`, `grade.json`, `grade_items.jsonl`, and `manifest.json`. The `run_id` form here is proposed for this study.
+`run_id` is the UTC start time and 8 hex characters, written as `{YYYYMMDD}T{HHMMSS}Z_{8 hex characters}`. The 8 hex characters hash the dataset revisions, the template versions, and the arm list. A later run gets a new id, so the earlier run stays in place. The moral outrage folder partitions by engine, under `outputs/jev/` and `outputs/bedrock/{model}/`. The speedup folder partitions by batch size, under `outputs/batch_{n}/`. Neither folder uses a run id. [PR 31](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/31) uses one directory per run under `outputs/`, and each directory holds `results.jsonl`, `grade.json`, `grade_items.jsonl`, and `manifest.json`. The `run_id` form here is proposed for this study.
 
 A partition is one prediction file for one arm and one dataset under that `run_id`. The arm names are `jev`, `clef`, `clef-flash`, and `guardrails`. `{dataset}` is the short name from the local tree, for example `toxigen`. The Hugging Face id, the config, and the split are in the manifest. The snapshot key adds the commit, as `rev_{commit}`.
 
@@ -417,11 +417,11 @@ Steps, in order:
 2. Confirm one template per dataset on 20 development items. For the six overlapping sets, start from the `build` methods in the public harness so the harness check uses the same wording. Store the confirmed JSON under `data/templates/`.
 3. Run the 20-item smoke test from section 4, once per arm. Stop if a probability or band is empty, if the rerun misses the cache, or if the Jev smoke metric cannot be compared with the published harness metric.
 4. Run `jev-1.13.0` on the six overlapping sets and compare to the published intervals. For OpenAI Moderation, that check uses all 1,680 rows at threshold 0.5. Stop if we are outside an interval.
-5. Create a numbered guardrail in `us-east-2` with the six content filters and the filter action set to `NONE`. Write the crosswalk. Fall back to three numbered versions only if detect mode omits the band.
+5. Create a numbered guardrail in `us-east-2` with the six content filters and the filter action set to `NONE`. Write the crosswalk into `configs/study.json`. Fall back to three numbered versions only if detect mode omits the band.
 6. Score the core pack with Jev, Clef, Clef-flash, and `ApplyGuardrail`, through the cache in section 4. On hosted Clef and Clef-flash, mark a prompt over the context limit as `truncated`, because Workers AI shortens the state and still returns an answer. Clef-flash's limit is 24,576 tokens.
 7. Fit thresholds on development splits. For OpenAI Moderation, fit the tuned threshold on the hash-stable 20% holdout and leave that holdout out of the tuned test number. Compute the metrics and the eight figures from the prediction records, using the union, intersection, and cascade functions. Write them under the paths in section 5, and upload with `scripts/upload_s3.py` using that prefix. Skip Do-Not-Answer question text.
 
-Future artifacts, when the study is run, would live under `experiments/safety_decision_models_2026_10_19/` and the same prefix in `s3://mind-technology-lab-experiments/`. This proposal does not add that folder. The layout inside it is in section 5, and the review points at the end of this file are the place to approve it or change it.
+Future artifacts, when the study is run, would live under `experiments/safety_decision_models_2026_10_19/` and the same prefix in `s3://mind-technology-lab-experiments/`. This proposal does not add that folder. The layout inside it is in section 5. The four review points at the end of this file were approved on 2026-10-20.
 
 ## 11. Draft abstract
 
@@ -441,9 +441,9 @@ Decisions 1 to 7 are closed.
 
 ## Review points
 
-The file layout in section 5 is still open. A yes on each point below keeps it. A change should name the path that should move.
+Approved on 2026-10-20. The four layout points below are the layout to implement.
 
-1. **Local tree.** Approve the tree in section 5. Git ignores `cache/`, `data/records/`, `data/snapshots/`, `outputs/predictions/`, `outputs/metrics/`, and `outputs/manifests/`. Git commits the code, the templates, the configs, `README.md`, `SETUP.md`, `RESULTS.md`, and the figure PNG files. The smoke entry is `scripts/smoke.py`, and the folder has no `tests/` directory.
-2. **S3 tree and run id.** Approve the prefix `experiments/safety_decision_models_2026_10_19/` and the `run_id` form `{YYYYMMDD}T{HHMMSS}Z_{8 hex characters}`. Stack policies are written into the metrics file, and they do not get prediction files.
-3. **Do-Not-Answer text.** Approve leaving that question text out of git and out of S3. The loader reads it from Hugging Face into the gitignored local cache for the run. The upload skips that dataset's snapshot, its records file, and any cache entry that holds the text. Aggregates by risk area and by type of harm still upload.
-4. **Figures path.** Approve `outputs/figures/{run_id}/` for the PNG files. The moral outrage and speedup folders put images in `outputs/.../static/`.
+1. **Local tree.** Approved. Use the tree in section 5. Git ignores `cache/`, `data/records/`, `data/snapshots/`, `outputs/predictions/`, `outputs/metrics/`, and `outputs/manifests/`. Git commits the code, the templates, the configs, `README.md`, `SETUP.md`, `RESULTS.md`, and the figure PNG files. The smoke entry is `scripts/smoke.py`, and the folder has no `tests/` directory.
+2. **S3 tree and run id.** Approved. The prefix is `experiments/safety_decision_models_2026_10_19/`. The `run_id` form is `{YYYYMMDD}T{HHMMSS}Z_{8 hex characters}`. Stack policies are written into the metrics file, and they do not get prediction files.
+3. **Do-Not-Answer text.** Approved. That question text stays out of git and out of S3. The loader reads it from Hugging Face into the gitignored local cache for the run. The upload skips that dataset's snapshot, its records file, and any cache entry that holds the text. Aggregates by risk area and by type of harm still upload.
+4. **Figures path.** Approved. PNG files go under `outputs/figures/{run_id}/`. The moral outrage and speedup folders put images in `outputs/.../static/`.
