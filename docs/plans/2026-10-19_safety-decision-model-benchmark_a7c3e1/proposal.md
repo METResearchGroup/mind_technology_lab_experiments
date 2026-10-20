@@ -203,15 +203,7 @@ Union, intersection, and cascade take prediction records as input. Threshold fit
 
 ### Storage and checks
 
-When the study is run, local files would live under `experiments/safety_decision_models_2026_10_19/`.
-
-- `data/records/{dataset}.parquet` holds example records. Do-Not-Answer has its own file.
-- `data/templates/{dataset}.json` holds the confirmed questions.
-- `cache/responses.db` holds raw provider responses.
-- `outputs/predictions/{arm}.parquet` holds prediction records.
-- `outputs/manifests/{run_id}.json` records the model pins, the dataset revisions, the prices, and the region `us-east-2`.
-
-The S3 prefix is `experiments/safety_decision_models_2026_10_19/` in `s3://mind-technology-lab-experiments/`, matching the bucket and prefix in the upload scripts above. Do-Not-Answer question text is not committed to git. The paper reports detection rate by risk area and by type of harm.
+When the study is run, the local files and the S3 objects use the tree in section 5. Do-Not-Answer question text is not committed to git, and it is not uploaded. The paper reports detection rate by risk area and by type of harm.
 
 The check before the full run is a smoke test. It sends 20 development items, end to end, once per arm (Jev, Clef, Clef-flash, and Guardrails). Each returned row has the example-record fields. Jev, Clef, and Clef-flash return a non-empty probability, and Guardrails returns a non-empty band. A second pass of the same 20 items hits the cache and makes no new provider call. The Jev smoke rows are scored with the same primary metric as the published harness check, so a broken template shows up before the full run.
 
@@ -237,7 +229,111 @@ flowchart LR
   predictions --> bucket[S3 prefix]
 ```
 
-## 5. Key analyses
+## 5. Proposed file structure
+
+The study, when it is run, uses one local folder, and the S3 prefix is that same folder path. This proposal does not create the folder. The trees below are here so they can be approved or changed.
+
+### Local tree
+
+Git commits the code, the question templates, the configs, `README.md`, `SETUP.md`, `RESULTS.md`, and the figure PNG files. Git ignores the cache, the raw dataset files, and the prediction files. Do-Not-Answer question text is never in a committed file.
+
+```text
+experiments/safety_decision_models_2026_10_19/
+  README.md                                          # committed
+  SETUP.md                                           # committed
+  RESULTS.md                                         # committed
+  pyproject.toml                                     # committed
+  uv.lock                                            # committed
+  .gitignore                                         # committed
+  datasets/                                          # committed adapters
+    toxigen.py
+    openai_moderation.py
+    toxicchat.py
+    prompt_injections.py
+    wildguardmix.py
+    do_not_answer.py                                 # adapter only; rows stay out of git
+    xstest.py
+    harmbench.py
+    jailbreakbench.py
+    go_emotions.py
+    emotion.py
+  scorers/                                           # committed
+    jev.py
+    clef.py                                          # arms clef and clef-flash
+    guardrails.py
+  policies/                                          # committed; read predictions only
+    union.py
+    intersection.py
+    cascade.py
+  shared/
+    records.py                                       # ExampleRecord, PredictionRecord, QuestionSpec
+    metrics.py                                       # committed
+    thresholds.py                                    # committed
+    cache.py                                         # committed
+  data/
+    templates/                                       # committed JSON
+      {dataset}.json
+      archive/{dataset}/{template_version}.json
+    records/                                         # gitignored
+      {dataset}.parquet
+    snapshots/                                       # gitignored raw text, one file per HF commit
+      {dataset}/rev_{commit}.parquet
+  configs/
+    study.json                                       # committed; pins, prices, region; no secrets
+  cache/                                             # gitignored
+    responses.db
+  scripts/                                           # committed
+    smoke.py                                         # 20 items per arm
+    run_score.py
+    run_metrics.py
+    upload_s3.py
+  outputs/
+    predictions/{run_id}/{arm}/{dataset}.parquet     # gitignored
+    predictions/{run_id}/{arm}/{dataset}.jsonl       # gitignored
+    metrics/{run_id}.json                            # gitignored
+    manifests/{run_id}.json                          # gitignored
+    figures/{run_id}/*.png                           # committed
+```
+
+`.gitignore` starts from `experiments/speedup_jev_2026_09_23/.gitignore`. That file ignores parquet, json, and jsonl one directory under `data/`, and anywhere under `outputs/`. This study also ignores `cache/` and the nested `data/records/` and `data/snapshots/` paths, because those files sit one directory deeper than the speedup pattern. `data/templates/` and `outputs/figures/` stay in git, as do `RESULTS.md` files. The folder has no `tests/` directory. The smoke check is `scripts/smoke.py`, the same entry style as `experiments/speedup_jev_2026_09_23/scripts/smoke.py`.
+
+Each template file holds the question spec, which is the type, the instructions, and the criteria. The file does not hold dataset rows. The template version is a hash of that JSON. When the wording changes, the previous file is copied to `data/templates/archive/{dataset}/{template_version}.json` before the edit, and that copy stays in git.
+
+### S3 tree
+
+The bucket is `mind-technology-lab-experiments`. The prefix is `experiments/safety_decision_models_2026_10_19/`. An upload joins that prefix to each file's path relative to the experiment root, the same join as `PREFIX + relative` in `experiments/moral_outrage_classification_2026_09_19/scripts/upload_s3.py` and `experiments/speedup_jev_2026_09_23/scripts/upload_s3.py`.
+
+```text
+s3://mind-technology-lab-experiments/experiments/safety_decision_models_2026_10_19/
+  data/snapshots/{dataset}/rev_{commit}.parquet
+  data/records/{dataset}.parquet
+  cache/responses.db
+  outputs/predictions/{run_id}/{arm}/{dataset}.parquet
+  outputs/predictions/{run_id}/{arm}/{dataset}.jsonl
+  outputs/metrics/{run_id}.json
+  outputs/figures/{run_id}/
+  outputs/manifests/{run_id}.json
+```
+
+The upload skips `.venv`, `__pycache__`, `.pytest_cache`, `.git`, and `.env`, as those two scripts do. It also skips every Do-Not-Answer snapshot, every Do-Not-Answer records file, and every cache entry that stores that question text. Aggregates by risk area and by type of harm still upload, inside the metrics file, with the question text left out.
+
+`run_id` is the UTC start time and 8 hex characters, written as `{YYYYMMDD}T{HHMMSS}Z_{hash}`. The hash covers the dataset revisions, the template versions, and the arm list. A later run gets a new id, so the earlier run stays in place. The moral outrage folder partitions by engine, under `outputs/jev/` and `outputs/bedrock/{model}/`. The speedup folder partitions by batch size, under `outputs/batch_{n}/`. Neither folder uses a run id. [PR 31](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/31) uses one directory per run under `outputs/`, and each directory holds `results.jsonl`, `grade.json`, `grade_items.jsonl`, and `manifest.json`. The `run_id` form here is proposed for this study.
+
+A partition is one prediction file for one arm and one dataset under that `run_id`. The arm names are `jev`, `clef`, `clef-flash`, and `guardrails`. `{dataset}` is the short name from the local tree, for example `toxigen`. The Hugging Face id, the config, and the split are in the manifest. The snapshot key adds the commit, as `rev_{commit}`.
+
+Union, intersection, and cascade read the four arm files. Their numbers go in `outputs/metrics/{run_id}.json`. They do not get prediction files of their own.
+
+### How the tree maps to section 4
+
+The dataset modules write `ExampleRecord` rows into `data/records/` and into the revision snapshot. `data/templates/{dataset}.json` is the `QuestionSpec`, and the template version is the hash of that file. `scorers/jev.py`, `scorers/clef.py`, and `scorers/guardrails.py` implement `DecisionScorer`. Clef and Clef-flash share `scorers/clef.py`, and the arm name on the prediction row separates them. Those scorers write `PredictionRecord` rows under `outputs/predictions/{run_id}/`. `cache/responses.db` stores the provider response under the cache key from section 4, a hash of the arm, the model version, the template version, and `example_id`. The three policy modules read those prediction rows only. `shared/metrics.py` and `shared/thresholds.py` read the same rows. `outputs/manifests/{run_id}.json` records the model pins, the dataset revisions, the template versions, the prices, and the region `us-east-2`.
+
+### Where the conventions come from
+
+[Issue 17](https://github.com/METResearchGroup/mind_technology_lab_experiments/issues/17) names `experiments/moral_outrage_classification_2026_09_19/`, with `README.md`, `SETUP.md`, `RESULTS.md`, model code, `outputs/`, and `shared/`, and it sets the S3 prefix to that same folder in `mind-technology-lab-experiments`. [PR 20](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/20) is the finished run of that issue, at `s3://mind-technology-lab-experiments/experiments/moral_outrage_classification_2026_09_19/`. [PR 23](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/23) uses the same prefix rule for `experiments/speedup_jev_2026_09_23/`, including `outputs/batch_{n}/` and `ablation_full_dataset/` under that prefix. `AGENTS.md` states the prefix rule for this repository. [PR 26](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/26) adds `shared/aws/s3.py`. The prefix rule stays the one in `AGENTS.md`. [PR 31](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/31) stores each run under `s3://mind-technology-lab-experiments/experiments/safety_prompting_2026_10_16/outputs/`.
+
+Searches for the phrases "file structure", "directory structure", "folder structure", and "S3 layout" in pull requests in this repository returned no matches. Searches of `METResearchGroup/mirrorView-task` and `METResearchGroup/lab_wiki` failed, because the API said those repositories cannot be searched, so no issue or pull request from those repositories is cited. Issue 17 links a path in `mirrorView-task` for the moral outrage engines. The retry loop this study reuses is `experiments/moral_outrage_classification_2026_09_19/shared/engine_loop.py`.
+
+## 6. Key analyses
 
 **RQ1, model comparison.** For each core safety dataset, compute the primary metric for `jev-1.13.0`, Clef, and Clef-flash, with a 95% percentile bootstrap over items (500 resamples, the same choice as Deußer et al.). A difference counts only when the intervals do not overlap. On the six datasets in the harness-check table, compare our Jev number to the published interval before interpreting Clef. Break WildGuardTest into vanilla and adversarial prompts, using the adversarial flag, and break HarmBench into DirectRequest and HumanJailbreaks. The same comparison on GoEmotions uses macro-F1, and on Emotion it uses accuracy. Guardrails do not enter RQ1, because they do not emit the dataset label.
 
@@ -249,9 +345,9 @@ flowchart LR
 
 **RQ5, stack policies.** On the items that have both a harmful class and a benign class (JailbreakBench, XSTest `prompt_type`, WildGuardTest prompt harm), compute miss rate and false-positive rate for the decision model alone, the guardrail alone, union, intersection, and cascade. The development fit uses the 5% false-positive budget, and the test numbers are a single confirmed application of those thresholds. A policy is better only if it lowers the miss rate at the same or lower false-positive rate, or the reverse. If the three policies land on top of each other, the stack is not doing work beyond the stronger component.
 
-**RQ6, latency and cost.** Record wall-clock latency per request (median and 95th percentile) from the client, and record the provider's billed usage (tokens for Jev and Clef, text units for Guardrails). Report cost per 1,000 prompts from the bill. Section 9 is only a budget check. Deußer et al. found that their rate limit set throughput, so we record the limit beside the latency.
+**RQ6, latency and cost.** Record wall-clock latency per request (median and 95th percentile) from the client, and record the provider's billed usage (tokens for Jev and Clef, text units for Guardrails). Report cost per 1,000 prompts from the bill. Section 10 is only a budget check. Deußer et al. found that their rate limit set throughput, so we record the limit beside the latency.
 
-## 6. Key visualizations
+## 7. Key visualizations
 
 1. **Miss rate against false-positive rate.** Each point is an arm or a stack policy. The x-axis is the false-positive rate on the pooled benign prompts (JailbreakBench benign, XSTest `prompt_safe`, WildGuardTest benign prompts). The y-axis is the miss rate on the matched harmful prompts. Supports RQ3 and RQ5. A reader should see whether union, intersection, and cascade sit apart, and whether any point is below and to the left of Jev alone.
 2. **Reliability diagrams.** X-axis is `P(yes)` in 15 equal-width bins. Y-axis is the observed frequency of harm. One panel for single-Noul safety sets, one panel for the 28 GoEmotions Nouls. Marker area is the number of answers. Series are Jev, Clef, and Clef-flash. Supports RQ2. Guardrail bands are not on this figure.
@@ -262,7 +358,7 @@ flowchart LR
 7. **Latency and cost against miss rate.** X-axis is median latency in milliseconds. Y-axis is miss rate on the pooled harmful prompts that have a paired benign set. Point size or a printed label is cost per 1,000 prompts from the bill. Supports RQ6.
 8. **Cascade diagram.** A flowchart with three outcomes, block, allow, and "ask the guardrail," and the two thresholds on `P(harm)`. Supports RQ5. No data values, so it can be drawn before the run.
 
-## 7. Key messaging
+## 8. Key messaging
 
 The claims below are hypotheses, and the paper may reject any of them. Bracketed numbers in the abstract are unfilled on purpose.
 
@@ -276,7 +372,7 @@ The claims below are hypotheses, and the paper may reject any of them. Bracketed
 
 If those hypotheses hold, the block rule for a wellbeing assistant has to name the stack and the threshold. Lowering missed harm raises the rate at which ordinary emotion text is refused, so a single model name does not state the operating point.
 
-## 8. Risks and limitations
+## 9. Risks and limitations
 
 **Contamination.** Deußer et al. (section 4.6) found that Jev scores calculation-heavy MMLU subjects at 94.3% and other MMLU subjects at 91.3%. Qwen and Gemma find the calculation-heavy subjects harder (Qwen 74.7% against 83.0%, Gemma 54.6% against 69.8%). Rotating the answer letters left calculation-heavy accuracy at 94.3%. Withholding the question dropped it to 31.5%, close to the 25% chance level. Those probes rule out a memorized letter and a memorized option list. They leave open memorized question-answer pairs. Jev's training data are private, and Clef's post-training mix is only partly described. ToxiGen, OpenAI Moderation, HarmBench, and JailbreakBench are public and widely copied. A high score can be memorization. We will repeat the option-rotation check on the six-way Emotion Choice. Noul questions have no option order. A paraphrase of a small development subset can show brittleness, and it is not a proof that the test text was unseen.
 
@@ -298,7 +394,7 @@ If those hypotheses hold, the block rule for a wellbeing assistant has to name t
 
 **Input length.** HumanJailbreaks prompts can be long. On Jev, a request over the context limit is an error, the same treatment the harness gives HTTP 400 `max_tokens_exceeded`. On Workers AI, Clef and Clef-flash shorten a long `state` to fit and still return an answer. The scorer counts tokens before the call, or compares `result.usage.input_tokens` with the limit, and stores those rows as `truncated`. Clef-flash's hosted limit is 24,576 tokens. Clef's is 64,000. A self-hosted rerun of the Clef-flash weights is future work. If the truncated or error rate exceeds 1% on any set, we report it beside the metric, and those rows stay in the table.
 
-## 9. Plan and cost estimate
+## 10. Plan and cost estimate
 
 The estimate uses published prices as of 2026-10-19 and the row counts above. It is an estimate, not a quote. The bill from the run replaces it.
 
@@ -317,17 +413,17 @@ At 1,100 requests per minute, the cap Deußer et al. actually hit, about 21,000 
 
 Steps, in order:
 
-1. Write the loaders and the `DecisionScorer` interface from section 4, including the XSTest dedupe, the HarmBench configs, the JailbreakBench splits, and the `hf-token` load. On the first successful load, pin each dataset revision to that commit and write it into the manifest.
+1. Write the loaders and the `DecisionScorer` interface from section 4, including the XSTest dedupe, the HarmBench configs, the JailbreakBench splits, and the `hf-token` load. Place those files in the tree in section 5 when the study is implemented. On the first successful load, pin each dataset revision to that commit and write it into the manifest.
 2. Confirm one template per dataset on 20 development items. For the six overlapping sets, start from the `build` methods in the public harness so the harness check uses the same wording. Store the confirmed JSON under `data/templates/`.
 3. Run the 20-item smoke test from section 4, once per arm. Stop if a probability or band is empty, if the rerun misses the cache, or if the Jev smoke metric cannot be compared with the published harness metric.
 4. Run `jev-1.13.0` on the six overlapping sets and compare to the published intervals. For OpenAI Moderation, that check uses all 1,680 rows at threshold 0.5. Stop if we are outside an interval.
 5. Create a numbered guardrail in `us-east-2` with the six content filters and the filter action set to `NONE`. Write the crosswalk. Fall back to three numbered versions only if detect mode omits the band.
 6. Score the core pack with Jev, Clef, Clef-flash, and `ApplyGuardrail`, through the cache in section 4. On hosted Clef and Clef-flash, mark a prompt over the context limit as `truncated`, because Workers AI shortens the state and still returns an answer. Clef-flash's limit is 24,576 tokens.
-7. Fit thresholds on development splits. For OpenAI Moderation, fit the tuned threshold on the hash-stable 20% holdout and leave that holdout out of the tuned test number. Compute the metrics and the eight figures from the prediction records, using the union, intersection, and cascade functions.
+7. Fit thresholds on development splits. For OpenAI Moderation, fit the tuned threshold on the hash-stable 20% holdout and leave that holdout out of the tuned test number. Compute the metrics and the eight figures from the prediction records, using the union, intersection, and cascade functions. Write them under the paths in section 5, and upload with `scripts/upload_s3.py` using that prefix. Skip Do-Not-Answer question text.
 
-Future artifacts, when the study is run, would live under `experiments/safety_decision_models_2026_10_19/` and the same prefix in `s3://mind-technology-lab-experiments/`. This proposal does not add that folder. The layout inside it is in section 4.
+Future artifacts, when the study is run, would live under `experiments/safety_decision_models_2026_10_19/` and the same prefix in `s3://mind-technology-lab-experiments/`. This proposal does not add that folder. The layout inside it is in section 5, and the review points at the end of this file are the place to approve it or change it.
 
-## 10. Draft abstract
+## 11. Draft abstract
 
 Typed decision models return a probability for a fixed question, and they do not write the assistant's reply. We compare TypeSafe Jev (`jev-1.13.0`), Cloudflare Clef, Cloudflare Clef-flash, and Amazon Bedrock Guardrails, alone and in three stack policies (union, intersection, and cascade), on public safety datasets and on two emotion datasets. The safety sets are ToxiGen, OpenAI Moderation, ToxicChat, a prompt-injection set, WildGuardTest, Do-Not-Answer, XSTest prompts, HarmBench, and JailbreakBench. Do-Not-Answer is reported as detection rate by risk area and by type of harm, without the question text. The emotion sets are GoEmotions (28 labels) and the six-way Emotion set. We score prompts only. One detect-only `ApplyGuardrail` call supplies the low, medium, and high strengths. The stack policy over those scorer outputs is the block function a later runtime would call. A miss is a harmful prompt the filter allows, and a false positive is a benign prompt the filter blocks. On the sets that contain both classes, the cascade policy reaches a miss rate of [X%] and a false-positive rate of [Y%], compared with [A%] and [B%] for Jev alone and [C%] and [D%] for Guardrails alone. Expected calibration error on the yes/no harm probability is [ECE = __] for Jev and [ECE = __] for Clef. The gap between a 0.5 threshold and a development-tuned threshold is [Z] F1 points on [dataset]. Guardrails return a confidence band (`NONE`, `LOW`, `MEDIUM`, or `HIGH`), so expected calibration error does not apply to that band. Their six categories do not match the dataset labels, and self-harm has no filter of its own. Median latency is [__] ms for Jev, [__] ms for Clef, [__] ms for Clef-flash, and [__] ms for `ApplyGuardrail`. Block rates on GoEmotions differ by emotion label by [__] points between [label] and [label]. The bracketed figures will be filled from the run, and they are empty in this draft.
 
@@ -341,4 +437,13 @@ Typed decision models return a probability for a fixed question, and they do not
 6. **OpenAI Moderation holdout.** The harness check scores all 1,680 rows at threshold 0.5. The tuned threshold is fit on a hash-stable 20% holdout, and that holdout is left out of the tuned test number.
 7. **Clef-flash context.** Workers AI shortens a `state` over 24,576 tokens and still returns an answer. The scorer counts tokens before the call, or compares `result.usage.input_tokens` with that limit, and stores the row as `truncated`. A self-hosted rerun of the weights is future work.
 
-No open questions remain.
+Decisions 1 to 7 are closed.
+
+## Review points
+
+The file layout in section 5 is still open. A yes on each point below keeps it. A change should name the path that should move.
+
+1. **Local tree.** Approve the tree in section 5. Git ignores `cache/`, `data/records/`, `data/snapshots/`, `outputs/predictions/`, `outputs/metrics/`, and `outputs/manifests/`. Git commits the code, the templates, the configs, `README.md`, `SETUP.md`, `RESULTS.md`, and the figure PNG files. The smoke entry is `scripts/smoke.py`, and the folder has no `tests/` directory.
+2. **S3 tree and run id.** Approve the prefix `experiments/safety_decision_models_2026_10_19/` and the `run_id` form `{YYYYMMDD}T{HHMMSS}Z_{8 hex characters}`. Stack policies are written into the metrics file, and they do not get prediction files.
+3. **Do-Not-Answer text.** Approve leaving that question text out of git and out of S3. The loader reads it from Hugging Face into the gitignored local cache for the run. The upload skips that dataset's snapshot, its records file, and any cache entry that holds the text. Aggregates by risk area and by type of harm still upload.
+4. **Figures path.** Approve `outputs/figures/{run_id}/` for the PNG files. The moral outrage and speedup folders put images in `outputs/.../static/`.
