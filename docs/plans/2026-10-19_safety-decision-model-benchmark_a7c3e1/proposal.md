@@ -29,13 +29,13 @@ Bedrock Guardrails scores text through a separate API. `ApplyGuardrail` can run 
 | --- | --- | --- |
 | Jev | TypeSafe API, model `jev-1.13.0` | Zero-shot typed questions. Same primitive mapping as Deußer et al. where the dataset overlaps. |
 | Clef | Workers AI `@cf/cloudflare/clef` | Same JSON request as Jev. Pin the hosted model and the Hugging Face revision `Cloudflare/clef`. |
-| Clef-flash | Workers AI `@cf/cloudflare/clef-flash` | Same request as Clef. Hosted context is 24,576 tokens as of 2026-10-09. Weights on Hugging Face allow a longer context if self-hosted. |
+| Clef-flash | Workers AI `@cf/cloudflare/clef-flash` | Same request as Clef. Hosted context is 24,576 tokens. A longer prompt is an error on this arm. A self-hosted rerun of the weights is future work. |
 | Guardrails | `ApplyGuardrail`, source `INPUT`, content filters only | Hate, Insults, Sexual, Violence, Misconduct, Prompt Attack. No denied topics, word lists, or grounding checks, so the bill and the decision stay on the six filters. |
 | Stack | One decision model plus the guardrail | Three policies, defined below. Each decision model gets its own stack. |
 
 Kev 9B (`jaredpalmer/kev-9b`) and Laya (`convaiinnovations/laya`) are optional. The Clef blog (Chen, Reneau, and Flansburg, 1 October 2026) lists both on the Jev Decision Index, a routing and tool suite. Laya's scores on that index are far below the others. Laya's own card documents a default English context of 512 tokens, which is a plausible reason those scores are low. We keep an optional arm only if a 20-example pilot returns a probability for every legal option, and the pilot includes one long jailbreak prompt so truncation is visible. If the pilot fails, that model is dropped and the failure is reported.
 
-Each decision-model request has a state (the text) and one or more questions. A Choice question picks one of a fixed set of labels. A Noul question returns the probability that the answer is yes. A Score question places the text on an ordered rubric of two to ten levels. The public harness documents 32,000 tokens for the state plus the longest question, and 64,000 tokens per request (`jev-benchmarking/docs/datasets.md`). Clef's hosted limit is 64,000 tokens. Clef-flash on Workers AI is 24,576 tokens. A prompt over the limit for that arm is an error.
+Each decision-model request has a state (the text) and one or more questions. A Choice question picks one of a fixed set of labels. A Noul question returns the probability that the answer is yes. A Score question places the text on an ordered rubric of two to ten levels. The public harness documents 32,000 tokens for the state plus the longest question, and 64,000 tokens per request (`jev-benchmarking/docs/datasets.md`). Clef's hosted limit is 64,000 tokens. Clef-flash on Workers AI is 24,576 tokens. A prompt over that limit is an error on the hosted arm, and a self-hosted rerun is future work.
 
 ### Stack policies
 
@@ -110,7 +110,7 @@ The run loads each public dataset through its own loader, scores every arm throu
 
 ### Files we will reuse
 
-The public harness at https://github.com/AppliedMachineLearning-Lab/jev-benchmarking loads Hugging Face datasets in `jev_benchmarking/tasks/base.py` (`load_split`). The same file builds Choice, Noul, and Score questions (`choice`, `noul`, `score`). Overlapping safety tasks are in `jev_benchmarking/tasks/safety.py`. ToxiGen uses config `annotated`, and ToxicChat uses config `toxicchat0124`. OpenAI Moderation and prompt injections use the default config. GoEmotions uses config `simplified`, and Emotion uses config `split`, both in `jev_benchmarking/tasks/classification.py`. `load_dataset` is called there without a revision argument. Raw responses go to SQLite, and `request_key` in `jev_benchmarking/cache.py` hashes the model, the state, and the questions. `jev_benchmarking/runner.py` caps how fast requests start, retries transient failures, and records HTTP 400 `max_tokens_exceeded` in an errors table. Metric code is in `jev_benchmarking/metrics.py`. The threshold grid is in `jev_benchmarking/thresholds.py`.
+The public harness at https://github.com/AppliedMachineLearning-Lab/jev-benchmarking loads Hugging Face datasets in `jev_benchmarking/tasks/base.py` (`load_split`). The same file builds Choice, Noul, and Score questions (`choice`, `noul`, `score`). Overlapping safety tasks are in `jev_benchmarking/tasks/safety.py`. ToxiGen uses config `annotated`, and ToxicChat uses config `toxicchat0124`. OpenAI Moderation and prompt injections use the default config. GoEmotions uses config `simplified`, and Emotion uses config `split`, both in `jev_benchmarking/tasks/classification.py`. `load_dataset` is called there without a revision argument. Our loaders pin each dataset to the commit from the first successful load, write that commit into the run manifest, and refuse a later load whose commit differs. Raw responses go to SQLite, and `request_key` in `jev_benchmarking/cache.py` hashes the model, the state, and the questions. `jev_benchmarking/runner.py` caps how fast requests start, retries transient failures, and records HTTP 400 `max_tokens_exceeded` in an errors table. Metric code is in `jev_benchmarking/metrics.py`. The threshold grid is in `jev_benchmarking/thresholds.py`.
 
 WildGuardMix, Do-Not-Answer, XSTest, HarmBench, and JailbreakBench are absent from the harness. `jev_benchmarking/docs/datasets.md` says `walledai/XSTest` and `allenai/wildguardmix` were left out because they require a Hugging Face form and because they overlap the moderation sets. The study loads `allenai/xstest-response` and `allenai/wildguardmix`, because the false-positive rate on safe prompts and the adversarial flag are questions in section 2.
 
@@ -142,7 +142,7 @@ JailbreakBench uses `JailbreakBench/JBB-Behaviors`, config `behaviors`. The `har
 
 Access-controlled datasets receive `HF_TOKEN` from the environment. A missing token fails that dataset and leaves the others loadable.
 
-Where the harness already names a development split, we use it. ToxiGen, ToxicChat, and prompt injections use `train`. GoEmotions and Emotion use `validation`. OpenAI Moderation sets `dev` to `None` in `safety.py`. Do-Not-Answer, the XSTest prompts after duplicate removal, and JailbreakBench have no development split. For those, a hash of `example_id` holds out 20% as development. The published Jev check on OpenAI Moderation still scores all 1,680 rows at threshold 0.5, and the holdout is used only for the tuned threshold.
+Where the harness already names a development split, we use it. ToxiGen, ToxicChat, and prompt injections use `train`. GoEmotions and Emotion use `validation`. OpenAI Moderation sets `dev` to `None` in `safety.py`. Do-Not-Answer, the XSTest prompts after duplicate removal, and JailbreakBench have no development split. For those, a hash of `example_id` holds out 20% as development. The Jev harness check on OpenAI Moderation scores all 1,680 rows at threshold 0.5. The tuned threshold is fit on the 20% holdout, and that holdout is left out of the tuned test number.
 
 Do-Not-Answer keeps `risk_area` and the type of harm on the row, and that dataset is written to its own file so a later paper can include the aggregates or leave them out.
 
@@ -278,11 +278,11 @@ If those hypotheses hold, the block rule for a wellbeing assistant has to name t
 
 **License.** Do-Not-Answer is in the core pack. The study is academic research, so non-commercial use fits CC BY-NC-SA 4.0. The card also names Apache 2.0 for source files, and the GitHub license field is Apache 2.0. The run follows the stricter card statement. Question text stays out of the paper, the git repository, and any public upload. The paper reports detection rate by risk area and by type of harm, from the dataset's own file, so a later draft can include those aggregates or leave them out. `allenai/xstest-response` requires the Allen Institute form and `HF_TOKEN`. If that form stalls, XSTest is omitted and the rest of the pack still runs. The public harness also marks `allenai/wildguardmix` as requiring a form, so WildGuard uses the same token.
 
-**Versions.** `jev-1.13.0` is pinned. Clef and Clef-flash are pinned by hosted model id and by Hugging Face commit. The guardrail is a numbered version, in `us-east-2`, which is `DEFAULT_REGION_NAME` in `shared/aws/constants.py`. Filter strength is recorded from the detect-only bands. A later vendor update is a different study.
+**Versions.** `jev-1.13.0` is pinned. Clef and Clef-flash are pinned by hosted model id and by Hugging Face commit. Each dataset revision is the commit from the first successful load, stored in the run manifest, and a later load with a different commit is refused. The guardrail is a numbered version, in `us-east-2`, which is `DEFAULT_REGION_NAME` in `shared/aws/constants.py`. Filter strength is recorded from the detect-only bands. A later vendor update is a different study.
 
 **What the miss rate is not.** We do not generate new jailbreak strings, and we do not measure whether a chat model would have complied. HarmBench's usual attack-success rate against a target model is a different quantity.
 
-**Input length.** HumanJailbreaks prompts can be long. Requests over the context limit are errors, the same treatment the harness gives HTTP 400 `max_tokens_exceeded`. If the error rate exceeds 1% on any set, we report it beside the metric, and those rows stay in the table as errors.
+**Input length.** HumanJailbreaks prompts can be long. Requests over the context limit are errors, the same treatment the harness gives HTTP 400 `max_tokens_exceeded`. On hosted Clef-flash the limit is 24,576 tokens, and a longer prompt is an error. A self-hosted rerun of those weights is future work. If the error rate exceeds 1% on any set, we report it beside the metric, and those rows stay in the table as errors.
 
 ## 9. Plan and cost estimate
 
@@ -303,12 +303,12 @@ At 1,100 requests per minute, the cap Deußer et al. actually hit, about 21,000 
 
 Steps, in order:
 
-1. Write the loaders and the `DecisionScorer` interface from section 4, including the XSTest dedupe, the HarmBench configs, the JailbreakBench splits, and the `HF_TOKEN` path. Run the schema checks on local rows before any paid call.
+1. Write the loaders and the `DecisionScorer` interface from section 4, including the XSTest dedupe, the HarmBench configs, the JailbreakBench splits, and the `HF_TOKEN` path. On the first successful load, pin each dataset revision to that commit and write it into the manifest. Run the schema checks on local rows before any paid call.
 2. Confirm one template per dataset on 20 development items. For the six overlapping sets, start from the `build` methods in the public harness so the harness check uses the same wording. Store the confirmed JSON under `data/templates/`.
-3. Run `jev-1.13.0` on those six sets and compare to the published intervals. Stop if we are outside an interval.
+3. Run `jev-1.13.0` on those six sets and compare to the published intervals. For OpenAI Moderation, that check uses all 1,680 rows at threshold 0.5. Stop if we are outside an interval.
 4. Create a numbered guardrail in `us-east-2` with the six content filters and the filter action set to `NONE`. Write the crosswalk. Fall back to three numbered versions only if detect mode omits the band.
-5. Score the core pack with Jev, Clef, Clef-flash, and `ApplyGuardrail`, through the cache in section 4.
-6. Fit thresholds on development splits. Compute the metrics and the eight figures from the prediction records, using the union, intersection, and cascade functions.
+5. Score the core pack with Jev, Clef, Clef-flash, and `ApplyGuardrail`, through the cache in section 4. On hosted Clef-flash, count a prompt over 24,576 tokens as an error.
+6. Fit thresholds on development splits. For OpenAI Moderation, fit the tuned threshold on the hash-stable 20% holdout and leave that holdout out of the tuned test number. Compute the metrics and the eight figures from the prediction records, using the union, intersection, and cascade functions.
 7. Run the Kev and Laya pilot only after step 3 succeeds. The pilot is 20 examples and includes one long jailbreak prompt. Include a model in the tables only if its probabilities come back well-formed.
 
 Future artifacts, when the study is run, would live under `experiments/safety_decision_models_2026_10_19/` and the same prefix in `s3://mind-technology-lab-experiments/`. This proposal does not add that folder. The layout inside it is in section 4.
@@ -324,9 +324,8 @@ Typed decision models return a probability for a fixed question, and they do not
 3. **Optional models.** A 20-example pilot for `jaredpalmer/kev-9b` and `convaiinnovations/laya`, including one long jailbreak prompt. A model is included only if its probabilities come back well-formed.
 4. **Emotion pair.** GoEmotions and `dair-ai/emotion`. Dreaddit is a possible later separate task, with its own label definition.
 5. **Region.** `us-east-2`, the same value as `DEFAULT_REGION_NAME` in `shared/aws/constants.py`.
+6. **Dataset revisions.** Each Hugging Face dataset is pinned to the commit from the first successful load. That commit is written into the run manifest, and a later load with a different commit is refused.
+7. **OpenAI Moderation holdout.** The harness check scores all 1,680 rows at threshold 0.5. The tuned threshold is fit on a hash-stable 20% holdout, and that holdout is left out of the tuned test number.
+8. **Clef-flash context.** On the hosted arm, a prompt over 24,576 tokens is an error. A self-hosted rerun of the weights is future work.
 
-## Open questions
-
-1. **Dataset revisions.** The public harness loads datasets without a revision. Recommend writing the commit from the first successful load into the run manifest, and refusing a later load whose commit differs.
-2. **OpenAI Moderation holdout.** The harness has no development split for that set, and the published number uses all 1,680 rows. Recommend keeping that full-set check at threshold 0.5, and fitting the tuned threshold on a hash-stable 20% holdout that is left out of the tuned test number.
-3. **Clef-flash context.** Workers AI caps Clef-flash at 24,576 tokens. Recommend counting longer prompts as errors on the hosted arm, and leaving a self-hosted rerun for a later task.
+No open questions remain.
