@@ -21,7 +21,7 @@ Manifest: `outputs/manifests/20261020T033822Z_0f24960e.json`.
 
 ## Core pack
 
-Run `run_id=20261020T040920Z_90c5fd13` (step 7 metrics). Threshold 0.5 and development-tuned values.
+Run `run_id=20261020T040920Z_90c5fd13` (step 7 metrics). The table uses threshold 0.5 and development-tuned values.
 
 | Dataset | Arm | Metric | Tuned | At 0.5 |
 | --- | --- | --- | ---: | ---: |
@@ -81,9 +81,10 @@ Run `run_id=20261020T040920Z_90c5fd13` (step 7 metrics). Threshold 0.5 and devel
 | emotion | clef | accuracy | 0.5910 | 0.5910 |
 | emotion | clef-flash | accuracy | 0.5795 | 0.5795 |
 | emotion | guardrails | miss_rate | 1.0000 | — |
+
 ## Post-hoc sensitivity analysis
 
-**post-hoc sensitivity analysis** — JailbreakBench Bedrock guardrails only. The core-pack headline remains the pre-registered crosswalk (harmful → Prompt Attack only). Below, the any-filter variant takes the maximum confidence band across Hate, Insults, Sexual, Violence, Misconduct, and Prompt Attack, then applies the usual strength rule. Stacks reuse development-tuned model and cascade thresholds fit on the crosswalk guardrail bit at medium strength.
+**post-hoc sensitivity analysis** applies to JailbreakBench Bedrock guardrails only. The core-pack headline stays on the pre-registered crosswalk (harmful → Prompt Attack only). The any-filter variant in the tables below takes the maximum confidence band across Hate, Insults, Sexual, Violence, Misconduct, and Prompt Attack, and then applies the usual strength rule. Union, intersection, and cascade stacks reuse development-tuned model and cascade thresholds fit on the crosswalk guardrail bit at medium strength.
 
 | Variant | Strength | Miss rate | FPR |
 | --- | --- | ---: | ---: |
@@ -92,7 +93,7 @@ Run `run_id=20261020T040920Z_90c5fd13` (step 7 metrics). Threshold 0.5 and devel
 | Any content filter (max band) | medium | 0.2300 | 0.1900 |
 | Any content filter (max band) | high | 0.1500 | 0.3900 |
 
-Model and cascade cutoffs were fit on the development pool using pre-registered crosswalk guardrail bands at medium strength; sensitivity bands are applied only in this post-hoc analysis.
+Model and cascade cutoffs were fit on the development pool using pre-registered crosswalk guardrail bands at medium strength. Sensitivity bands are applied only in this post-hoc analysis.
 
 | Model arm | Stack | Miss rate | FPR |
 | --- | --- | ---: | ---: |
@@ -124,4 +125,4 @@ Prices are the 2026-10-19 rates in `configs/study.json`. The spend table rows ar
 | Metrics reband and rerun (cache only) | 0.00 |
 | **Total** | **18.38** |
 
-On the full-pack prediction rows, cost per 1,000 prompts is Jev $0.023, Clef $0.230, Clef-flash $0.036, and Guardrails $0.179. Median latency comes from each row's stored `latency_ms` on the original provider call. Cache replays count toward latency and are not zeroed. Jev median latency is 88.9 ms, with 88.0 ms for live calls only and 291 ms at p95. Clef-flash is 303 ms, Guardrails is 359 ms, and Clef is 368 ms.
+On the full-pack prediction rows, cost per 1,000 prompts is Jev $0.023, Clef $0.230, Clef-flash $0.036, and Guardrails $0.179. Median latency comes from each row's stored `latency_ms` on the original provider call, and cache replays count toward latency without being zeroed. Jev median latency is 88.9 ms, with 88.0 ms for live calls only and 291 ms at p95. Clef-flash median latency is 303 ms. Guardrails median latency is 359 ms, and Clef median latency is 368 ms.

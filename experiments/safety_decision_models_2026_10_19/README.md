@@ -16,7 +16,7 @@ The benchmark pulls eleven public datasets: ToxiGen, OpenAI Moderation, ToxicCha
 ## Docs
 
 - [SETUP.md](./SETUP.md), credentials, install, and S3 prefix
-- [RESULTS.md](./RESULTS.md), harness check, core-pack metrics, and logged spend. The core-pack guardrail headline for JailbreakBench stays on the pre-registered Prompt Attack crosswalk; see **Post-hoc sensitivity analysis** in RESULTS.md for an any-filter variant computed from cached assessments only.
+- [RESULTS.md](./RESULTS.md), harness check, core-pack metrics, and logged spend. For JailbreakBench, the core-pack guardrail headline stays on the pre-registered Prompt Attack crosswalk. **Post-hoc sensitivity analysis** in RESULTS.md reports an any-filter variant computed from cached assessments only.
 
 ## Plan
 
