@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import importlib
 import math
 from dataclasses import dataclass
 
@@ -23,9 +24,17 @@ TRAIN_DEV_DATASETS = frozenset(
 )
 VALIDATION_DEV_DATASETS = frozenset({"go_emotions", "emotion"})
 HOLDOUT_DEV_DATASETS = frozenset(
-    {"openai_moderation", "do_not_answer", "xstest", "jailbreakbench"}
+    {
+        "openai_moderation",
+        "do_not_answer",
+        "xstest",
+        "jailbreakbench",
+        "wildguardmix",
+        "harmbench",
+    }
 )
-FIXED_TUNED_DATASETS = frozenset({"prompt_injections", "jailbreakbench"})
+SMALL_DEV_TUNED_DATASETS = frozenset({"prompt_injections", "jailbreakbench"})
+MIN_LABELED_DEV_FOR_TUNING = 200
 
 
 def is_hash_holdout(example_id: str) -> bool:
@@ -38,10 +47,40 @@ def is_development_row(dataset: str, example_id: str, split: str) -> bool:
         return split == "train"
     if dataset in VALIDATION_DEV_DATASETS:
         return split == "validation"
-    if dataset == "harmbench":
-        return split == "val"
     if dataset in HOLDOUT_DEV_DATASETS:
         return is_hash_holdout(example_id)
+    return False
+
+
+def load_development_records(dataset: str) -> list[ExampleRecord]:
+    """Rows used only to fit thresholds (never mixed into test metrics)."""
+    module = importlib.import_module(f"datasets.{dataset}")
+    if dataset in TRAIN_DEV_DATASETS:
+        return module.load_records("train")
+    if dataset in VALIDATION_DEV_DATASETS:
+        return module.load_records("validation")
+    from scripts.run_score import _load_core_records
+
+    core = _load_core_records(dataset)
+    return [
+        row
+        for row in core
+        if is_development_row(dataset, row.example_id, row.split)
+    ]
+
+
+def development_labeled_count(dataset: str, rows: list[ExampleRecord]) -> int:
+    """Count development rows with usable labels for threshold tuning."""
+    if dataset in SMALL_DEV_TUNED_DATASETS:
+        return len(rows)
+    return len(rows)
+
+
+def tuned_threshold_fixed_at_half(dataset: str, dev_rows: list[ExampleRecord]) -> bool:
+    if dataset in SMALL_DEV_TUNED_DATASETS:
+        return development_labeled_count(dataset, dev_rows) < MIN_LABELED_DEV_FOR_TUNING
+    if dataset in ("harmbench", "do_not_answer"):
+        return True
     return False
 
 

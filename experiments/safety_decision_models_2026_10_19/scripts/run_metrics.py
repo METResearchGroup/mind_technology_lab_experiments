@@ -7,6 +7,7 @@ import importlib
 import json
 import math
 import sys
+import threading
 from collections import defaultdict
 from collections.abc import Callable
 from datetime import datetime, timezone
@@ -46,6 +47,7 @@ from shared.metrics import (  # noqa: E402
     spearman_correlation,
 )
 from shared.records import ExampleRecord, PredictionRecord  # noqa: E402
+from shared.cache import ResponseCache  # noqa: E402
 from shared.thresholds import (  # noqa: E402
     FIXED_THRESHOLD,
     CascadeThresholds,
@@ -54,20 +56,30 @@ from shared.thresholds import (  # noqa: E402
     fit_openai_moderation_threshold,
     fit_threshold_fp_budget,
     is_openai_moderation_holdout,
+    load_development_records,
     openai_moderation_test_rows,
+    SMALL_DEV_TUNED_DATASETS,
+    tuned_threshold_fixed_at_half,
 )
 from scripts.run_score import (  # noqa: E402
+    ALL_ARMS,
     DATASET_MODULES,
     DATASET_ORDER,
+    MAX_WORKERS,
     _estimate_usd,
     _load_core_records,
+    _model_version,
     _price_line,
+    _score_dataset,
+    _scorer_factory,
     load_question,
 )
 
 RUN_ID = "20261020T040920Z_90c5fd13"
 MODEL_ARMS = ("jev", "clef", "clef-flash")
 GUARDRAIL_ARM = "guardrails"
+SCORING_ARMS = tuple(ALL_ARMS)
+ADDITIONAL_SPEND_CAP_USD = 40.0
 STACK_STRENGTH: GuardrailStrength = "medium"
 RECORDS_DIR = EXPERIMENT_ROOT / "data" / "records"
 METRICS_PATH = EXPERIMENT_ROOT / "outputs" / "metrics" / f"{RUN_ID}.json"
@@ -102,7 +114,7 @@ HARNESS_METRIC_DATASETS = frozenset(
 def main() -> None:
     records_by_dataset = ensure_record_parquets()
     preds_by_arm: dict[str, dict[str, list[PredictionRecord]]] = {}
-    for arm in (*MODEL_ARMS, GUARDRAIL_ARM):
+    for arm in SCORING_ARMS:
         preds_by_arm[arm] = {}
         for dataset in DATASET_ORDER:
             preds_by_arm[arm][dataset] = align_predictions(
@@ -110,11 +122,22 @@ def main() -> None:
             )
 
     study = json.loads(STUDY_CONFIG.read_text(encoding="utf-8"))
+    dev_rows_by_dataset = {
+        dataset: load_development_records(dataset) for dataset in DATASET_ORDER
+    }
+    dev_scoring_report = ensure_development_predictions(dev_rows_by_dataset, study)
+    if dev_scoring_report.get("stopped_for_budget"):
+        raise SystemExit(
+            "development scoring skipped: projected spend exceeds budget cap"
+        )
+    dev_preds_by_arm = load_development_predictions_by_arm(dev_rows_by_dataset)
+
     metrics: dict[str, Any] = {
         "run_id": RUN_ID,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "threshold_fixed": FIXED_THRESHOLD,
         "guardrail_strength_stack": STACK_STRENGTH,
+        "development_scoring": dev_scoring_report,
         "arms": {},
         "stacks": {},
         "rq1_bootstrap": {},
@@ -124,7 +147,8 @@ def main() -> None:
     }
 
     thresholds: dict[str, dict[str, float]] = {}
-    cascade_thresholds: dict[str, CascadeThresholds] = {}
+    cascade_thresholds: dict[str, dict[str, CascadeThresholds]] = {}
+    threshold_notes: dict[str, dict[str, str]] = {arm: {} for arm in MODEL_ARMS}
     per_item_primary: dict[str, dict[str, list[float]]] = {
         arm: {} for arm in MODEL_ARMS
     }
@@ -132,14 +156,30 @@ def main() -> None:
     for arm in MODEL_ARMS:
         metrics["arms"][arm] = {}
         thresholds[arm] = {}
+        cascade_thresholds[arm] = {}
         for dataset in DATASET_ORDER:
             rows = records_by_dataset[dataset]
             preds = preds_by_arm[arm][dataset]
-            harm_scores = [harm_score(dataset, row, pred) for row, pred in zip(rows, preds)]
-            tuned = fit_tuned_threshold(dataset, rows, preds, harm_scores)
+            dev_rows = dev_rows_by_dataset[dataset]
+            dev_preds = dev_preds_by_arm[arm][dataset]
+            dev_harm_scores = [
+                harm_score(dataset, row, pred)
+                for row, pred in zip(dev_rows, dev_preds, strict=True)
+            ]
+            tuned = fit_tuned_threshold(
+                dataset, dev_rows, dev_preds, dev_harm_scores
+            )
+            if (
+                dataset in SMALL_DEV_TUNED_DATASETS
+                and tuned_threshold_fixed_at_half(dataset, dev_rows)
+            ):
+                threshold_notes[arm][dataset] = (
+                    f"held at {FIXED_THRESHOLD}: development labeled pool "
+                    f"< 200 items"
+                )
             thresholds[arm][dataset] = tuned
-            cascade_thresholds[f"{arm}+{GUARDRAIL_ARM}"] = fit_cascade_thresholds(
-                rows, preds, harm_scores
+            cascade_thresholds[arm][dataset] = fit_cascade_thresholds(
+                dev_rows, dev_preds, dev_harm_scores
             )
             ds_metrics = evaluate_dataset(
                 dataset, rows, preds, arm=arm, threshold_tuned=tuned, study=study
@@ -161,9 +201,16 @@ def main() -> None:
                 )
 
     metrics["thresholds"] = thresholds
+    metrics["threshold_notes"] = threshold_notes
     metrics["cascade_thresholds"] = {
-        key: {"t_high": val.threshold_high, "t_low": val.threshold_low}
-        for key, val in cascade_thresholds.items()
+        arm: {
+            dataset: {
+                "t_high": val.threshold_high,
+                "t_low": val.threshold_low,
+            }
+            for dataset, val in per_ds.items()
+        }
+        for arm, per_ds in cascade_thresholds.items()
     }
 
     metrics["arms"][GUARDRAIL_ARM] = {}
@@ -225,8 +272,8 @@ def ensure_record_parquets() -> dict[str, list[ExampleRecord]]:
     return out
 
 
-def load_predictions(arm: str, dataset: str) -> list[PredictionRecord]:
-    path = (
+def test_predictions_path(arm: str, dataset: str) -> Path:
+    return (
         EXPERIMENT_ROOT
         / "outputs"
         / "predictions"
@@ -234,6 +281,22 @@ def load_predictions(arm: str, dataset: str) -> list[PredictionRecord]:
         / arm
         / f"{dataset}.parquet"
     )
+
+
+def dev_predictions_path(arm: str, dataset: str) -> Path:
+    return (
+        EXPERIMENT_ROOT
+        / "outputs"
+        / "predictions"
+        / RUN_ID
+        / "dev"
+        / arm
+        / f"{dataset}.parquet"
+    )
+
+
+def load_predictions(arm: str, dataset: str) -> list[PredictionRecord]:
+    path = test_predictions_path(arm, dataset)
     frame = pd.read_parquet(path)
     preds: list[PredictionRecord] = []
     for row in frame.to_dict(orient="records"):
@@ -249,6 +312,233 @@ def load_predictions(arm: str, dataset: str) -> list[PredictionRecord]:
             row["probability"] = None
         preds.append(PredictionRecord.model_validate(row))
     return preds
+
+
+def load_predictions_from_path(path: Path) -> dict[str, PredictionRecord]:
+    if not path.is_file():
+        return {}
+    frame = pd.read_parquet(path)
+    out: dict[str, PredictionRecord] = {}
+    for row in frame.to_dict(orient="records"):
+        raw = row.get("raw_response")
+        if isinstance(raw, str):
+            row["raw_response"] = json.loads(raw)
+        err = row.get("error_status")
+        if err is not None and isinstance(err, float) and math.isnan(err):
+            row["error_status"] = None
+        if row.get("band") is not None and isinstance(row["band"], float) and math.isnan(
+            row["band"]
+        ):
+            row["band"] = None
+        if row.get("probability") is not None and isinstance(
+            row["probability"], float
+        ) and math.isnan(row["probability"]):
+            row["probability"] = None
+        pred = PredictionRecord.model_validate(row)
+        out[pred.example_id] = pred
+    return out
+
+
+def _manifest_billed_per_call(study: dict[str, Any]) -> dict[str, float]:
+    if not MANIFEST_PATH.is_file():
+        return {arm: 500.0 for arm in SCORING_ARMS}
+    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    billing = manifest.get("billing", {})
+    out: dict[str, float] = {}
+    for arm in SCORING_ARMS:
+        stats = billing.get(arm, {})
+        calls = float(stats.get("new_provider_calls") or 0)
+        units = float(stats.get("billed_units") or 0)
+        out[arm] = units / calls if calls else 500.0
+    return out
+
+
+def ensure_development_predictions(
+    dev_rows_by_dataset: dict[str, list[ExampleRecord]],
+    study: dict[str, Any],
+) -> dict[str, Any]:
+    """Score development rows missing from test and dev prediction stores."""
+    billed_per_call = _manifest_billed_per_call(study)
+    missing_by_arm: dict[str, dict[str, list[ExampleRecord]]] = {
+        arm: {} for arm in SCORING_ARMS
+    }
+    row_counts: dict[str, int] = {}
+    for dataset, dev_rows in dev_rows_by_dataset.items():
+        row_counts[dataset] = len(dev_rows)
+        for arm in SCORING_ARMS:
+            test_by_id = load_predictions_from_path(test_predictions_path(arm, dataset))
+            dev_by_id = load_predictions_from_path(dev_predictions_path(arm, dataset))
+            missing = [
+                row
+                for row in dev_rows
+                if row.example_id not in dev_by_id
+                and row.example_id not in test_by_id
+            ]
+            if missing:
+                missing_by_arm[arm][dataset] = missing
+
+    total_missing = sum(
+        len(rows) for per_arm in missing_by_arm.values() for rows in per_arm.values()
+    )
+    token_estimate = sum(
+        len(rows) * billed_per_call.get(arm, 500.0)
+        for arm, per_ds in missing_by_arm.items()
+        for rows in per_ds.values()
+    )
+    projected_usd = sum(
+        _estimate_usd(arm, len(rows) * billed_per_call.get(arm, 500.0), study)
+        for arm, per_ds in missing_by_arm.items()
+        for rows in per_ds.values()
+    )
+    print("development prediction gaps (rows to score):")
+    for dataset in DATASET_ORDER:
+        counts = [
+            len(missing_by_arm[arm].get(dataset, [])) for arm in SCORING_ARMS
+        ]
+        if any(counts):
+            print(
+                f"  {dataset}\tdev_pool={row_counts.get(dataset, 0)}\t"
+                f"per_arm_missing={counts}"
+            )
+    print(
+        f"total missing scoring rows (all arms): {total_missing}\t"
+        f"estimated_billed_units={token_estimate:.0f}\t"
+        f"projected_additional_usd={projected_usd:.4f}"
+    )
+
+    report: dict[str, Any] = {
+        "dev_pool_rows": row_counts,
+        "missing_rows_total": total_missing,
+        "estimated_billed_units": token_estimate,
+        "projected_additional_usd": projected_usd,
+        "scored": False,
+        "additional_billed_units": 0.0,
+        "additional_usd": 0.0,
+    }
+    if total_missing == 0:
+        report["scored"] = True
+        _materialize_dev_parquets(dev_rows_by_dataset)
+        return report
+
+    if projected_usd > ADDITIONAL_SPEND_CAP_USD:
+        print(
+            f"STOP: projected additional spend ${projected_usd:.2f} "
+            f"exceeds cap ${ADDITIONAL_SPEND_CAP_USD:.2f}; skipping dev scoring"
+        )
+        report["stopped_for_budget"] = True
+        return report
+
+    cache = ResponseCache()
+    cache_lock = threading.Lock()
+    progress_lock = threading.Lock()
+    additional_billed = 0.0
+    additional_calls = 0
+    billed_by_arm: dict[str, float] = {arm: 0.0 for arm in SCORING_ARMS}
+
+    for arm in SCORING_ARMS:
+        model_version = _model_version(arm, study)
+        scorer_factory = _scorer_factory(arm)
+        for dataset, missing_rows in missing_by_arm[arm].items():
+            if not missing_rows:
+                continue
+            question, template_version = load_question(dataset)
+            preds, new_calls, new_billed = _score_dataset(
+                missing_rows,
+                question,
+                template_version,
+                arm=arm,
+                model_version=model_version,
+                cache=cache,
+                cache_lock=cache_lock,
+                progress_lock=progress_lock,
+                dataset=dataset,
+                run_id=RUN_ID,
+                scorer_factory=scorer_factory,
+            )
+            additional_calls += new_calls
+            additional_billed += new_billed
+            billed_by_arm[arm] += new_billed
+            dev_path = dev_predictions_path(arm, dataset)
+            existing = load_predictions_from_path(dev_path)
+            for pred in preds:
+                existing[pred.example_id] = pred
+            _write_dev_predictions_parquet(arm, dataset, existing.values())
+
+    report["scored"] = True
+    report["additional_provider_calls"] = additional_calls
+    report["additional_billed_units"] = additional_billed
+    report["additional_usd"] = sum(
+        _estimate_usd(arm, billed_by_arm[arm], study) for arm in SCORING_ARMS
+    )
+    report["additional_usd_by_arm"] = {
+        arm: _estimate_usd(arm, billed_by_arm[arm], study) for arm in SCORING_ARMS
+    }
+    _materialize_dev_parquets(dev_rows_by_dataset)
+    return report
+
+
+def _write_dev_predictions_parquet(
+    arm: str, dataset: str, predictions: list[PredictionRecord]
+) -> None:
+    path = dev_predictions_path(arm, dataset)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    rows_payload = [row.model_dump() for row in predictions]
+    for payload in rows_payload:
+        raw = payload.get("raw_response")
+        if raw is not None:
+            payload["raw_response"] = json.dumps(raw, sort_keys=True)
+    frame = pd.DataFrame(rows_payload)
+    frame.to_parquet(path, index=False)
+    print(f"wrote {len(predictions)} dev rows to {path}")
+
+
+def _materialize_dev_parquets(
+    dev_rows_by_dataset: dict[str, list[ExampleRecord]],
+) -> None:
+    """Write dev parquets from test overlap + any dev-only scores."""
+    for arm in SCORING_ARMS:
+        for dataset, dev_rows in dev_rows_by_dataset.items():
+            if not dev_rows:
+                continue
+            test_by_id = load_predictions_from_path(test_predictions_path(arm, dataset))
+            dev_by_id = load_predictions_from_path(dev_predictions_path(arm, dataset))
+            merged: dict[str, PredictionRecord] = {}
+            for row in dev_rows:
+                eid = row.example_id
+                if eid in dev_by_id:
+                    merged[eid] = dev_by_id[eid]
+                elif eid in test_by_id:
+                    merged[eid] = test_by_id[eid]
+            if merged:
+                ordered = [merged[row.example_id] for row in dev_rows if row.example_id in merged]
+                if ordered:
+                    _write_dev_predictions_parquet(arm, dataset, ordered)
+
+
+def load_development_predictions_by_arm(
+    dev_rows_by_dataset: dict[str, list[ExampleRecord]],
+) -> dict[str, dict[str, list[PredictionRecord]]]:
+    out: dict[str, dict[str, list[PredictionRecord]]] = {
+        arm: {} for arm in SCORING_ARMS
+    }
+    for arm in SCORING_ARMS:
+        for dataset, dev_rows in dev_rows_by_dataset.items():
+            test_by_id = load_predictions_from_path(test_predictions_path(arm, dataset))
+            dev_by_id = load_predictions_from_path(dev_predictions_path(arm, dataset))
+            preds: list[PredictionRecord] = []
+            for row in dev_rows:
+                eid = row.example_id
+                if eid in dev_by_id:
+                    preds.append(dev_by_id[eid])
+                elif eid in test_by_id:
+                    preds.append(test_by_id[eid])
+                else:
+                    raise ValueError(
+                        f"missing development prediction for {arm}/{dataset} "
+                        f"example_id={eid}"
+                    )
+            out[arm][dataset] = preds
+    return out
 
 
 def align_predictions(
@@ -355,7 +645,7 @@ def fit_tuned_threshold(
     preds: list[PredictionRecord],
     scores: list[float | None],
 ) -> float:
-    if dataset in ("prompt_injections", "jailbreakbench"):
+    if tuned_threshold_fixed_at_half(dataset, rows):
         return FIXED_THRESHOLD
     if dataset == "openai_moderation":
         return fit_openai_moderation_threshold(rows, preds)
@@ -364,9 +654,7 @@ def fit_tuned_threshold(
             json.loads((TEMPLATE_DIR / "go_emotions.json").read_text()).keys()
         )
         return fit_go_emotions_threshold(rows, preds, labels)
-    if dataset in ("harmbench", "do_not_answer"):
-        return FIXED_THRESHOLD
-    return fit_threshold_fp_budget(rows, preds, scores)
+    return fit_threshold_fp_budget(rows, preds, scores, dev_only=False)
 
 
 def evaluate_dataset(
@@ -632,15 +920,15 @@ def evaluate_stacks(
     records_by_dataset: dict[str, list[ExampleRecord]],
     preds_by_arm: dict[str, dict[str, list[PredictionRecord]]],
     thresholds: dict[str, dict[str, float]],
-    cascade_thresholds: dict[str, CascadeThresholds],
+    cascade_thresholds: dict[str, dict[str, CascadeThresholds]],
 ) -> dict[str, Any]:
     stack_sets = ("jailbreakbench", "xstest", "wildguardmix")
     out: dict[str, Any] = {}
     for model_arm in MODEL_ARMS:
         out[model_arm] = {}
         guard_preds = preds_by_arm[GUARDRAIL_ARM]
-        cascade = cascade_thresholds[f"{model_arm}+{GUARDRAIL_ARM}"]
         for dataset in stack_sets:
+            cascade = cascade_thresholds[model_arm][dataset]
             rows = records_by_dataset[dataset]
             model_preds = preds_by_arm[model_arm][dataset]
             bands = {p.example_id: p.band for p in guard_preds[dataset]}
