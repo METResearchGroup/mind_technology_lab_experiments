@@ -313,6 +313,14 @@ def _score_one_with_retry(
     raise RuntimeError("score failed without exception")
 
 
+def _stringify_json_keys(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {str(key): _stringify_json_keys(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_stringify_json_keys(item) for item in value]
+    return value
+
+
 def _write_predictions(
     run_id: str, arm: str, dataset: str, predictions: list[PredictionRecord]
 ) -> None:
@@ -326,8 +334,8 @@ def _write_predictions(
     rows_payload = [row.model_dump() for row in predictions]
     for payload in rows_payload:
         raw = payload.get("raw_response")
-        if isinstance(raw, dict):
-            payload["raw_response"] = json.dumps(raw, sort_keys=True)
+        if raw is not None:
+            payload["raw_response"] = json.dumps(_stringify_json_keys(raw), sort_keys=True)
     frame = pd.DataFrame(rows_payload)
     parquet_path = out_dir / f"{dataset}.parquet"
     frame.to_parquet(parquet_path, index=False)
