@@ -1,8 +1,58 @@
-\appendix
 \section{Additional Tables}
 \label{sec:appendix-tables}
 
 Run \texttt{20261020T040920Z\_90c5fd13} (metrics JSON \texttt{outputs/metrics/20261020T040920Z\_90c5fd13.json}). Primary metrics below follow \texttt{RESULTS.md} at four decimal places unless noted.
+
+\begin{table}[htbp]
+\centering
+\caption{Tuned primary metrics by dataset and arm (guardrails: miss rate or detection rate at medium strength).}
+\label{tab:core-pack}
+\small
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+Dataset & Metric & Jev & Clef & Clef-flash & Guardrails \\
+\midrule
+ToxiGen & accuracy & 0.8755 & 0.7213 & 0.8074 & miss 0.6103 \\
+OpenAI Mod. & mean AUPRC & 0.7419 & 0.7528 & 0.7099 & miss 0.2126 \\
+ToxicChat & toxic F1 & 0.7878 & 0.6566 & 0.5784 & miss 0.2624 \\
+ToxicChat & jailbreak F1 & 0.7004 & 0.6071 & 0.2900 & \\
+Prompt inject. & accuracy & 0.7586 & 0.7672 & 0.5948 & miss 0.6000 \\
+WildGuardMix & prompt harm F1 & 0.4940 & 0.5933 & 0.4210 & miss 0.4208 \\
+WildGuardMix & prompt harm AUPRC & 0.9881 & 0.9875 & 0.9881 & \\
+Do-Not-Answer & detection rate & 0.7433 & 0.6017 & 0.4462 & det.\ 0.1523 \\
+XSTest & safe FPR & 0.0120 & 0.1080 & 0.0280 & miss 0.1700 \\
+XSTest & harmful det. & 0.8400 & 0.8950 & 0.7600 & \\
+HarmBench & miss rate & 0.2870 & 0.3937 & 0.4688 & miss 0.2026 \\
+JailbreakBench & miss rate & 0.0300 & 0.0100 & 0.0700 & miss 0.9800 \\
+JailbreakBench & FPR & 0.3400 & 0.5400 & 0.2400 & \\
+GoEmotions & macro-F1 & 0.3229 & 0.4624 & 0.4814 & miss 1.0000 \\
+Emotion & accuracy & 0.5840 & 0.5910 & 0.5795 & miss 1.0000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Primary metrics at fixed score threshold 0.5 where they differ from tuned values (same run).}
+\label{tab:threshold-contrast}
+\small
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+Dataset & Metric & Arm & At 0.5 & Tuned \\
+\midrule
+XSTest & safe FPR & Jev & 0.0840 & 0.0120 \\
+WildGuardMix & prompt harm F1 & Jev & 0.5904 & 0.4940 \\
+GoEmotions & macro-F1 & Jev & 0.2436 & 0.3229 \\
+XSTest & safe FPR & Clef & 0.2360 & 0.1080 \\
+WildGuardMix & prompt harm F1 & Clef & 0.6351 & 0.5933 \\
+OpenAI Mod. & mean AUPRC & Clef & 0.7501 & 0.7528 \\
+GoEmotions & macro-F1 & Clef & 0.4618 & 0.4624 \\
+XSTest & safe FPR & Clef-flash & 0.1000 & 0.0280 \\
+WildGuardMix & prompt harm F1 & Clef-flash & 0.5223 & 0.4210 \\
+OpenAI Mod. & mean AUPRC & Clef-flash & 0.7048 & 0.7099 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{longtable}{@{}lllrr@{}}
 \caption{Core-pack primary metrics at development-tuned thresholds and at score threshold 0.5. Source: \texttt{RESULTS.md} core-pack table (\texttt{run\_id=20261020T040920Z\_90c5fd13}). Guardrail arms report miss rate or detection rate only at medium strength; tuned column is not applicable (\texttt{n/a}).}
@@ -506,6 +556,37 @@ clef-flash & cascade & 0.0700 & 0.2400 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\section{Supplementary figures}
+\label{sec:appendix-figures}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{../outputs/figures/narrative_20261020/complementarity.png}
+\caption{Jev and guardrails block different harmful subsets where both arms are informative; empty slices dominate when the guardrail rarely fires.}
+\label{fig:complementarity}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{../outputs/figures/narrative_20261020/cost_vs_miss.png}
+\caption{Jev is cheapest per 1{,}000 prompts but does not sit at the lowest miss on every benchmark at headline thresholds.}
+\label{fig:cost-vs-miss}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{../outputs/figures/narrative_20261020/operating_points.png}
+\caption{Raising Jev's threshold on XSTest cuts benign FPR while raising harmful miss; on WildGuardMix, higher thresholds lower both prompt-harm F1 and benign FPR.}
+\label{fig:operating-points}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{../outputs/figures/narrative_20261020/reliability.png}
+\caption{Decision-model probabilities are usable for ranking but moderately miscalibrated on several heads (ECE in appendix Table~\ref{tab:calibration-decision-models}).}
+\label{fig:reliability}
+\end{figure}
 
 \begin{table}[htbp]
 \centering

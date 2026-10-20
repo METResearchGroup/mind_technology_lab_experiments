@@ -1,78 +1,17 @@
 \section{Methods}
 \label{sec:methods}
 
-\subsection{Shared scoring interface, templates, and cache}
-\label{sec:methods-scoring}
+Each loader emits stable example ids, gold labels, and optional benign-known flags.
+Decision models score versioned question templates; guardrails store \texttt{ApplyGuardrail} bands in a SQLite cache keyed by arm, template hash, and example id.
+Headline metrics use core pack \texttt{20261020T040920Z\_90c5fd13}; harness validation used \texttt{20261020T033822Z\_0f24960e}.
 
-All arms share one scoring contract. Each dataset loader emits \texttt{ExampleRecord} rows with a stable \texttt{example\_id}, split name, prompt text, gold labels, an optional harm category, a flag \texttt{is\_benign\_known} for rows used in false-positive budgeting, and metadata. Per dataset we load a \texttt{QuestionSpec} from \texttt{data/templates/\{dataset\}.json}: a versioned map of typed questions (binary noul heads or a single choice head) aligned with the public Jev harness shape \cite{deusser2026jevbenchmark,appliedml2026jevbenchmarking}. The template version stored on every prediction is the SHA-256 hash of that JSON file, so any edit to instructions or criteria changes the cache namespace.
+\textbf{Thresholds and guardrails.}
+Tuned thresholds maximize harmful-class F1 on development rows subject to a 5\% benign FPR cap; we also report scores at 0.5.
+Guardrail block bits apply Bedrock strength rules to the max matched band under the pre-registered crosswalk.
+A post-hoc JailbreakBench variant takes the max band across all six filters without refitting model thresholds; we label it post-hoc throughout.
 
-Each arm implements \texttt{DecisionScorer.score(records, question)}, which returns one \texttt{PredictionRecord} per input row. Typed decision APIs (Jev, Clef, Clef-flash) populate \texttt{probability} or per-question scores in \texttt{raw\_response}; the metrics layer maps those to a scalar harm score when a threshold is applied. Amazon Bedrock Guardrails \cite{aws2024bedrockguardrails} populate an ordinal detect band (\texttt{NONE}, \texttt{LOW}, \texttt{MEDIUM}, \texttt{HIGH}) and leave \texttt{probability} empty. Every record also carries \texttt{model\_version}, \texttt{latency\_ms} from the original provider round trip, billed units, and optional \texttt{error\_status}.
-
-Provider calls are deduplicated through a SQLite \texttt{ResponseCache} keyed by arm, model version, template version, and example id. Cache hits replay the stored \texttt{PredictionRecord}, including original \texttt{latency\_ms} (not zero). Dataset revisions are pinned via a manifest.
-
-Jev harness validation used \texttt{run\_id=20261020T033822Z\_0f24960e}; headline metrics use core pack \texttt{run\_id=20261020T040920Z\_90c5fd13}. Metrics are computed from saved predictions without new provider calls for that run.
-
-\subsection{Threshold tuning}
-\label{sec:methods-thresholds}
-
-For each decision-model arm and dataset we fit a single operating threshold on development rows that are never mixed into held-out test metrics. Development membership follows pre-registered rules: train split for ToxiGen, ToxicChat, and prompt injections; validation split for GoEmotions and Emotion; and a deterministic 20\% hash holdout on example id for OpenAI Moderation, Do-Not-Answer, XSTest, WildGuardMix, HarmBench, and JailbreakBench. OpenAI Moderation additionally holds out the complementary 80\% for test metrics at the tuned threshold.
-
-Unless fixed at 0.5, we search $t \in [0.00, 1.00]$ step 0.01. Among points with benign false-positive rate $\leq 5\%$ on \texttt{is\_benign\_known} development rows, we maximize harmful-class F1 (block if score $\geq t$); ties favor $t$ closer to 0.5, then lower $t$. With no benign-known rows or no feasible point, $t=0.5$. HarmBench and Do-Not-Answer stay at 0.5 by policy. JailbreakBench stays at 0.5 for all arms because the labeled development pool has fewer than 200 rows (50 in the metrics manifest), including cascade cutoffs. GoEmotions tunes macro-F1 on validation; OpenAI Moderation averages per-head thresholds fit on the 20\% hash holdout.
-
-We report primaries at tuned $t$ and at 0.5. Jev tuned values include WildGuardMix 0.78, XSTest 0.77, and GoEmotions 0.87. Cascade cutoffs use the same grid and false-positive budget on development rows under the cascade rule, with tie-breaking by distance of $(t_{\mathrm{high}}, t_{\mathrm{low}})$ from 0.5.
-
-For probabilistic arms we summarize calibration with 15-bin expected calibration error (ECE-15) and Brier score on binary harm labels where a scalar probability is defined \cite{guo2017calibration}. Selective prediction curves withhold the lowest-confidence fraction of prompts and report accuracy or miss rate at fixed coverage levels; we tabulate coverage 0.8 and 0.5 following the selective classification framework \cite{geifman2017selective}. Figures~\ref{fig:reliability},~\ref{fig:threshold}, and~\ref{fig:selective} visualize calibration, threshold sweeps, and selective operating points at the tuned threshold.
-
-\subsection{Stack policies}
-\label{sec:methods-stacks}
-
-Stacked screeners combine a typed decision model with the pre-registered Bedrock guardrail bit at strength \texttt{medium} (\texttt{guardrail\_strength\_stack} in the metrics JSON). All three policies read saved model predictions and guardrail bands recomputed from cached \texttt{ApplyGuardrail} responses; they do not call providers again.
-
-\textbf{Union.} Block if the model score is at or above the tuned point threshold \emph{or} the guardrail blocks at the chosen strength.
-
-\textbf{Intersection.} Block only if \emph{both} the model blocks at the tuned threshold and the guardrail blocks at that strength.
-
-\textbf{Cascade.} Let $P$ be the model harm probability (or equivalent score). Block if $P \geq t_{\mathrm{high}}$; allow (do not block) if $P \leq t_{\mathrm{low}}$; if $t_{\mathrm{low}} < P < t_{\mathrm{high}}$, defer to the guardrail medium-strength block bit. Cutoffs $(t_{\mathrm{high}}, t_{\mathrm{low}})$ are fit on the development pool with the same false-positive budget as point thresholds, using the medium guardrail block flags as the deferral path. Figure~\ref{fig:cascade} (defined in Section~\ref{sec:systems}) diagrams this three-way rule.
-
-For Jev, development-tuned cascade cutoffs are WildGuardMix $t_{\mathrm{high}}=0.78$ and $t_{\mathrm{low}}=0.77$; XSTest $t_{\mathrm{high}}=0.77$ and $t_{\mathrm{low}}=0.5$; and JailbreakBench $t_{\mathrm{high}}=0.5$ and $t_{\mathrm{low}}=0.5$. Other datasets in the core pack use 0.5 for both cutoffs under the same fitting procedure. Stack metrics are computed on JailbreakBench, XSTest, and WildGuardMix, where both harmful and benign-known rows support miss rate and false-positive rate.
-
-\subsection{Guardrail strength mapping and crosswalk}
-\label{sec:methods-guardrails}
-
-Headline metrics use the pre-registered crosswalk in \texttt{configs/study.json}: each gold label maps to Bedrock filter names (Hate, Insults, Sexual, Violence, Misconduct, Prompt Attack). We normalize names (case, spaces, hyphens, underscores), take the max matched confidence band, and assign \texttt{NONE} when the crosswalk list is empty. JailbreakBench harmful maps only to Prompt Attack in registered results. Bands are recomputed from cached responses; post-hoc JailbreakBench sensitivity uses the max band across all standard filters without refitting model or cascade thresholds.
-
-Given band $b$ and user-selected strength $s \in \{\mathrm{low}, \mathrm{medium}, \mathrm{high}\}$, we apply the Bedrock-style blocking rule used in production documentation: at \textbf{low} strength, block only \texttt{HIGH} detections; at \textbf{medium}, block \texttt{HIGH} and \texttt{MEDIUM}; at \textbf{high}, block \texttt{HIGH}, \texttt{MEDIUM}, and \texttt{LOW}. \texttt{NONE} never blocks. Headline guardrail and stack results use medium strength.
-
-GoEmotions and Emotion crosswalk every affect label to an empty filter list, so every row receives band \texttt{NONE} and the guardrail never blocks. On those datasets the guardrail arm therefore has miss rate 1.0000 under the blocking definition (all prompts are allowed through the guardrail layer), which is distinct from the decision models' classification metrics on the same text.
-
-Figure~\ref{fig:bands} summarizes miss rate and false-positive rate across strength levels for datasets where both harm and benign supervision exist.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\linewidth]{../outputs/figures/20261020T040920Z_90c5fd13/guardrail_bands.png}
-  \caption{Bedrock guardrail miss rate and false-positive rate by strength (low, medium, high) after crosswalk band recomputation. Datasets without benign labels omit false-positive rate.}
-  \label{fig:bands}
-\end{figure}
-
-\subsection{Metrics and primary endpoints}
-\label{sec:methods-metrics}
-
-\textbf{Blocking rates.} For datasets with harmful gold labels, \emph{miss rate} is the fraction of harmful prompts that are allowed (not blocked). For datasets with benign-known rows, \emph{false-positive rate} is the fraction of benign-known prompts that are blocked. \emph{Detection rate} is the fraction of blocked decisions among all rows in a harm-only evaluation set (Do-Not-Answer uses this definition on every prompt, which is treated as harm-seeking for detection purposes). Guardrail and stack arms use the strength mapping above to convert bands to block bits; decision models block when the harm score meets the threshold.
-
-\textbf{Primary metric per dataset} (decision models at tuned $t$, guardrails at medium strength):
-\begin{itemize}
-  \item ToxiGen, prompt injections, Emotion: accuracy.
-  \item OpenAI Moderation: mean area under the precision-recall curve (mean AUPRC) across moderation heads.
-  \item ToxicChat: toxic F1 and jailbreak F1.
-  \item GoEmotions: macro-F1 across labels.
-  \item WildGuardMix: prompt-harm F1 (primary) with prompt-harm AUPRC reported alongside.
-  \item Do-Not-Answer: detection rate (aggregates by risk area in results; no verbatim questions).
-  \item XSTest: false-positive rate on safe prompts and detection rate on harmful prompts.
-  \item HarmBench: miss rate on harmful behaviors.
-  \item JailbreakBench: miss rate on harmful goals and false-positive rate on benign goals.
-  \item Guardrails on standard safety sets: miss rate where harmful labels exist; detection rate on Do-Not-Answer.
-\end{itemize}
-
-\textbf{Calibration and selective prediction.} Where the decision model exposes a scalar probability for the relevant harm question, we report ECE-15 and Brier score on binary gold harm labels. Ordinal guardrail bands are not treated as probabilities and are excluded from ECE. Selective prediction metrics at 80\% and 50\% coverage rank examples by confidence and report the resulting miss rate or accuracy on the retained subset \cite{geifman2017selective}.
-
-\textbf{Analysis artifacts.} Bootstrap comparisons for research question 1, stack tables, guardrail strength grids, and latency-cost summaries are derived from the same prediction files and threshold JSON (\texttt{thresholds}, \texttt{cascade\_thresholds}, \texttt{threshold\_notes}) emitted with run \texttt{20261020T040920Z\_90c5fd13}. Threshold notes document JailbreakBench holds at 0.5 for all arms because the development labeled pool has fewer than 200 items.
+\textbf{Stacks and metrics.}
+Pre-registered stacks pair each decision model with the medium-strength crosswalk guardrail on JailbreakBench, XSTest, and WildGuardMix.
+Miss rate is the share of harmful prompts allowed; FPR is the share of benign-known prompts blocked; Do-Not-Answer uses detection rate on harm-only rows.
+Bootstrap CIs in the results section are percentile intervals from 1{,}000 resamples (seed 42) of JailbreakBench harmful and benign rows and of the XSTest Jev operating points.
+Expected calibration error (ECE-15) summarizes probabilistic arms where noted in the appendix.

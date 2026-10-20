@@ -5,6 +5,8 @@
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{graphicx}
+\usepackage{float}
+\usepackage{placeins}
 \usepackage{amsmath}
 \usepackage[hidelinks,pdftitle={Benchmarking Decision Models for LLM Safety Screening}]{hyperref}
 
@@ -31,15 +33,16 @@ Email: \texttt{william.brady@kellogg.northwestern.edu}.}%
 \input{sections/datasets}
 \input{sections/methods}
 \input{sections/results}
-\input{sections/stacking}
-\input{sections/sensitivity}
-\input{sections/latency}
 \input{sections/discussion}
 \input{sections/limitations}
 \input{sections/ethics}
 \input{sections/conclusion}
+
+\clearpage
+\appendix
 \input{sections/appendix}
 
+\FloatBarrier
 \bibliographystyle{plainnat}
 \bibliography{references}
 

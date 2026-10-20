@@ -1,43 +1,8 @@
 \section{Related Work}
 \label{sec:related}
 
-Public benchmarks for undesired content, jailbreaks, and exaggerated refusals give the field shared tasks and labels, but they were built for different model families and scoring rules.
-\citeauthor{hartvigsen2022toxigen} introduce ToxiGen for implicit and machine-generated hate \cite{hartvigsen2022toxigen}.
-\citeauthor{markov2023holistic} describe the holistic moderation taxonomy that underlies the OpenAI Moderation evaluation set \cite{markov2023holistic}.
-ToxicChat stresses toxicity and jailbreak cues in real user and assistant logs \cite{lin2023toxicchat}.
-The deepset prompt-injection corpus offers a compact binary injection task \cite{deepset2024promptinjections}.
-WildGuard and WildGuardMix extend moderation to jailbreaks, refusals, and prompt harm with an adversarial flag \cite{han2024wildguard}.
-Do-Not-Answer measures whether safeguards should refuse risky questions without a benign contrast class \cite{wang2024donotanswer}.
-XSTest targets exaggerated safety on prompts that are safe versus harmful by construction \cite{rottger2024xstest}.
-HarmBench standardizes automated red-teaming and refusal behavior \cite{mazeika2024harmbench}, and JailbreakBench pairs harmful goals with benign look-alikes for miss and false-positive measurement \cite{chao2024jailbreakbench}.
-Together these sets cover toxicity, category moderation, injections, broad harm, and over-refusal, yet prior work rarely scores them under one input-screening protocol.
-
-Emotion-labeled text is adjacent to safety screening because wellbeing products must not treat ordinary distress as policy violations.
-GoEmotions provides fine-grained emotion labels in short comments \cite{demszky2020goemotions}.
-Work on contextualized affect representations, such as CARER, highlights how emotion cues depend on surrounding text \cite{saravia2018carer}.
-Benchmarks in the Jev line therefore include emotion classification alongside safety sets so that block rates on non-harm emotional language can be read next to toxicity scores rather than in isolation.
-
-A second line of work scores \emph{typed} decision models that answer fixed questions with probabilities instead of generating moderation rationales.
-TypeSafe documents the Jev request shape and model versions \cite{typesafe2026jevmodels}.
-Deu{\ss}er, Sparrenberg, and Sifa benchmark Jev \texttt{jev-1.13.0} zero-shot on dozens of Hugging Face tasks, including the safety and emotion sets that overlap our pack \cite{deusser2026jevbenchmark}.
-Their public harness and task definitions \cite{appliedml2026jevbenchmarking} pin dataset configs, question primitives, and primary metrics such as ToxiGen accuracy, mean category AUPRC on OpenAI Moderation, ToxicChat F1 splits, prompt-injection accuracy, and GoEmotions macro-F1.
-That study does not call a managed guardrail or combine a decision model with cloud policy APIs.
-Before our full evaluation we reran the harness on six overlapping datasets (ToxiGen, OpenAI Moderation, ToxicChat, prompt injections, GoEmotions, and Emotion); every observed primary fell inside or matched the published intervals reported in our results log, so subsequent arms share the same templates and splits.
-
-Cloudflare publishes Clef and Clef-flash as open-weight models that accept the same \texttt{state} and \texttt{questions} interface as Jev \cite{cloudflare2026clef,cloudflare2026clefflash}.
-They are natural comparators for API-hosted typed screening, but prior public numbers are model cards and documentation rather than a multi-benchmark table aligned with Deu{\ss}er et al.
-
-Managed guardrails implement a different interface: category filters return ordinal confidence bands and a block bit at a chosen strength rather than a calibrated harm probability.
-Amazon Bedrock Guardrails documents six input content filters (Hate, Insults, Sexual, Violence, Misconduct, and Prompt Attack) and strength rules that map bands to block decisions \cite{aws2024bedrockguardrails}.
-Bands are not probabilities, so calibration metrics from the scoring literature do not transfer directly.
-Dataset harm labels also need an explicit crosswalk to filter names, which matters most on jailbreak benchmarks where only a subset of filters is semantically native.
-
-When decision models do emit probabilities, calibration and selective prediction provide standard tools for threshold choice and coverage trade-offs.
-\citeauthor{guo2017calibration} show that modern classifiers are often miscalibrated and discuss temperature scaling and evaluation of probabilistic outputs \cite{guo2017calibration}.
-\citeauthor{geifman2017selective} formalize selective classification, abstaining on low-confidence items to reduce error at a fixed coverage \cite{geifman2017selective}.
-Prior Jev reporting includes tuned thresholds and selective curves on development data \cite{deusser2026jevbenchmark}; guardrail papers and product docs seldom report the same curves because the actionable object is a band, not $P(\text{harm})$.
-
-Our study sits at the intersection of these threads.
-We keep the Deu{\ss}er et al.\ question templates and metrics where datasets overlap, add Clef, Clef-flash, and Bedrock Guardrails on the same eleven public sets (including WildGuardMix, Do-Not-Answer aggregates, XSTest, HarmBench, and JailbreakBench), and harmonize miss rate, false-positive rate, and detection rate definitions across arms.
-We further evaluate union, intersection, and cascade stack policies that read only saved predictions, mirroring how a product might run a typed screener before or together with a managed guardrail.
-To our knowledge, no prior work reports this full matrix under one pre-registered crosswalk, threshold rule, and cost and latency accounting for every arm.
+Public safety benchmarks---ToxiGen~\cite{hartvigsen2022toxigen}, OpenAI Moderation~\cite{markov2023holistic}, ToxicChat~\cite{lin2023toxicchat}, prompt injections~\cite{deepset2024promptinjections}, WildGuardMix~\cite{han2024wildguard}, Do-Not-Answer~\cite{wang2024donotanswer}, XSTest~\cite{rottger2024xstest}, HarmBench~\cite{mazeika2024harmbench}, and JailbreakBench~\cite{chao2024jailbreakbench}---were built for different model interfaces and primary metrics.
+Deu{\ss}er et al.\ benchmark Jev zero-shot on many of these tasks with a shared harness~\cite{deusser2026jevbenchmark,appliedml2026jevbenchmarking} but without Bedrock Guardrails or stack policies on the same prompts.
+Clef and Clef-flash share the Jev request shape~\cite{cloudflare2026clef,cloudflare2026clefflash}; Bedrock documents ordinal filter bands rather than calibrated probabilities~\cite{aws2024bedrockguardrails}.
+Calibration and selective prediction tools apply to probabilistic arms~\cite{guo2017calibration,geifman2017selective}; guardrail deployments still require an explicit label-to-filter crosswalk.
+We add Clef, Clef-flash, guardrails, stacks, and unified miss/FPR/detection semantics on one eleven-dataset pack.

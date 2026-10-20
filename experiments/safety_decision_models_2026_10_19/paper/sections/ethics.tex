@@ -1,14 +1,11 @@
 \section{Ethics and Broader Impact}
 \label{sec:ethics}
 
-This work benchmarks automated screening tools on datasets that contain hate, harassment, sexual content, self-harm themes, jailbreaks, and other harmful requests. We handle that material under dataset licenses and under a deliberate minimization policy for public artifacts.
-
-Do-Not-Answer is included under its academic-use terms. The study is non-commercial research. The dataset card describes CC BY-NC-SA 4.0 for the content and also references Apache 2.0 for some source files; we follow the stricter card statement for how we use the data. We do not reproduce Do-Not-Answer question text in the paper, in the public git repository, or in the S3 upload. Aggregates such as detection rate by risk area or harm type may appear when they are computed from the dataset's own taxonomy fields without quoting prompts. This section does not provide legal advice on license interpretation; readers with deployment obligations should consult the original dataset and vendor terms.
-
-Other core-pack datasets carry their own licenses and access rules on Hugging Face. Some sets require acceptance forms or tokens; we pin revisions in the run manifest and report metrics only. Harmful or offensive prompts are never quoted verbatim in the manuscript or in public logs. We name the dataset, describe the task, and report numeric outcomes so that others can reproduce the protocol without redistributing harmful strings.
-
-Public releases contain aggregates and prediction metadata, not full user-facing text. The paper, repository artifacts, and S3 mirror under the experiment prefix report run manifests, metrics JSON, figures, and parquet prediction files as defined by the study protocol. Question wording for scored templates is versioned separately; Do-Not-Answer item text is excluded from those public bundles by design.
-
-Screening benchmarks affect people only indirectly, but deployment of similar filters in real products does not. A miss means the filter allowed the prompt through under the stated threshold and mapping. It does not mean a downstream language model complied with a harmful request, and it does not measure user harm in the world. Conversely, a false positive blocks or flags benign text, including ordinary emotional expression on GoEmotions and Emotion, which can impose refusal or friction on users who were not seeking harm. Product teams face costs in both directions: missed harm if the screen is too permissive, and over-refusal or chilling effects if it is too aggressive. Our emotion datasets are included partly to make that trade-off visible.
-
-Researchers should avoid quoting harmful content in issues or commits and should restrict access to cached API payloads. Better measurement clarifies what a configuration would do on fixed public tests; it does not by itself make deployed systems safe.
+The benchmarks include hate, harassment, sexual content, self-harm themes, and jailbreaks.
+We do not quote those prompts, and we do not reproduce Do-Not-Answer question text in the paper, the repository, or the S3 release.
+Do-Not-Answer is used under its academic-use terms.
+Risk-area rates use the dataset's own category names.
+A miss means the screen allowed the text under the stated threshold and mapping.
+It is not evidence that a chat model complied, and it is not a measure of harm to a person.
+A false positive can block ordinary emotional text.
+The comparison is a configuration result on fixed public prompts, not a certification of a deployed product.

@@ -1,66 +1,17 @@
 \section{Introduction}
 
-Products that support mental health and emotional wellbeing must screen user input before a large language model responds.
-A harmful request that passes the filter can enter the session.
-A false positive can refuse someone who was describing ordinary distress.
-The screening layer therefore trades missed harm against over-refusal, latency, and cost.
+Input screening trades missed harm against over-refusal, latency, and cost.
+Two commercial families implement that layer differently.
+Typed decision models---TypeSafe Jev~\cite{typesafe2026jevmodels,deusser2026jevbenchmark}, Cloudflare Clef, and Clef-flash~\cite{cloudflare2026clef,cloudflare2026clefflash}---take fixed questions on prompt text and return probabilities or discrete choices.
+Amazon Bedrock Guardrails~\cite{aws2024bedrockguardrails} scores input through \texttt{ApplyGuardrail} and maps ordinal bands on six content filters to block decisions.
+Prior Jev benchmarks~\cite{deusser2026jevbenchmark} do not place a managed guardrail on the same rows under harmonized miss and false-positive definitions.
 
-Two families of commercial APIs implement that layer in different ways.
-Typed decision models, such as TypeSafe Jev~\cite{typesafe2026jevmodels,deusser2026jevbenchmark}, take a text state and one or more fixed questions, then return probabilities or discrete choices with no free-text generation.
-Cloudflare Clef and Clef-flash follow the same request shape with open-weight models~\cite{cloudflare2026clef,cloudflare2026clefflash}.
-Amazon Bedrock Guardrails scores input through \texttt{ApplyGuardrail} and returns block decisions derived from ordinal bands on six content filters~\cite{aws2024bedrockguardrails}.
-Bands are not probabilities, and filter names do not align one-to-one with benchmark harm categories.
-Prior work benchmarks Jev across many public datasets~\cite{deusser2026jevbenchmark} but does not place managed guardrails on the same prompts under harmonized miss-rate and false-positive-rate definitions.
+Under one pre-registered protocol, typed decision models and a managed guardrail sit on different miss--false-positive--cost points; on JailbreakBench the guardrail's headline miss is mostly the category crosswalk, not the strength setting; stacks help only where that guardrail still catches harm.
 
-We run a pre-registered comparison on eleven public datasets that score prompts only.
-Safety sets include ToxiGen~\cite{hartvigsen2022toxigen}, OpenAI Moderation~\cite{markov2023holistic}, ToxicChat~\cite{lin2023toxicchat}, prompt injections~\cite{deepset2024promptinjections}, WildGuardMix~\cite{han2024wildguard}, Do-Not-Answer~\cite{wang2024donotanswer}, XSTest~\cite{rottger2024xstest}, HarmBench~\cite{mazeika2024harmbench}, and JailbreakBench~\cite{chao2024jailbreakbench}.
-We add GoEmotions~\cite{demszky2020goemotions} and Emotion~\cite{saravia2018carer} because wellbeing products encounter emotionally loaded text that is not labeled as harm; we record whether guardrails block those rows while decision models are scored as classifiers.
-We do not measure chat-model compliance or attack success against a target LLM.
-For Do-Not-Answer we report detection rates and risk-area aggregates only, without reproducing question text.
+We evaluate four arms on eleven public prompt-only datasets (safety sets plus GoEmotions and Emotion for emotionally loaded non-harm text).
+We report tuned decision-model thresholds and scores at 0.5, guardrail metrics at medium strength under a dataset-to-filter crosswalk fixed before test scoring, and pre-registered stacks (union, intersection, cascade) from cached predictions.
+We do not measure downstream chat-model compliance or user outcomes in live sessions.
 
-Four arms are evaluated: Jev \texttt{jev-1.13.0}, Clef, Clef-flash, and Bedrock Guardrails with content filters only.
-Each decision model is also combined with the guardrail under three stack policies (union, intersection, cascade) computed from saved predictions.
-Union blocks if either component blocks; intersection blocks only when both block; cascade defers ambiguous model scores to the guardrail at medium strength.
-These policies are deterministic functions of cached scorer output, so the same rules could be deployed at runtime without additional model calls.
-
-Our study is organized around six research questions.
-We ask whether Clef and Clef-flash move primary safety metrics relative to Jev beyond bootstrap uncertainty; how tuned thresholds and selective prediction at 80\% and 50\% coverage compare to a fixed 0.5 cutoff; what false-positive rates arise on benign prompts and on emotion-labeled text; how guardrail miss and false-positive rates vary at low, medium, and high strength under a published crosswalk; how stacks separate miss rate from false-positive rate relative to each arm alone; and what median latency and billed cost per 1{,}000 prompts each arm incurs on this pack.
-
-Thresholds maximize harmful-class F1 on a development pool subject to benign false-positive rate at most 5\%, with JailbreakBench held at 0.5 when the labeled development pool is small.
-We report tuned scores and scores at 0.5, plus expected calibration error and Brier scores where probabilities apply.
-Guardrail strength uses a dataset-to-filter crosswalk fixed before test scoring; headline JailbreakBench metrics map harmful goals to Prompt Attack only.
-
-Before scoring Clef or guardrails on the full pack, we ran the public Jev harness on six datasets that overlap Deu{\ss}er et al.~\cite{deusser2026jevbenchmark}.
-Observed primaries fell inside published intervals (harness PASS), including ToxiGen accuracy 0.8755 and ToxicChat toxic F1 0.7878.
-That step anchors later contrasts to a validated Jev baseline rather than an ad hoc template.
-
-Headline results show sharp trade-offs rather than a single winning arm.
-Jev attains low over-refusal on XSTest safe prompts (false-positive rate 0.0120 at tuned thresholds) and low miss on JailbreakBench harmful goals (0.0300).
-The pre-registered guardrail mapping on the same JailbreakBench split misses 0.9800 of harmful goals, which shows how much the category crosswalk shapes guardrail behavior on jailbreak-style text.
-A post-hoc sensitivity analysis that takes the maximum band across all content filters lowers medium-strength miss rate to 0.2300 at false-positive rate 0.1900; we treat that mapping as exploratory, not a registered endpoint.
-On HarmBench, guardrails miss rate 0.2026 is lower than Jev miss rate 0.2870.
-Clef is not uniformly better than Jev on safety primaries; for example, Clef ToxiGen accuracy is 0.7213 versus Jev 0.8755, while Clef exceeds Jev on some other sets in the core pack.
-ToxicChat toxic F1 remains 0.7878 for tuned Jev versus guardrails miss rate 0.2624 on the same dataset under the crosswalk.
-Do-Not-Answer Jev detection rate is 0.7433 versus 0.1523 for guardrails.
-Guardrails assign miss rate 1.0000 on GoEmotions and Emotion in our scoring interface, which we interpret as blanket blocking of non-harm-labeled comments rather than emotion classification accuracy.
-Stacking can shift the miss-versus-false-positive frontier on datasets with both classes, but on JailbreakBench the pre-registered intersection policy inherits the guardrail miss rate when the guardrail is stricter than the model.
-
-Operationally, Jev median latency is 88.9\,ms and cost per 1{,}000 prompts is \$0.023, compared with guardrails at 359\,ms and \$0.179 per 1{,}000 prompts and Clef at \$0.230 per 1{,}000 prompts; total study spend was \$18.38 at pinned 2026-10-19 rates.
-All predictions, manifests, and figures for run \texttt{20261020T040920Z\_90c5fd13} are released with the experiment repository.
-
-\textbf{Contributions.}
-(1)~A harmonized benchmark of three typed decision APIs and Bedrock Guardrails on eleven prompt-level datasets, with explicit miss rate, false-positive rate, and detection-rate semantics.
-(2)~A harness-validated Jev baseline aligned to prior published evaluations~\cite{deusser2026jevbenchmark}.
-(3)~Pre-registered guardrail crosswalk and stack policies, plus calibration and selective-prediction analyses at tuned and 0.5 thresholds.
-(4)~Documented cost and latency for the same prediction rows, and a clearly labeled post-hoc JailbreakBench guardrail sensitivity analysis.
-
-\textbf{Paper organization.}
-Section~\ref{sec:related} reviews related benchmarks and systems.
-Section~\ref{sec:systems} describes the systems under test.
-Section~\ref{sec:datasets} lists datasets and splits.
-Section~\ref{sec:methods} details methods, caching, thresholds, stacks, and metrics.
-Section~\ref{sec:results} presents results by research question.
-Section~\ref{sec:stacking} analyzes stacking policies.
-Section~\ref{sec:jbb-sensitivity} reports the post-hoc JailbreakBench guardrail sensitivity analysis.
-Section~\ref{sec:latency} covers latency and cost.
-Section~\ref{sec:discussion} discusses implications, Section~\ref{sec:limitations} states limitations, Section~\ref{sec:ethics} covers ethics, and Section~\ref{sec:conclusion} concludes.
+Before the full pack we reran the public Jev harness (\texttt{20261020T033822Z\_0f24960e}, PASS).
+Headline numbers below use \texttt{20261020T040920Z\_90c5fd13}.
+Section~\ref{sec:related} situates prior benchmarks; Sections~\ref{sec:systems}--\ref{sec:methods} describe arms, data, and metrics; Section~\ref{sec:results} reports empirical findings; Sections~\ref{sec:discussion}--\ref{sec:conclusion} interpret deployment trade-offs.
