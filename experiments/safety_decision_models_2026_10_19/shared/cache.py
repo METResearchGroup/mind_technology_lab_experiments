@@ -111,23 +111,49 @@ def _sys_path_without_experiment_root() -> list[str]:
     return filtered
 
 
+def _local_datasets_root() -> Path:
+    return (EXPERIMENT_ROOT / "datasets").resolve()
+
+
+def _is_local_datasets_module(module_name: str) -> bool:
+    """True for experiment loader modules under ``datasets/``, not Hugging Face."""
+    module = sys.modules.get(module_name)
+    if module is None:
+        return False
+    local_root = _local_datasets_root()
+    file_path = getattr(module, "__file__", None)
+    if file_path:
+        try:
+            resolved = Path(file_path).resolve()
+        except OSError:
+            return False
+        if resolved == local_root / "__init__.py" or local_root in resolved.parents:
+            return True
+    if module_name == "datasets":
+        for entry in getattr(module, "__path__", []) or []:
+            try:
+                if Path(entry).resolve() == local_root:
+                    return True
+            except OSError:
+                continue
+    return False
+
+
 @contextmanager
 def _isolated_hf_datasets_import() -> Iterator[None]:
     """Hide local ``datasets/`` loaders while Hugging Face datasets runs."""
-    saved_submodules = {
-        name: sys.modules[name]
-        for name in list(sys.modules)
-        if name == "datasets" or name.startswith("datasets.")
-    }
-    for name in saved_submodules:
-        sys.modules.pop(name, None)
+    saved_local: dict[str, Any] = {}
+    for name in list(sys.modules):
+        if name == "datasets" or name.startswith("datasets."):
+            if _is_local_datasets_module(name):
+                saved_local[name] = sys.modules.pop(name)
     old_path = sys.path[:]
     sys.path = _sys_path_without_experiment_root()
     try:
         yield
     finally:
         sys.path = old_path
-        for name, module in saved_submodules.items():
+        for name, module in saved_local.items():
             sys.modules[name] = module
 
 
@@ -135,11 +161,15 @@ def _import_hf_datasets() -> Any:
     """Import the Hugging Face ``datasets`` package, not this repo's loaders."""
     cached = sys.modules.get("_hf_datasets_package")
     if cached is not None and hasattr(cached, "load_dataset"):
-        return cached
-    import importlib
+        hf = cached
+    else:
+        import importlib
 
-    hf = importlib.import_module("datasets")
-    sys.modules["_hf_datasets_package"] = hf
+        hf = importlib.import_module("datasets")
+        sys.modules["_hf_datasets_package"] = hf
+    # ``load_dataset`` and friends do ``import datasets`` internally; bind the HF
+    # package while local ``datasets/`` loaders are off sys.path.
+    sys.modules["datasets"] = hf
     return hf
 
 
@@ -175,6 +205,33 @@ def load_hf_dataset(
             f"Refusing {repo_id}: hub commit {commit} != pin {pinned}"
         )
     return table
+
+
+def list_hf_splits(
+    repo_id: str,
+    *,
+    name: str | None = None,
+    token: str | None = None,
+    revision: str | None = None,
+) -> list[str]:
+    """Return split names for a Hugging Face dataset (revision-aware)."""
+    dataset_key = _dataset_manifest_key(repo_id, name)
+    pinned = _read_pinned_revision(dataset_key)
+    if pinned and revision and revision != pinned:
+        raise RevisionMismatchError(
+            f"Refusing {repo_id}: requested revision {revision} != pin {pinned}"
+        )
+    use_revision = revision or pinned
+    builder_kwargs: dict[str, Any] = {"path": repo_id, "token": token}
+    if name is not None:
+        builder_kwargs["name"] = name
+    if use_revision:
+        builder_kwargs["revision"] = use_revision
+    with _isolated_hf_datasets_import():
+        hf = _import_hf_datasets()
+        builder = hf.load_dataset_builder(**builder_kwargs)
+    splits = list(builder.info.splits.keys())
+    return sorted(splits)
 
 
 def _dataset_manifest_key(repo_id: str, config: str | None) -> str:

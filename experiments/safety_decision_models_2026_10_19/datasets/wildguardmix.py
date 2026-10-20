@@ -13,13 +13,17 @@ from shared.secrets import load_hf_token
 
 DATASET_NAME = "wildguardmix"
 HF_REPO = "allenai/wildguardmix"
+HF_CONFIG = "wildguardtest"
+HUB_SPLIT = "test"
 SPLIT_NAME = "WildGuardTest"
 
 
 def load_records(split: str = SPLIT_NAME) -> list[ExampleRecord]:
     """Load WildGuardTest rows (gated; requires hf-token)."""
     token = load_hf_token()
-    table = load_hf_dataset(HF_REPO, split=split, token=token)
+    table = load_hf_dataset(
+        HF_REPO, name=HF_CONFIG, split=HUB_SPLIT, token=token
+    )
     records: list[ExampleRecord] = []
     for index, row in enumerate(iter_table_rows(table)):
         prompt_harm = bool(row.get("prompt_harm_label"))
@@ -27,9 +31,9 @@ def load_records(split: str = SPLIT_NAME) -> list[ExampleRecord]:
         benign_prompt = not prompt_harm
         records.append(
             ExampleRecord(
-                example_id=f"{DATASET_NAME}:{split}:{index}",
+                example_id=f"{DATASET_NAME}:{SPLIT_NAME}:{index}",
                 dataset=DATASET_NAME,
-                split=split,
+                split=SPLIT_NAME,
                 text=str(row["prompt"]).strip(),
                 gold_labels={
                     "prompt_harm": prompt_harm,

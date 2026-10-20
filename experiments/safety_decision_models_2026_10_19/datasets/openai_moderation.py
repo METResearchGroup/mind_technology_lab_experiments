@@ -15,12 +15,19 @@ HF_REPO = "mmathys/openai-moderation-api-evaluation"
 CATEGORY_CODES = ("S", "H", "V", "HR", "SH", "S3", "H2", "V2")
 
 
+def _category_positive(row: dict[str, object], code: str) -> bool:
+    value = row.get(code)
+    if value is None:
+        return False
+    return int(value) == 1
+
+
 def load_records(split: str = "train") -> list[ExampleRecord]:
     """Load moderation rows (single train split on the hub)."""
     table = load_hf_dataset(HF_REPO, split=split)
     records: list[ExampleRecord] = []
     for index, row in enumerate(iter_table_rows(table)):
-        gold = {code: int(row[code]) == 1 for code in CATEGORY_CODES}
+        gold = {code: _category_positive(row, code) for code in CATEGORY_CODES}
         records.append(
             ExampleRecord(
                 example_id=f"{DATASET_NAME}:{split}:{index}",

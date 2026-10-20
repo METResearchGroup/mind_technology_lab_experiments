@@ -103,7 +103,10 @@ def load_typesafe_api_key() -> str:
 
 
 def load_hf_token() -> str:
-    """Load the Hugging Face token from secret hf-token."""
+    """Load the Hugging Face token from env or secret hf-token."""
+    env_token = os.environ.get("HF_TOKEN", "").strip()
+    if env_token:
+        return env_token
     secret_string = _read_secret_string(HF_SECRET_ID, _secrets_client())
     stripped = secret_string.strip()
     if not stripped.startswith("{"):
