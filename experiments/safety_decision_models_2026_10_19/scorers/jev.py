@@ -145,9 +145,17 @@ def _response_to_dict(response: object) -> dict[str, Any]:
 
 
 def _answer_to_dict(answer: object) -> dict[str, Any]:
+    if hasattr(answer, "model_dump"):
+        return answer.model_dump()
+    if hasattr(answer, "root") and hasattr(answer.root, "model_dump"):
+        return answer.root.model_dump()
     payload: dict[str, Any] = {"type": getattr(answer, "type", None)}
     if hasattr(answer, "noul"):
         payload["noul"] = getattr(answer, "noul", None)
     if hasattr(answer, "choice"):
         payload["choice"] = getattr(answer, "choice", None)
+    if hasattr(answer, "confidence"):
+        payload["confidence"] = getattr(answer, "confidence", None)
+    if hasattr(answer, "probabilities"):
+        payload["probabilities"] = getattr(answer, "probabilities", None)
     return payload
