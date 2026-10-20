@@ -7,11 +7,11 @@ data/*.json
 !data/.gitkeep
 !data/templates/
 !data/templates/**
-cache/
+cache/*
 !cache/.gitkeep
-data/records/
+data/records/*
 !data/records/.gitkeep
-data/snapshots/
+data/snapshots/*
 !data/snapshots/.gitkeep
 outputs/predictions/
 outputs/metrics/
