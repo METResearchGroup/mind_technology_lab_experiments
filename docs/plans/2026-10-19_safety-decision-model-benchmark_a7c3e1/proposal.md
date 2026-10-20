@@ -6,7 +6,7 @@ Scope: a research proposal for a new standalone study. The study scores typed de
 
 A typed decision model answers a fixed question about a text and returns a probability, with no free-text reply. TypeSafe AI's Jev is the commercial model in this class. Cloudflare's Clef and Clef-flash use the same request shape and publish open weights. A product that talks with people about mental health or emotional wellbeing needs that decision on the way in, because the assistant has to block a request for real harm and still leave ordinary sadness, anger, or fear in the conversation. A miss leaves a harmful request in the session. A false positive refuses someone who was only describing how they feel.
 
-Mark Torres, a research engineer at Northwestern's Kellogg School, builds evaluations for language models and studies how people use them, including how platform ranking changes conversation. His advisor, William Brady, studies moral and emotional contagion online, outrage, and the way algorithms shape what people learn from each other. When a filter blocks an angry or sad message, that block decides whether the message stays, drops, or goes to a person. The measurements in this study are classifier scores on public benchmarks. Contagion, ranking experiments, and private conversation labels sit outside it.
+The lab studies emotion and behavior on online platforms, which is why a block on angry or sad text is in this study, and the scores themselves are classifier results on public benchmarks.
 
 Because the block is the decision we can score on public data, the prior Jev evaluations are the baseline. Deußer, Sparrenberg, and Sifa evaluated Jev `jev-1.13.0` zero-shot on 37 Hugging Face datasets, in "Evaluating and Benchmarking the System One Model Jev" (arXiv:2609.37647). Four of those datasets are safety sets, and two are emotion sets. The harness and the raw responses are public (https://github.com/AppliedMachineLearning-Lab/jev-benchmarking). Their safety numbers check our harness. They do not include a guardrail. Chung and colleagues, in "Jev-ToM" (arXiv:2610.18610), score five typed models on nine existing theory-of-mind benchmarks. The part worth copying is their extra analysis, in particular confidence cutoffs and the effect of attaching a reason to an answer. What we add is the guardrail stack, the split between missed harm and over-refusal, and the emotion texts, under one confirmed template per dataset.
 
@@ -35,7 +35,7 @@ Bedrock Guardrails scores text through a separate API. `ApplyGuardrail` can run 
 
 Kev 9B (`jaredpalmer/kev-9b`) and Laya (`convaiinnovations/laya`) are optional. The Clef blog (Chen, Reneau, and Flansburg, 1 October 2026) lists both on the Jev Decision Index, a routing and tool suite. Laya's scores on that index are far below the others. Laya's own card documents a default English context of 512 tokens, which is a plausible reason those scores are low. We keep an optional arm only if a 20-example pilot returns a probability for every legal option, and the pilot includes one long jailbreak prompt so truncation is visible. If the pilot fails, that model is dropped and the failure is reported.
 
-Each decision-model request has a state (the text) and one or more questions. A Choice question picks one of a fixed set of labels. A Noul question returns the probability that the answer is yes. A Score question places the text on an ordered rubric of two to ten levels. Jev's documented context limit in Deußer et al. is 32,000 tokens for the state plus the longest question. TypeSafe's current model page describes 64,000 tokens per request and 32,000 per question, so we check the limit that applies to `jev-1.13.0` before the run. Clef's hosted limit is 64,000 tokens. Prompts over the limit are counted as errors, not as safe.
+Each decision-model request has a state (the text) and one or more questions. A Choice question picks one of a fixed set of labels. A Noul question returns the probability that the answer is yes. A Score question places the text on an ordered rubric of two to ten levels. The public harness documents 32,000 tokens for the state plus the longest question, and 64,000 tokens per request (`jev-benchmarking/docs/datasets.md`). Clef's hosted limit is 64,000 tokens. Clef-flash on Workers AI is 24,576 tokens. A prompt over the limit for that arm is an error.
 
 ### Stack policies
 
@@ -45,7 +45,7 @@ Thresholds `t`, `t_high`, and `t_low` are fit on the development split only, the
 - Intersection. Block if the guardrail blocks and `P(harm) >= t`.
 - Cascade. Block if `P(harm) >= t_high`. Allow if `P(harm) <= t_low`. Otherwise use the guardrail's block decision.
 
-We also report every decision model at 0.5, with no guardrail, so the threshold effect is visible on its own.
+We also report every decision model at 0.5, with no guardrail, so the threshold effect is visible on its own. These three policies are functions of saved prediction records. They do not call a model, and the same functions are the block rule a later runtime would apply to new scorer output.
 
 ### Core datasets
 
@@ -104,7 +104,126 @@ The figures in the table are from Deußer et al., and they are prior results. If
 
 Their full run was 346,009 requests, 217.9 million input tokens, and US$9.15 at US$0.042 per million input tokens. Output tokens were free. Mean latency was 0.36 seconds, and the rate limit (1,100 requests per minute) bound the throughput. Qwen3.8-27B, scored on the same requests, led Jev on the 116 prompt-injection items (accuracy 0.767 against 0.741). That lead is inside a wide interval, and it is a reminder that Jev is not ahead on every safety set even before Clef is added.
 
-## 4. Key analyses
+## 4. Data loading and shared interfaces
+
+The run loads each public dataset through its own loader, scores every arm through one shared method, and computes the stack policies from the saved predictions. The policy function is the runtime block rule. The code is a later change. The paths below are files that already exist, and the study uses them when the code is written.
+
+### Files we will reuse
+
+The public harness at https://github.com/AppliedMachineLearning-Lab/jev-benchmarking loads Hugging Face datasets in `jev_benchmarking/tasks/base.py` (`load_split`). The same file builds Choice, Noul, and Score questions (`choice`, `noul`, `score`). Overlapping safety tasks are in `jev_benchmarking/tasks/safety.py`. ToxiGen uses config `annotated`, and ToxicChat uses config `toxicchat0124`. OpenAI Moderation and prompt injections use the default config. GoEmotions uses config `simplified`, and Emotion uses config `split`, both in `jev_benchmarking/tasks/classification.py`. `load_dataset` is called there without a revision argument. Raw responses go to SQLite, and `request_key` in `jev_benchmarking/cache.py` hashes the model, the state, and the questions. `jev_benchmarking/runner.py` caps how fast requests start, retries transient failures, and records HTTP 400 `max_tokens_exceeded` in an errors table. Metric code is in `jev_benchmarking/metrics.py`. The threshold grid is in `jev_benchmarking/thresholds.py`.
+
+WildGuardMix, Do-Not-Answer, XSTest, HarmBench, and JailbreakBench are absent from the harness. `jev_benchmarking/docs/datasets.md` says `walledai/XSTest` and `allenai/wildguardmix` were left out because they require a Hugging Face form and because they overlap the moderation sets. The study loads `allenai/xstest-response` and `allenai/wildguardmix`, because the false-positive rate on safe prompts and the adversarial flag are questions in section 2.
+
+In this repository, `shared/aws/constants.py` sets `DEFAULT_REGION_NAME` to `us-east-2`, and `shared/aws/s3.py` can upload bytes to one bucket. Experiment scripts upload with boto3 instead, from `experiments/moral_outrage_classification_2026_09_19/scripts/upload_s3.py` and `experiments/speedup_jev_2026_09_23/scripts/upload_s3.py`, to bucket `mind-technology-lab-experiments`, with a prefix equal to the experiment folder. `experiments/speedup_jev_2026_09_23/shared/rate_limiter.py` defines `RequestStartLimiter`. `experiments/speedup_jev_2026_09_23/shared/secrets.py` loads the TypeSafe key (`load_typesafe_api_key`). `experiments/moral_outrage_classification_2026_09_19/shared/records.py` is a pydantic prediction row for a different labeling task, so the field list is the pattern and the model for this study is new. `AGENTS.md` says Hugging Face access uses the `HF_TOKEN` environment variable. `lib/load_env_vars.py` loads the GitHub token only, so the new loaders read `HF_TOKEN` from the environment.
+
+### Example records
+
+Each loader records a Hugging Face id, a revision, a config, and a split, and it writes one row per example. The shared fields are `example_id`, `dataset`, `split`, `text`, `gold_labels`, `harm_category`, `is_benign_known`, and `metadata`. `gold_labels` is a binary harm bit, a multi-label map, or a class name. `is_benign_known` is true only when the dataset marks that row benign. A row with no benign label stays false, and it stays out of the false-positive rate. `metadata` holds the adversarial flag, `prompt_type`, risk area, or type of harm when the source row has that field.
+
+```python
+class ExampleRecord(BaseModel):
+    example_id: str
+    dataset: str
+    split: str
+    text: str
+    gold_labels: dict[str, bool] | str
+    harm_category: str | None
+    is_benign_known: bool
+    metadata: dict[str, str | bool]
+```
+
+A few loaders need extra rules.
+
+XSTest uses `allenai/xstest-response`, which asks for a form before download. The loader keeps one row per prompt text, drops duplicate prompts, and ignores reply labels. `prompt_type` stays in `metadata`.
+
+HarmBench uses `swiss-ai/harmbench`, once for config `DirectRequest` and once for config `HumanJailbreaks`. Test rows are scored. Validation rows are the development pool for thresholds, and they are not a benign class.
+
+JailbreakBench uses `JailbreakBench/JBB-Behaviors`, config `behaviors`. The `harmful` split and the `benign` split are both loaded. `is_benign_known` is true on the benign split.
+
+Access-controlled datasets receive `HF_TOKEN` from the environment. A missing token fails that dataset and leaves the others loadable.
+
+Where the harness already names a development split, we use it. ToxiGen, ToxicChat, and prompt injections use `train`. GoEmotions and Emotion use `validation`. OpenAI Moderation sets `dev` to `None` in `safety.py`. Do-Not-Answer, the XSTest prompts after duplicate removal, and JailbreakBench have no development split. For those, a hash of `example_id` holds out 20% as development. The published Jev check on OpenAI Moderation still scores all 1,680 rows at threshold 0.5, and the holdout is used only for the tuned threshold.
+
+Do-Not-Answer keeps `risk_area` and the type of harm on the row, and that dataset is written to its own file so a later paper can include the aggregates or leave them out.
+
+### Scorers
+
+`DecisionScorer` is a Python `Protocol` with one method. The method takes example records and a question spec, and it returns prediction records. Jev, Clef, Clef-flash, Guardrails, and the optional Kev and Laya arms each implement it.
+
+```python
+class DecisionScorer(Protocol):
+    def score(
+        self, records: list[ExampleRecord], question: QuestionSpec
+    ) -> list[PredictionRecord]: ...
+```
+
+The question spec is Choice, Noul, or Score, in the same JSON shape as `choice`, `noul`, and `score` in `jev_benchmarking/tasks/base.py`. On the six datasets the harness already runs, the first template is the `build` method in `safety.py` or `classification.py`, so the harness check uses that wording.
+
+A prediction record stores `example_id`, `arm`, `model_version`, `template_version`, the probability or the Guardrails band, the raw response, latency, billed usage, and an error status. A context-limit overflow is stored as an error, and the metric table keeps the row.
+
+```python
+class PredictionRecord(BaseModel):
+    example_id: str
+    arm: str
+    model_version: str
+    template_version: str
+    probability: float | None
+    band: str | None
+    raw_response: dict
+    latency_ms: float
+    billed_units: float
+    error_status: str | None
+```
+
+The Guardrails implementation makes one detect-only `ApplyGuardrail` call, with the filter action set to `NONE`, in `us-east-2`. Low, medium, and high strength are applied to the returned bands after the call. Three numbered guardrail versions are created only if detect mode omits the band.
+
+### Templates, the request cache, and limits
+
+Each dataset has one JSON template file, and the template version is a hash of that JSON. We confirm the wording on 20 development items. After that confirmation, the file stays as it is.
+
+The cache key is a hash of the arm, the model version, the template version, and `example_id`. A retry that finds the key reads the stored response and does not call the provider again. The store follows `ResponseCache` in `jev_benchmarking/cache.py`. Each provider uses its own `RequestStartLimiter`. HTTP 429 and 5xx wait and retry, as in `experiments/moral_outrage_classification_2026_09_19/shared/engine_loop.py`. The `us-east-2` ApplyGuardrail quota is read before the paid run and written into the manifest, because the harness cap is for the TypeSafe API.
+
+### Policies and metrics read predictions only
+
+Union, intersection, and cascade take prediction records as input. Threshold fitting and the metric code take the same records. A later runtime blocks or allows by calling that policy on new scorer output, without a second code path.
+
+### Storage and checks
+
+When the study is run, local files would live under `experiments/safety_decision_models_2026_10_19/`.
+
+- `data/records/{dataset}.parquet` holds example records. Do-Not-Answer has its own file.
+- `data/templates/{dataset}.json` holds the confirmed questions.
+- `cache/responses.db` holds raw provider responses.
+- `outputs/predictions/{arm}.parquet` holds prediction records.
+- `outputs/manifests/{run_id}.json` records the model pins, the dataset revisions, the prices, and the region `us-east-2`.
+
+The S3 prefix is `experiments/safety_decision_models_2026_10_19/` in `s3://mind-technology-lab-experiments/`, matching the bucket and prefix in the upload scripts above. Do-Not-Answer question text is not committed to git. The paper reports detection rate by risk area and by type of harm.
+
+Before a paid run, the checks are:
+
+- Every loader row validates as an example record, and `is_benign_known` is false when the dataset has no benign class.
+- XSTest prompt ids are unique after duplicate removal.
+- JailbreakBench has 100 harmful rows and 100 benign rows, and HarmBench has both configs.
+- A fake scorer serves the second call from the cache.
+- Stack-policy tests use fake prediction records and make no network call.
+- Jev on the six overlapping sets falls inside the published intervals before Clef or Guardrails are scored.
+
+`jev-benchmarking/tests/test_metrics.py` is the pattern for the metric checks. Root CI today runs `tests/test_scaffold.py` only, so these checks live with the experiment.
+
+```mermaid
+flowchart LR
+  hub[Hugging Face] --> loaders[Dataset loaders]
+  loaders --> examples[Example records]
+  templates[Confirmed templates] --> scorers[Decision scorers]
+  examples --> scorers
+  scorers --> cache[Request cache]
+  cache --> predictions[Prediction records]
+  predictions --> policy[Stack policy]
+  policy --> metrics[Metrics]
+  predictions --> bucket[S3 prefix]
+```
+
+## 5. Key analyses
 
 **RQ1, model comparison.** For each core safety dataset, compute the primary metric for `jev-1.13.0`, Clef, and Clef-flash, with a 95% percentile bootstrap over items (500 resamples, the same choice as Deußer et al.). A difference counts only when the intervals do not overlap. On the six datasets in the harness-check table, compare our Jev number to the published interval before interpreting Clef. Break WildGuardTest into vanilla and adversarial prompts, using the adversarial flag, and break HarmBench into DirectRequest and HumanJailbreaks. The same comparison on GoEmotions uses macro-F1, and on Emotion it uses accuracy. Guardrails do not enter RQ1, because they do not emit the dataset label.
 
@@ -112,13 +231,13 @@ Their full run was 346,009 requests, 217.9 million input tokens, and US$9.15 at 
 
 **RQ3, over-refusal and emotion text.** False-positive rate on JailbreakBench `benign` and on XSTest prompts with `prompt_type` equal to `prompt_safe`, for every arm including the three stack policies. For GoEmotions and Emotion, the gold label is an emotion, not harm. The analysis is the block rate of each arm by gold label. The comparison is whether anger, disgust, and sadness are blocked more often than joy or neutral. We do not call an emotion block a false positive, because the dataset has no harm label. A comment can be both angry and abusive. Where GoEmotions has no abuse label, we say "block rate by emotion," not "over-refusal."
 
-**RQ4, guardrail crosswalk.** Before scoring, write a table from each dataset label to zero or more of the six filters. The table is fixed, and it is not edited after the first test number is computed. Sexual and hate have obvious candidates. Harassment is only partly Insults. Self-harm has no filter, and that cell stays empty on purpose. For each strength (low, medium, high), report the miss rate on harmful rows and the false-positive rate on benign rows, using the AWS rule above (high strength blocks more bands). The preferred call sets the filter action to `NONE`, which is detect-only, so each category returns a band and we apply the three strengths offline from that one response. If detect mode omits the band, we create three numbered guardrail versions. Bands may be ranked (`NONE` < `LOW` < `MEDIUM` < `HIGH`) for a rank statistic. We will not call that rank a probability.
+**RQ4, guardrail crosswalk.** Before scoring, write a table from each dataset label to zero or more of the six filters. The table is written before the first test number, and it stays unchanged after that. Sexual and hate have obvious candidates. Harassment is only partly Insults. Self-harm has no filter, and that cell stays empty on purpose. For each strength (low, medium, high), report the miss rate on harmful rows and the false-positive rate on benign rows, using the AWS rule above (high strength blocks more bands). The call is one detect-only `ApplyGuardrail` with the filter action set to `NONE`, and the three strengths are applied to the returned bands. Three numbered versions are created only if detect mode omits the band. Bands may be ranked (`NONE` < `LOW` < `MEDIUM` < `HIGH`) for a rank statistic. The rank stays a rank.
 
 **RQ5, stack policies.** On the items that have both a harmful class and a benign class (JailbreakBench, XSTest `prompt_type`, WildGuardTest prompt harm), compute miss rate and false-positive rate for the decision model alone, the guardrail alone, union, intersection, and cascade. The development fit uses the 5% false-positive budget, and the test numbers are a single confirmed application of those thresholds. A policy is better only if it lowers the miss rate at the same or lower false-positive rate, or the reverse. If the three policies land on top of each other, the stack is not doing work beyond the stronger component.
 
-**RQ6, latency and cost.** Record wall-clock latency per request (median and 95th percentile) from the client, and record the provider's billed usage (tokens for Jev and Clef, text units for Guardrails). Report cost per 1,000 prompts from the bill. Section 8 is only a budget check. Deußer et al. found that their rate limit set throughput, so we record the limit beside the latency.
+**RQ6, latency and cost.** Record wall-clock latency per request (median and 95th percentile) from the client, and record the provider's billed usage (tokens for Jev and Clef, text units for Guardrails). Report cost per 1,000 prompts from the bill. Section 9 is only a budget check. Deußer et al. found that their rate limit set throughput, so we record the limit beside the latency.
 
-## 5. Key visualizations
+## 6. Key visualizations
 
 1. **Miss rate against false-positive rate.** Each point is an arm or a stack policy. The x-axis is the false-positive rate on the pooled benign prompts (JailbreakBench benign, XSTest `prompt_safe`, WildGuardTest benign prompts). The y-axis is the miss rate on the matched harmful prompts. Supports RQ3 and RQ5. A reader should see whether union, intersection, and cascade sit apart, and whether any point is below and to the left of Jev alone.
 2. **Reliability diagrams.** X-axis is `P(yes)` in 15 equal-width bins. Y-axis is the observed frequency of harm. One panel for single-Noul safety sets, one panel for the 28 GoEmotions Nouls. Marker area is the number of answers. Series are Jev, Clef, and Clef-flash. Supports RQ2. Guardrail bands are not on this figure.
@@ -129,7 +248,7 @@ Their full run was 346,009 requests, 217.9 million input tokens, and US$9.15 at 
 7. **Latency and cost against miss rate.** X-axis is median latency in milliseconds. Y-axis is miss rate on the pooled harmful prompts that have a paired benign set. Point size or a printed label is cost per 1,000 prompts from the bill. Supports RQ6.
 8. **Cascade diagram.** A flowchart with three outcomes, block, allow, and "ask the guardrail," and the two thresholds on `P(harm)`. Supports RQ5. No data values, so it can be drawn before the run.
 
-## 6. Key messaging
+## 7. Key messaging
 
 The claims below are hypotheses, and the paper may reject any of them. Bracketed numbers in the abstract are unfilled on purpose.
 
@@ -143,7 +262,7 @@ The claims below are hypotheses, and the paper may reject any of them. Bracketed
 
 If those hypotheses hold, the block rule for a wellbeing assistant has to name the stack and the threshold. Lowering missed harm raises the rate at which ordinary emotion text is refused, so a single model name does not state the operating point.
 
-## 7. Risks and limitations
+## 8. Risks and limitations
 
 **Contamination.** Deußer et al. (section 4.6) found that Jev scores calculation-heavy MMLU subjects at 94.3% and other MMLU subjects at 91.3%. Qwen and Gemma find the calculation-heavy subjects harder (Qwen 74.7% against 83.0%, Gemma 54.6% against 69.8%). Rotating the answer letters left calculation-heavy accuracy at 94.3%. Withholding the question dropped it to 31.5%, close to the 25% chance level. Those probes rule out a memorized letter and a memorized option list. They leave open memorized question-answer pairs. Jev's training data are private, and Clef's post-training mix is only partly described. ToxiGen, OpenAI Moderation, HarmBench, and JailbreakBench are public and widely copied. A high score can be memorization. We will repeat the option-rotation check on the six-way Emotion Choice. Noul questions have no option order. A paraphrase of a small development subset can show brittleness, and it is not a proof that the test text was unseen.
 
@@ -157,15 +276,15 @@ If those hypotheses hold, the block rule for a wellbeing assistant has to name t
 
 **Labels.** WildGuardTest prompt-harm labels have Fleiss' kappa 0.55 across three annotators (moderate agreement), as stated on the dataset card. Emotion labels are hashtag-derived and noisy, which is why published accuracy is 0.585 and ECE is 0.279. GoEmotions can mark several emotions on one comment, and a single Noul does not know that most of the other 27 are false, which is the over-prediction Deußer et al. measured (mean `P(yes)` 0.209 against an observed rate of 0.041 on multi-label Nouls).
 
-**License.** The `LibrAI/do-not-answer` card says the datasets are under CC BY-NC-SA 4.0 and the source files are under Apache 2.0. The GitHub repository's license field is Apache 2.0. Until that conflict is resolved, we can score the questions in a private run, and we do not redistribute the question text. `allenai/xstest-response` is gated behind the Allen Institute responsible-use form. Access might stall the XSTest portion. The rest of the pack does not depend on it.
+**License.** Do-Not-Answer is in the core pack. The study is academic research, so non-commercial use fits CC BY-NC-SA 4.0. The card also names Apache 2.0 for source files, and the GitHub license field is Apache 2.0. The run follows the stricter card statement. Question text stays out of the paper, the git repository, and any public upload. The paper reports detection rate by risk area and by type of harm, from the dataset's own file, so a later draft can include those aggregates or leave them out. `allenai/xstest-response` requires the Allen Institute form and `HF_TOKEN`. If that form stalls, XSTest is omitted and the rest of the pack still runs. The public harness also marks `allenai/wildguardmix` as requiring a form, so WildGuard uses the same token.
 
-**Versions.** `jev-1.13.0` is pinned. Clef and Clef-flash are pinned by hosted model id and by Hugging Face commit. The guardrail is a numbered version, not `DRAFT`, in one region (`us-east-2`, matching other Bedrock work in this lab). Filter strength is recorded. A later vendor update is a different study.
+**Versions.** `jev-1.13.0` is pinned. Clef and Clef-flash are pinned by hosted model id and by Hugging Face commit. The guardrail is a numbered version, in `us-east-2`, which is `DEFAULT_REGION_NAME` in `shared/aws/constants.py`. Filter strength is recorded from the detect-only bands. A later vendor update is a different study.
 
 **What the miss rate is not.** We do not generate new jailbreak strings, and we do not measure whether a chat model would have complied. HarmBench's usual attack-success rate against a target model is a different quantity.
 
-**Input length.** HumanJailbreaks prompts can be long. Requests over the context limit are errors. If the error rate exceeds 1% on any set, we report it beside the metric and we do not drop those rows silently.
+**Input length.** HumanJailbreaks prompts can be long. Requests over the context limit are errors, the same treatment the harness gives HTTP 400 `max_tokens_exceeded`. If the error rate exceeds 1% on any set, we report it beside the metric, and those rows stay in the table as errors.
 
-## 8. Plan and cost estimate
+## 9. Plan and cost estimate
 
 The estimate uses published prices as of 2026-10-19 and the row counts above. It is an estimate, not a quote. The bill from the run replaces it.
 
@@ -180,27 +299,34 @@ Row count for one pass of the core pack, counting one request per example and co
 
 A stack pays for the decision model and the guardrail. Three decision models plus one guardrail pass, short prompts, is on the order of US$8. The long-prompt case is on the order of US$15 to US$30. Three separate strength calls, used only if detect mode omits the band, push the upper end toward US$50. A 20-example pilot and a development tune add a small fraction on top. Planning number for the required arms on the core pack: under US$50. Optional Kev and Laya are self-hosted, and their GPU time is not in this number. The optional preference-data pool is not in this number, because a full pass of `hh-rlhf` would dominate the bill and needs its own estimate after a subsample is chosen.
 
-At 1,100 requests per minute, the cap Deußer et al. actually hit, about 21,000 requests take on the order of 20 minutes of API time, before retries. That figure is throughput, not a schedule for analysis.
+At 1,100 requests per minute, the cap Deußer et al. actually hit, about 21,000 requests take on the order of 20 minutes of API time, before retries. The cache in section 4 keeps a retry from paying twice, so the estimate counts one call per example. The 20 minutes are API time only.
 
 Steps, in order:
 
-1. Confirm one template per dataset on 20 development items. For the six overlapping sets, start from the published templates in the Jev harness so the harness check is meaningful.
-2. Run `jev-1.13.0` on those six sets and compare to the published intervals. Stop if we are outside an interval.
-3. Create a numbered guardrail in `us-east-2` with the six content filters, and write the crosswalk.
-4. Score the core pack with Jev, Clef, Clef-flash, and `ApplyGuardrail`. Cache requests so a retry does not pay twice.
-5. Fit thresholds on development splits. Compute the metrics, the five stack comparisons, and the eight figures.
-6. Run the Kev and Laya pilot only after step 2 succeeds. Include a model in the tables only if the pilot returns valid probabilities.
+1. Write the loaders and the `DecisionScorer` interface from section 4, including the XSTest dedupe, the HarmBench configs, the JailbreakBench splits, and the `HF_TOKEN` path. Run the schema checks on local rows before any paid call.
+2. Confirm one template per dataset on 20 development items. For the six overlapping sets, start from the `build` methods in the public harness so the harness check uses the same wording. Store the confirmed JSON under `data/templates/`.
+3. Run `jev-1.13.0` on those six sets and compare to the published intervals. Stop if we are outside an interval.
+4. Create a numbered guardrail in `us-east-2` with the six content filters and the filter action set to `NONE`. Write the crosswalk. Fall back to three numbered versions only if detect mode omits the band.
+5. Score the core pack with Jev, Clef, Clef-flash, and `ApplyGuardrail`, through the cache in section 4.
+6. Fit thresholds on development splits. Compute the metrics and the eight figures from the prediction records, using the union, intersection, and cascade functions.
+7. Run the Kev and Laya pilot only after step 3 succeeds. The pilot is 20 examples and includes one long jailbreak prompt. Include a model in the tables only if its probabilities come back well-formed.
 
-Future artifacts, when the study is run, would live under `experiments/safety_decision_models_2026_10_19/` and the same prefix in `s3://mind-technology-lab-experiments/`. This proposal does not add that folder.
+Future artifacts, when the study is run, would live under `experiments/safety_decision_models_2026_10_19/` and the same prefix in `s3://mind-technology-lab-experiments/`. This proposal does not add that folder. The layout inside it is in section 4.
 
-## 9. Draft abstract
+## 10. Draft abstract
 
-Typed decision models return a probability for a fixed question, and they do not write the assistant's reply. We compare TypeSafe Jev (`jev-1.13.0`), Cloudflare Clef, Cloudflare Clef-flash, and Amazon Bedrock Guardrails, alone and in three stack policies (union, intersection, and cascade), on public safety datasets and on two emotion datasets. The safety sets are ToxiGen, OpenAI Moderation, ToxicChat, a prompt-injection set, WildGuardTest, Do-Not-Answer, XSTest prompts, HarmBench, and JailbreakBench. The emotion sets are GoEmotions (28 labels) and the six-way Emotion set. We score prompts only. A miss is a harmful prompt the filter allows, and a false positive is a benign prompt the filter blocks. On the sets that contain both classes, the cascade policy reaches a miss rate of [X%] and a false-positive rate of [Y%], compared with [A%] and [B%] for Jev alone and [C%] and [D%] for Guardrails alone. Expected calibration error on the yes/no harm probability is [ECE = __] for Jev and [ECE = __] for Clef. The gap between a 0.5 threshold and a development-tuned threshold is [Z] F1 points on [dataset]. Guardrails return a confidence band (`NONE`, `LOW`, `MEDIUM`, or `HIGH`), so expected calibration error does not apply to that band. Their six categories do not match the dataset labels, and self-harm has no filter of its own. Median latency is [__] ms for Jev, [__] ms for Clef, [__] ms for Clef-flash, and [__] ms for `ApplyGuardrail`. Block rates on GoEmotions differ by emotion label by [__] points between [label] and [label]. The bracketed figures will be filled from the run, and they are empty in this draft.
+Typed decision models return a probability for a fixed question, and they do not write the assistant's reply. We compare TypeSafe Jev (`jev-1.13.0`), Cloudflare Clef, Cloudflare Clef-flash, and Amazon Bedrock Guardrails, alone and in three stack policies (union, intersection, and cascade), on public safety datasets and on two emotion datasets. The safety sets are ToxiGen, OpenAI Moderation, ToxicChat, a prompt-injection set, WildGuardTest, Do-Not-Answer, XSTest prompts, HarmBench, and JailbreakBench. Do-Not-Answer is reported as detection rate by risk area and by type of harm, without the question text. The emotion sets are GoEmotions (28 labels) and the six-way Emotion set. We score prompts only. One detect-only `ApplyGuardrail` call supplies the low, medium, and high strengths. The stack policy over those scorer outputs is the block function a later runtime would call. A miss is a harmful prompt the filter allows, and a false positive is a benign prompt the filter blocks. On the sets that contain both classes, the cascade policy reaches a miss rate of [X%] and a false-positive rate of [Y%], compared with [A%] and [B%] for Jev alone and [C%] and [D%] for Guardrails alone. Expected calibration error on the yes/no harm probability is [ECE = __] for Jev and [ECE = __] for Clef. The gap between a 0.5 threshold and a development-tuned threshold is [Z] F1 points on [dataset]. Guardrails return a confidence band (`NONE`, `LOW`, `MEDIUM`, or `HIGH`), so expected calibration error does not apply to that band. Their six categories do not match the dataset labels, and self-harm has no filter of its own. Median latency is [__] ms for Jev, [__] ms for Clef, [__] ms for Clef-flash, and [__] ms for `ApplyGuardrail`. Block rates on GoEmotions differ by emotion label by [__] points between [label] and [label]. The bracketed figures will be filled from the run, and they are empty in this draft.
 
-## Decisions to confirm
+## Decisions made
 
-1. **Guardrail strength.** Recommend one `ApplyGuardrail` call with the filter action set to `NONE` (detect only), then apply AWS's rule offline: low blocks only HIGH, medium blocks HIGH and MEDIUM, and high blocks HIGH, MEDIUM, and LOW. The alternative, if detect mode omits the band, is three numbered versions. Dropping the sweep and reporting medium only is the smaller alternative.
-2. **Do-Not-Answer.** Recommend scoring it and not redistributing the question text, because the card conflicts (CC BY-NC-SA 4.0 for the dataset, Apache 2.0 for source files). The alternative is to drop it until the license is clear.
-3. **Optional models.** Recommend a 20-example pilot for `jaredpalmer/kev-9b` and `convaiinnovations/laya`, including one long jailbreak prompt, and inclusion only if probabilities come back well-formed. The alternative is to leave them out of the study.
-4. **Emotion pair.** Recommend keeping GoEmotions and `dair-ai/emotion`, because both have published Jev numbers. The alternative is to swap Emotion for Dreaddit later, as a separate distress task, not as a silent replacement.
-5. **Region.** Recommend `us-east-2` for the guardrail. The alternative is another single region, recorded in the run notes, as long as it does not change mid-study.
+1. **Guardrail strength.** One detect-only `ApplyGuardrail` call, with the filter action set to `NONE`. Low, medium, and high are applied after the call. Low blocks only a HIGH band, medium blocks HIGH and MEDIUM, and high blocks HIGH, MEDIUM, and LOW. Three numbered versions are the fallback only if detect mode omits the band.
+2. **Do-Not-Answer.** Included in the core pack. Academic research fits non-commercial use under CC BY-NC-SA 4.0. Question text is not republished. Results are aggregates by risk area and by type of harm. The dataset is its own file, so a paper can include it or leave it out later.
+3. **Optional models.** A 20-example pilot for `jaredpalmer/kev-9b` and `convaiinnovations/laya`, including one long jailbreak prompt. A model is included only if its probabilities come back well-formed.
+4. **Emotion pair.** GoEmotions and `dair-ai/emotion`. Dreaddit is a possible later separate task, with its own label definition.
+5. **Region.** `us-east-2`, the same value as `DEFAULT_REGION_NAME` in `shared/aws/constants.py`.
+
+## Open questions
+
+1. **Dataset revisions.** The public harness loads datasets without a revision. Recommend writing the commit from the first successful load into the run manifest, and refusing a later load whose commit differs.
+2. **OpenAI Moderation holdout.** The harness has no development split for that set, and the published number uses all 1,680 rows. Recommend keeping that full-set check at threshold 0.5, and fitting the tuned threshold on a hash-stable 20% holdout that is left out of the tuned test number.
+3. **Clef-flash context.** Workers AI caps Clef-flash at 24,576 tokens. Recommend counting longer prompts as errors on the hosted arm, and leaving a self-hosted rerun for a later task.
