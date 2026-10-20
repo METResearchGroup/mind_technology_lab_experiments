@@ -281,12 +281,14 @@ def fit_go_emotions_threshold(
     return best_t
 
 
-def _cascade_block_without_guardrail(prob: float, t_high: float, t_low: float) -> bool:
+def _cascade_block(
+    prob: float, t_high: float, t_low: float, guardrail_blocks: bool
+) -> bool:
     if prob >= t_high:
         return True
     if prob <= t_low:
         return False
-    return False
+    return guardrail_blocks
 
 
 def _tie_break_cascade_pair(
@@ -307,15 +309,17 @@ def fit_cascade_thresholds(
     rows: list[ExampleRecord],
     preds: list[PredictionRecord],
     scores: list[float | None],
+    guardrail_blocks: list[bool] | None = None,
 ) -> CascadeThresholds:
     """Fit t_high and t_low under the same benign FPR budget on development rows.
 
-    Searches grid pairs with ``t_low <= t_high``. Benign false positives use the
-    cascade score paths only (middle band treated as allow; guardrails omitted).
-    Among pairs meeting ``FP_BUDGET``, pick the pair with the best harmful-class
-    F1 on labeled development rows. Tie-break by total distance of both cutoffs
-    from 0.5, then lower ``t_high``, then lower ``t_low``. If there are no
-    benign-known rows or no qualifying pair, both cutoffs are 0.5.
+    Searches grid pairs with ``t_low <= t_high``. Block if ``P >= t_high``,
+    allow if ``P <= t_low``, else use the per-row guardrail block flag (aligned
+    with ``band_blocks_at_strength`` at stack strength). Among pairs meeting
+    ``FP_BUDGET``, pick the pair with the best harmful-class F1 on labeled
+    development rows. Tie-break by total distance of both cutoffs from 0.5, then
+    lower ``t_high``, then lower ``t_low``. If there are no benign-known rows or
+    no qualifying pair, both cutoffs are 0.5.
     """
     dev_indices = [
         i
@@ -331,6 +335,12 @@ def fit_cascade_thresholds(
         return CascadeThresholds(FIXED_THRESHOLD, FIXED_THRESHOLD)
 
     harmful_golds = [_harmful_gold(r) for r in dev_rows]
+    if guardrail_blocks is None:
+        guard_blocks = [False] * len(dev_prob)
+    elif len(guardrail_blocks) != len(dev_prob):
+        raise ValueError("guardrail_blocks length must match development predictions")
+    else:
+        guard_blocks = guardrail_blocks
     n_benign = sum(1 for flag in benign_flags if flag)
     grid = [round(step * THRESHOLD_GRID_STEP, 4) for step in range(int(1 / THRESHOLD_GRID_STEP) + 1)]
 
@@ -341,8 +351,8 @@ def fit_cascade_thresholds(
             if t_low > t_high:
                 continue
             blocks = [
-                _cascade_block_without_guardrail(prob, t_high, t_low)
-                for prob in dev_prob
+                _cascade_block(prob, t_high, t_low, guard_blocks[i])
+                for i, prob in enumerate(dev_prob)
             ]
             fp = sum(
                 1

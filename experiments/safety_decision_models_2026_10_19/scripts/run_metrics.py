@@ -24,7 +24,12 @@ if str(EXPERIMENT_ROOT) not in sys.path:
 from policies.cascade import cascade_decisions  # noqa: E402
 from policies.intersection import intersection_decisions  # noqa: E402
 from policies.union import union_decisions  # noqa: E402
-from scorers.guardrails import GuardrailStrength, band_blocks_at_strength  # noqa: E402
+from scorers.guardrails import (  # noqa: E402
+    GuardrailStrength,
+    _crosswalk_filters_for_record,
+    band_blocks_at_strength,
+    guardrail_band_from_response,
+)
 from shared.metrics import (  # noqa: E402
     OPENAI_MOD_HEADS,
     answers_map,
@@ -72,10 +77,12 @@ from scripts.run_score import (  # noqa: E402
     _price_line,
     _score_dataset,
     _scorer_factory,
+    _write_predictions,
     load_question,
 )
 
 RUN_ID = "20261020T040920Z_90c5fd13"
+HARNESS_RUN_ID = "20261020T033822Z_0f24960e"
 MODEL_ARMS = ("jev", "clef", "clef-flash")
 GUARDRAIL_ARM = "guardrails"
 SCORING_ARMS = tuple(ALL_ARMS)
@@ -132,6 +139,18 @@ def main() -> None:
         )
     dev_preds_by_arm = load_development_predictions_by_arm(dev_rows_by_dataset)
 
+    crosswalk = study.get("crosswalk", {})
+    if not isinstance(crosswalk, dict):
+        crosswalk = {}
+    reband_guardrail_predictions(
+        records_by_dataset,
+        preds_by_arm[GUARDRAIL_ARM],
+        dev_rows_by_dataset,
+        dev_preds_by_arm[GUARDRAIL_ARM],
+        crosswalk,
+        study,
+    )
+
     metrics: dict[str, Any] = {
         "run_id": RUN_ID,
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -178,9 +197,24 @@ def main() -> None:
                     f"< 200 items"
                 )
             thresholds[arm][dataset] = tuned
+            guard_dev_preds = dev_preds_by_arm[GUARDRAIL_ARM][dataset]
+            guard_blocks = [
+                band_blocks_at_strength(p.band or "NONE", STACK_STRENGTH)
+                for p in guard_dev_preds
+            ]
             cascade_thresholds[arm][dataset] = fit_cascade_thresholds(
-                dev_rows, dev_preds, dev_harm_scores
+                dev_rows,
+                dev_preds,
+                dev_harm_scores,
+                guardrail_blocks=guard_blocks,
             )
+            if (
+                dataset in SMALL_DEV_TUNED_DATASETS
+                and tuned_threshold_fixed_at_half(dataset, dev_rows)
+            ):
+                cascade_thresholds[arm][dataset] = CascadeThresholds(
+                    FIXED_THRESHOLD, FIXED_THRESHOLD
+                )
             ds_metrics = evaluate_dataset(
                 dataset, rows, preds, arm=arm, threshold_tuned=tuned, study=study
             )
@@ -231,7 +265,13 @@ def main() -> None:
         preds_by_arm,
         thresholds,
     )
-    metrics["latency_cost"] = latency_cost_all(preds_by_arm, study)
+    metrics["latency_cost"] = latency_cost_all(preds_by_arm, study, records_by_dataset)
+    metrics["latency_cost"]["_note"] = (
+        "median_latency_ms and p95_latency_ms use stored provider latency_ms "
+        "from the original call, including rows replayed from cache (not zeroed). "
+        "live_call_only_* fields exclude rows that were cache hits in the full-pack "
+        "run when identifiable via harness-run prediction overlap (Jev arm)."
+    )
 
     METRICS_PATH.parent.mkdir(parents=True, exist_ok=True)
     METRICS_PATH.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
@@ -555,6 +595,100 @@ def align_predictions(
     if extra:
         raise ValueError(f"duplicate example_id in predictions ({extra} duplicates)")
     return [by_id[row.example_id] for row in rows]
+
+
+def _reband_one_guardrail_pred(
+    row: ExampleRecord,
+    pred: PredictionRecord,
+    crosswalk: dict[str, Any],
+) -> PredictionRecord:
+    raw = pred.raw_response
+    if not isinstance(raw, dict):
+        return pred
+    filter_names = _crosswalk_filters_for_record(row, crosswalk)
+    new_band = guardrail_band_from_response(raw, filter_names)
+    if pred.band == new_band:
+        return pred
+    return pred.model_copy(update={"band": new_band})
+
+
+def reband_guardrail_predictions(
+    records_by_dataset: dict[str, list[ExampleRecord]],
+    test_preds_by_dataset: dict[str, list[PredictionRecord]],
+    dev_rows_by_dataset: dict[str, list[ExampleRecord]],
+    dev_preds_by_dataset: dict[str, list[PredictionRecord]],
+    crosswalk: dict[str, Any],
+    study: dict[str, Any],
+) -> None:
+    """Recompute guardrail bands from cached ApplyGuardrail payloads; persist band only."""
+    cache = ResponseCache()
+    default_model_version = _model_version(GUARDRAIL_ARM, study)
+    updated_cache = 0
+
+    for dataset in DATASET_ORDER:
+        rows = records_by_dataset[dataset]
+        preds = test_preds_by_dataset[dataset]
+        aligned_rows = rows
+        rebanded: list[PredictionRecord] = []
+        for row, pred in zip(aligned_rows, preds, strict=True):
+            new_pred = _reband_one_guardrail_pred(row, pred, crosswalk)
+            rebanded.append(new_pred)
+            if new_pred.band != pred.band:
+                model_version = new_pred.model_version or default_model_version
+                template_version = new_pred.template_version or ""
+                if template_version:
+                    key = ResponseCache.cache_key(
+                        GUARDRAIL_ARM,
+                        model_version,
+                        template_version,
+                        new_pred.example_id,
+                    )
+                    cache.put(key, new_pred)
+                    updated_cache += 1
+        test_preds_by_dataset[dataset] = rebanded
+        _write_predictions(RUN_ID, GUARDRAIL_ARM, dataset, rebanded)
+
+    for dataset, dev_rows in dev_rows_by_dataset.items():
+        if not dev_rows:
+            continue
+        dev_preds = dev_preds_by_dataset[dataset]
+        rebanded_dev: list[PredictionRecord] = []
+        for row, pred in zip(dev_rows, dev_preds, strict=True):
+            new_pred = _reband_one_guardrail_pred(row, pred, crosswalk)
+            rebanded_dev.append(new_pred)
+            if new_pred.band != pred.band:
+                model_version = new_pred.model_version or default_model_version
+                template_version = new_pred.template_version or ""
+                if template_version:
+                    key = ResponseCache.cache_key(
+                        GUARDRAIL_ARM,
+                        model_version,
+                        template_version,
+                        new_pred.example_id,
+                    )
+                    cache.put(key, new_pred)
+                    updated_cache += 1
+        dev_preds_by_dataset[dataset] = rebanded_dev
+        if rebanded_dev:
+            _write_dev_predictions_parquet(GUARDRAIL_ARM, dataset, rebanded_dev)
+
+    print(
+        f"rebanded guardrail predictions (band only); cache rows updated={updated_cache}"
+    )
+
+
+def _harness_jev_example_ids(dataset: str) -> set[str]:
+    path = (
+        EXPERIMENT_ROOT
+        / "outputs"
+        / "predictions"
+        / HARNESS_RUN_ID
+        / "jev"
+        / f"{dataset}.parquet"
+    )
+    if not path.is_file():
+        return set()
+    return set(load_predictions_from_path(path).keys())
 
 
 def go_emotions_primary_metrics(
@@ -1155,6 +1289,7 @@ def dna_aggregates(
 def latency_cost_all(
     preds_by_arm: dict[str, dict[str, list[PredictionRecord]]],
     study: dict[str, Any],
+    records_by_dataset: dict[str, list[ExampleRecord]],
 ) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for arm, by_ds in preds_by_arm.items():
@@ -1169,6 +1304,23 @@ def latency_cost_all(
         price, unit = _price_line(arm, study)
         summary["price"] = price
         summary["price_unit"] = unit
+        if arm == "jev":
+            live_preds: list[PredictionRecord] = []
+            for dataset, preds in by_ds.items():
+                harness_ids = _harness_jev_example_ids(dataset)
+                for pred in preds:
+                    if dataset not in HARNESS_METRIC_DATASETS or (
+                        pred.example_id not in harness_ids
+                    ):
+                        live_preds.append(pred)
+            if live_preds:
+                live_summary = latency_cost_summary(live_preds)
+                summary["live_call_only_median_latency_ms"] = live_summary[
+                    "median_latency_ms"
+                ]
+                summary["live_call_only_p95_latency_ms"] = live_summary[
+                    "p95_latency_ms"
+                ]
         out[arm] = summary
     return out
 
@@ -1521,8 +1673,13 @@ def update_manifest(metrics: dict[str, Any]) -> None:
 def append_results(metrics: dict[str, Any]) -> None:
     results_path = EXPERIMENT_ROOT / "RESULTS.md"
     text = results_path.read_text(encoding="utf-8")
+    spend_tail = ""
     if "## Core pack" in text:
-        text = text[: text.index("## Core pack")].rstrip() + "\n"
+        head = text[: text.index("## Core pack")].rstrip() + "\n"
+        if "## Spend" in text:
+            spend_tail = "\n" + text[text.index("## Spend") :].lstrip()
+    else:
+        head = text.rstrip() + "\n"
     lines = [
         "",
         "## Core pack",
@@ -1552,7 +1709,7 @@ def append_results(metrics: dict[str, Any]) -> None:
                 lines.append(
                     f"| {dataset} | {arm} | miss_rate | {ds.get('miss_rate', float('nan')):.4f} | — |"
                 )
-    results_path.write_text(text + "\n".join(lines) + "\n", encoding="utf-8")
+    results_path.write_text(head + "\n".join(lines) + "\n" + spend_tail, encoding="utf-8")
 
 
 if __name__ == "__main__":
