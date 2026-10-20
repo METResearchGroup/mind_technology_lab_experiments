@@ -1,7 +1,7 @@
 \section{Related Work}
 \label{sec:related}
 
-Public safety benchmarks---ToxiGen~\cite{hartvigsen2022toxigen}, OpenAI Moderation~\cite{markov2023holistic}, ToxicChat~\cite{lin2023toxicchat}, prompt injections~\cite{deepset2024promptinjections}, WildGuardMix~\cite{han2024wildguard}, Do-Not-Answer~\cite{wang2024donotanswer}, XSTest~\cite{rottger2024xstest}, HarmBench~\cite{mazeika2024harmbench}, and JailbreakBench~\cite{chao2024jailbreakbench}---were built for different model interfaces and primary metrics.
+Public safety benchmarks, including ToxiGen~\cite{hartvigsen2022toxigen}, OpenAI Moderation~\cite{markov2023holistic}, ToxicChat~\cite{lin2023toxicchat}, prompt injections~\cite{deepset2024promptinjections}, WildGuardMix~\cite{han2024wildguard}, Do-Not-Answer~\cite{wang2024donotanswer}, XSTest~\cite{rottger2024xstest}, HarmBench~\cite{mazeika2024harmbench}, and JailbreakBench~\cite{chao2024jailbreakbench}, were built for different model interfaces and primary metrics.
 Deu{\ss}er et al.\ benchmark Jev zero-shot on many of these tasks with a shared harness~\cite{deusser2026jevbenchmark,appliedml2026jevbenchmarking} but without Bedrock Guardrails or stack policies on the same prompts.
 Clef and Clef-flash share the Jev request shape~\cite{cloudflare2026clef,cloudflare2026clefflash}; Bedrock documents ordinal filter bands rather than calibrated probabilities~\cite{aws2024bedrockguardrails}.
 Calibration and selective prediction tools apply to probabilistic arms~\cite{guo2017calibration,geifman2017selective}; guardrail deployments still require an explicit label-to-filter crosswalk.

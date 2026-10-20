@@ -444,7 +444,9 @@ def fig_jbb_crosswalk(
 
     ax.set_xlabel("False-positive rate (benign)")
     ax.set_ylabel("Miss rate (harmful)")
-    ax.set_title("Mapping, not strength, sets JailbreakBench guardrail miss")
+    ax.set_title(
+        "Category mapping sets the JailbreakBench miss.\nStrength barely moves it."
+    )
     ax.legend(fontsize=7, loc="upper left", bbox_to_anchor=(1.02, 1), borderaxespad=0)
     fig.subplots_adjust(right=0.72)
     path = OUT_DIR / "jbb_crosswalk.png"

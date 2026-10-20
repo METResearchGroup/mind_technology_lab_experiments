@@ -1,8 +1,10 @@
-Under one pre-registered protocol, typed decision models and a managed guardrail sit on different miss--false-positive--cost points; on JailbreakBench the guardrail's headline miss is mostly the category crosswalk, and registered strength barely moves it (1.00 at low, 0.98 at medium, 0.96 at high, FPR 0); stacks help only where that guardrail still catches harm.
+Under one pre-registered protocol, typed decision models and a managed guardrail sit on different miss, false-positive, and cost points.
+On JailbreakBench the guardrail's headline miss is mostly the category crosswalk, and registered strength barely moves it (1.00 at low, 0.98 at medium, 0.96 at high, FPR 0).
+Stacks help only where that guardrail still catches harm.
 We score TypeSafe Jev (\texttt{jev-1.13.0}), Cloudflare Clef and Clef-flash, and Amazon Bedrock Guardrails on eleven public prompt-level benchmarks, with pre-registered union, intersection, and cascade stacks on three sets.
 A harness check reproduced published Jev intervals on six overlapping datasets (\texttt{run\_id=20261020T033822Z\_0f24960e}, PASS); headline metrics use core pack \texttt{20261020T040920Z\_90c5fd13}.
-On JailbreakBench the pre-registered Prompt-Attack-only crosswalk yields guardrail miss 0.9800 (bootstrap 95\% CI 0.95--1.00) at false-positive rate 0.
-An exploratory sensitivity on cached guardrail bands (any-filter max at medium strength, not a second registered endpoint) yields miss 0.23 (CI 0.15--0.31) at FPR 0.19 (CI 0.11--0.26).
-Jev at threshold 0.5 reaches miss 0.03 (CI 0.00--0.07) at FPR 0.34 (CI 0.25--0.44).
+On JailbreakBench the pre-registered Prompt-Attack-only crosswalk yields guardrail miss 0.9800 (bootstrap 95\% CI 0.95 to 1.00) at false-positive rate 0.
+An exploratory sensitivity on cached guardrail bands (any-filter max at medium strength, not a second registered endpoint) yields miss 0.23 (CI 0.15 to 0.31) at FPR 0.19 (CI 0.11 to 0.26).
+Jev at threshold 0.5 reaches miss 0.03 (CI 0.00 to 0.07) at FPR 0.34 (CI 0.25 to 0.44).
 HarmBench overall miss is 0.2026 for guardrails versus 0.2870 for Jev, but splits reverse by attack type.
 Jev is the cheapest and fastest arm on this pack (\$0.023 per 1{,}000 prompts; median latency 88.9\,ms) and does not win every miss metric.

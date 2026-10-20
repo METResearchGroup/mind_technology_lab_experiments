@@ -1,7 +1,7 @@
 \section{Discussion}
 \label{sec:discussion}
 
-\textbf{Rule 1:} publish the category crosswalk with any guardrail miss rate (JailbreakBench shows Prompt-Attack-only mapping dominates registered strength sweeps).
-\textbf{Rule 2:} use union only when the guardrail still blocks harm and benign FPR stays low (XSTest); stacking cannot rescue a path that already misses 0.98 of harmful JailbreakBench rows under the registered mapping.
+Publish the category crosswalk with any guardrail miss rate, because JailbreakBench shows Prompt-Attack-only mapping dominates registered strength sweeps.
+Use union only when the guardrail still blocks harm and benign FPR stays low, as on XSTest; stacking cannot rescue a path that already misses 0.98 of harmful JailbreakBench rows under the registered mapping.
 We do not treat a pooled miss, a post-hoc any-filter number, or a low JailbreakBench miss under one mapping as certification of a mental-health product or of a deployed product.
 Miss means the screen allowed the text under stated thresholds; it is not attack success against a target LLM.

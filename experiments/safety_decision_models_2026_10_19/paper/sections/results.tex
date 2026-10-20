@@ -9,22 +9,22 @@ Table~\ref{tab:core-pack} in the appendix lists the full grid.
 \label{sec:results-jbb}
 
 On JailbreakBench the pre-registered mapping sends harmful goals to Prompt Attack only.
-At medium strength the guardrail misses 0.9800 of harmful rows (bootstrap mean 0.98, 95\% CI 0.95--1.00) with FPR 0.
+At medium strength the guardrail misses 0.9800 of harmful rows (bootstrap mean 0.98, 95\% CI 0.95 to 1.00) with FPR 0.
 Strength barely moves that point: miss 1.00 at low, 0.98 at medium, and 0.96 at high, with FPR 0 at all three.
-A post-hoc any-filter rule at medium strength---maximum band across Hate, Insults, Sexual, Violence, Misconduct, and Prompt Attack, not refit on development data---yields miss 0.23 (CI 0.15--0.31) and FPR 0.19 (CI 0.11--0.26).
-At score threshold 0.5, Jev miss is 0.03 (CI 0.00--0.07) at FPR 0.34 (CI 0.25--0.44); Clef miss 0.01 at FPR 0.54; Clef-flash miss 0.07 at FPR 0.24.
+A post-hoc any-filter rule at medium strength takes the maximum band across Hate, Insults, Sexual, Violence, Misconduct, and Prompt Attack without refit on development data, and yields miss 0.23 (CI 0.15 to 0.31) and FPR 0.19 (CI 0.11 to 0.26).
+At score threshold 0.5, Jev miss is 0.03 (CI 0.00 to 0.07) at FPR 0.34 (CI 0.25 to 0.44); Clef miss 0.01 at FPR 0.54; Clef-flash miss 0.07 at FPR 0.24.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{../outputs/figures/narrative_20261020/jbb_crosswalk.png}
-\caption{Pre-registered Prompt-Attack-only mapping (solid) moves guardrail miss only from 1.00 to 0.96 at FPR 0 across strengths; the orange series is an exploratory post-hoc any-filter panel on cached bands; Jev at 0.5 trades lower miss for higher benign FPR.}
+\caption{The pre-registered Prompt-Attack-only point moves guardrail miss only from 1.00 to 0.96 at FPR 0 across strengths. The orange series is an exploratory post-hoc any-filter panel on cached bands. Jev at 0.5 trades lower miss for higher benign FPR.}
 \label{fig:jbb-crosswalk}
 \end{figure}
 
 \subsection{Harm splits}
 \label{sec:results-harm}
 
-Harm is not one number.
+A single pooled miss rate can hide opposite guardrail and Jev strengths.
 HarmBench overall miss is 0.2026 for guardrails versus 0.2870 for Jev, but config splits reverse: on DirectRequest ($n=320$) Jev miss is 0.3406 versus guardrails 0.5844; on HumanJailbreaks ($n=1600$) Jev miss is 0.2763 versus guardrails 0.1263, so the guardrail advantage on the aggregate reflects the larger HumanJailbreaks slice.
 On Do-Not-Answer overall detection, Jev reaches 0.7433 versus guardrails 0.1523.
 By risk area (detection rates, not item text), Information Hazards show Jev 0.8306 versus guardrails 0.0081; Discrimination, Exclusion, Toxicity, Hateful, Offensive Jev 0.7841 versus guardrails 0.0000; Malicious Uses Jev 0.9671 versus guardrails 0.5556.
@@ -42,7 +42,8 @@ By risk area (detection rates, not item text), Information Hazards show Jev 0.83
 Pre-registered stacks use Jev with the medium crosswalk guardrail.
 On XSTest, Jev alone misses 0.16 at FPR 0.012; guardrail alone 0.17 at FPR 0.00; union 0.10 at FPR 0.012; intersection 0.23 at FPR 0.00; cascade 0.125 at FPR 0.012.
 Union cuts miss without raising FPR because the guardrail's benign FPR is 0.
-On WildGuardMix, Jev alone 0.6710 / FPR 0.1923; guardrail 0.4208 / 0.4615; union 0.3661 / 0.5385; intersection 0.7257 / 0.1154; cascade 0.6710 / 0.1923---cascade equals Jev alone because the deferral band spans one percentage point ($t_{\mathrm{high}}=0.78$, $t_{\mathrm{low}}=0.77$).
+On WildGuardMix, Jev alone 0.6710 / FPR 0.1923; guardrail 0.4208 / 0.4615; union 0.3661 / 0.5385; intersection 0.7257 / 0.1154; cascade 0.6710 / 0.1923.
+Cascade equals Jev alone because the deferral band spans one percentage point ($t_{\mathrm{high}}=0.78$, $t_{\mathrm{low}}=0.77$).
 On JailbreakBench under the pre-registered crosswalk, union and cascade match Jev (miss 0.03, FPR 0.34) and intersection matches the guardrail (miss 0.98, FPR 0).
 Post-hoc any-filter stacks at medium strength (not refit) give union miss 0.03 at FPR 0.42, intersection miss 0.23 at FPR 0.11, and cascade miss 0.03 at FPR 0.34 for Jev.
 
@@ -53,15 +54,15 @@ Post-hoc any-filter stacks at medium strength (not refit) give union miss 0.03 a
 \label{fig:stack-frontier}
 \end{figure}
 
-On harmful rows (appendix Figure~\ref{fig:complementarity}), \emph{Both block} is the share both arms block; \emph{Jev only} means Jev allowed the row and the guardrail blocked it; \emph{Guardrail only} means the guardrail allowed it and Jev blocked; \emph{Both miss} means both allowed it---HarmBench 0.628 / 0.170 / 0.085 / 0.117 ($n=1920$), XSTest 0.77 / 0.06 / 0.07 / 0.10 ($n=200$), WildGuardMix 0.274 / 0.305 / 0.055 / 0.366 ($n=1699$).
+On harmful rows (appendix Figure~\ref{fig:complementarity}), \emph{Both block} is the share both arms block; \emph{Jev only} means Jev allowed the row and the guardrail blocked it; \emph{Guardrail only} means the guardrail allowed it and Jev blocked; \emph{Both miss} means both allowed it: HarmBench 0.628 / 0.170 / 0.085 / 0.117 ($n=1920$), XSTest 0.77 / 0.06 / 0.07 / 0.10 ($n=200$), WildGuardMix 0.274 / 0.305 / 0.055 / 0.366 ($n=1699$).
 Cohen's $\kappa$ for block agreement (Jev vs guardrail) is 0.862 on XSTest, 0.316 on WildGuardMix and HarmBench, and 0.011 on JailbreakBench.
 
 \subsection{Operating points and cost}
 \label{sec:results-cost}
 
 Threshold choice moves benign burden.
-On XSTest, Jev safe FPR is 0.084 at score 0.5 (CI 0.052--0.120) versus 0.012 tuned at 0.77 (CI 0.000--0.028); harmful detection is 0.925 versus 0.840.
-On WildGuardMix, Jev prompt-harm F1 is 0.5904 at 0.5 versus 0.4940 tuned because tuned miss stays 0.671---raising the threshold lowers both F1 and benign FPR on this set.
+On XSTest, Jev safe FPR is 0.084 at score 0.5 (CI 0.052 to 0.120) versus 0.012 tuned at 0.77 (CI 0.000 to 0.028); harmful detection is 0.925 versus 0.840.
+On WildGuardMix, Jev prompt-harm F1 is 0.5904 at 0.5 versus 0.4940 tuned because tuned miss stays 0.671, so raising the threshold lowers both F1 and benign FPR on this set.
 Cost per 1{,}000 prompts: Jev \$0.023, Clef-flash \$0.036, guardrails \$0.179, Clef \$0.230; median latency Jev 88.9\,ms, Clef-flash 303\,ms, guardrails 359\,ms, Clef 368\,ms; total study spend \$18.38.
 Jev is cheapest and fastest here but not the lowest-miss arm on WildGuardMix or HarmBench.
 ECE-15 is lower for Jev than Clef on ToxicChat (0.014 vs 0.098), ToxiGen (0.061 vs 0.197), and XSTest (0.073 vs 0.117); scores rank better than they calibrate (appendix Figures~\ref{fig:operating-points}, \ref{fig:reliability}, and \ref{fig:cost-vs-miss} for operating-point sweeps, reliability diagrams, and cost-versus-miss scatter).

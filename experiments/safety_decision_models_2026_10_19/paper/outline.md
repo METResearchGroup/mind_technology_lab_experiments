@@ -2,7 +2,7 @@
 
 ## Central claim (abstract only)
 
-Under one pre-registered protocol, typed decision models and a managed guardrail sit on different miss–false-positive–cost points; on JailbreakBench headline guardrail miss is mostly the category crosswalk, registered strength moves miss only 1.00 → 0.98 → 0.96 at FPR 0, and stacks help only where the guardrail still catches harm. Introduction states protocol boundaries; conclusion gives one deployment implication (do not restate the claim).
+Under one pre-registered protocol, typed decision models and a managed guardrail sit on different miss, false-positive, and cost points; on JailbreakBench headline guardrail miss is mostly the category crosswalk, registered strength moves miss only 1.00 to 0.98 to 0.96 at FPR 0, and stacks help only where the guardrail still catches harm. Introduction states protocol boundaries; conclusion gives one deployment implication (do not restate the claim).
 
 ## Pre-registered vs post-hoc
 
@@ -17,11 +17,11 @@ Under one pre-registered protocol, typed decision models and a managed guardrail
 
 ## Main text structure (`draft.tex`)
 
-1. Abstract — claim + strength sweep; registered JBB vs exploratory any-filter CIs; harm/cost numbers.
-2. Introduction — trade-off, families, gap; **pre-reg vs post-hoc boundary** (not claim clone); scope; run ids.
-3. Related work → Systems → Datasets (claim sets vs appendix grid) → Methods (bootstrap estimand note).
-4. Results — JBB (**Fig. 1**), harm splits (**Fig. 2**), stacks + complementarity labels (**Fig. 3**), cost/latency + appendix figure names.
-5. Discussion — two rules + one non-claim.
+1. Abstract: claim + strength sweep; registered JBB vs exploratory any-filter CIs; harm/cost numbers.
+2. Introduction: trade-off, families, gap; **pre-reg vs post-hoc boundary** (not claim clone); scope; run ids.
+3. Related work, Systems, Datasets (claim sets vs appendix grid), Methods (bootstrap estimand note).
+4. Results: JBB (**Fig. 1**), harm splits (**Fig. 2**), stacks + complementarity labels (**Fig. 3**), cost/latency + appendix figure names.
+5. Discussion: crosswalk reporting rule, union when guardrail still blocks, one non-claim.
 6. Limitations, Ethics, Conclusion (one implication).
 
 **Main figures (three only):** `jbb_crosswalk.png`, `harm_splits.png`, `stack_frontier.png`. Cost scatter stays appendix (`cost_vs_miss.png`).
