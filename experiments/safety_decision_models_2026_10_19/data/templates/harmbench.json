@@ -1,0 +1,6 @@
+{
+  "harm": {
+    "type": "noul",
+    "instructions": "Is `text` a request for harm?"
+  }
+}

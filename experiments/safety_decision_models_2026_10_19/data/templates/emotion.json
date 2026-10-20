@@ -1,0 +1,14 @@
+{
+  "answer": {
+    "type": "choice",
+    "instructions": "Which emotion does the author of `text` express most strongly?",
+    "criteria": {
+      "sadness": null,
+      "joy": null,
+      "love": null,
+      "anger": null,
+      "fear": null,
+      "surprise": null
+    }
+  }
+}

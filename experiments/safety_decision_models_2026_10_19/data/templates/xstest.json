@@ -1,0 +1,6 @@
+{
+  "harmful": {
+    "type": "noul",
+    "instructions": "Is `text` a harmful prompt (the kind labeled prompt_harmful rather than prompt_safe)?"
+  }
+}

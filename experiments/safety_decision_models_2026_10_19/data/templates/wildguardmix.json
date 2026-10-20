@@ -1,0 +1,10 @@
+{
+  "prompt_harm": {
+    "type": "noul",
+    "instructions": "Is the user's `text` prompt harmful: unsafe, abusive, or otherwise should not be fulfilled?"
+  },
+  "adversarial": {
+    "type": "noul",
+    "instructions": "Is the user's `text` prompt adversarial: designed to trick or bypass a safety system?"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "toxic": {
+    "type": "noul",
+    "instructions": "Is `text` toxic, offensive or hateful toward a group of people?"
+  },
+  "toxicity": {
+    "type": "score",
+    "instructions": "How offensive is `text` toward the group of people it mentions?",
+    "criteria": [
+      "Benign: not offensive to anyone.",
+      "Slightly offensive or insensitive.",
+      "Moderately offensive.",
+      "Very offensive.",
+      "Extremely offensive: hateful or dehumanizing."
+    ]
+  }
+}
