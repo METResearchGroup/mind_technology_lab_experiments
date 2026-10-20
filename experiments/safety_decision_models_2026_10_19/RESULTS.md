@@ -1,6 +1,6 @@
 # Results
 
-Step 3 smoke tests passed for `jev`, `clef`, and `clef-flash`, with cache hits on the second pass. Guardrails scores are in the core-pack table.
+Step 3 smoke tests passed for `jev`, `clef`, and `clef-flash`. The second pass hit the cache. Guardrails scores appear in the core-pack table.
 
 ## Jev harness check (step 4)
 
@@ -23,7 +23,13 @@ Manifest: `outputs/manifests/20261020T033822Z_0f24960e.json`.
 
 Run `run_id=20261020T040920Z_90c5fd13` (step 7 metrics). Threshold 0.5 and development-tuned values.
 
-Guardrail bands were recomputed offline from cached Bedrock guardrail assessments after normalizing content-filter names to the study crosswalk. JailbreakBench still maps harmful labels to Prompt Attack only. GoEmotions and Emotion have no content-filter crosswalk, so the guardrail band is NONE at all strengths. Tuned score thresholds are the best harmful-class F1 on the development pool with benign false-positive rate at most 5%, otherwise 0.5; JailbreakBench stays at 0.5 because the labeled development pool has fewer than 200 rows. Cascade fitting uses the same FPR budget; between `t_low` and `t_high` the decision follows the guardrail block bit at medium strength. Tuned cutoffs (Jev): wildguardmix `t_high=0.78`, `t_low=0.77`; xstest `t_high=0.77`, `t_low=0.5`; jailbreakbench `t_high=0.5`, `t_low=0.5` (held).
+Guardrail bands were recomputed offline from cached Bedrock guardrail assessments. Content-filter names were normalized to the study crosswalk before that step. JailbreakBench still maps harmful labels to Prompt Attack only. GoEmotions and Emotion have no content-filter crosswalk, so the guardrail band is NONE at all strengths.
+
+Tuned score thresholds pick the harmful-class F1 that is best on the development pool while the benign false-positive rate stays at most 5%. When no threshold meets that constraint, the score threshold is 0.5. JailbreakBench stays at 0.5 because the labeled development pool has fewer than 200 rows.
+
+Cascade fitting uses the same false-positive rate budget. When a score falls between `t_low` and `t_high`, the decision follows the guardrail block bit at medium strength.
+
+For Jev, tuned cutoffs are wildguardmix `t_high=0.78` and `t_low=0.77`, xstest `t_high=0.77` and `t_low=0.5`, and jailbreakbench `t_high=0.5` and `t_low=0.5` (held).
 
 | Dataset | Arm | Metric | Tuned | At 0.5 |
 | --- | --- | --- | ---: | ---: |
@@ -86,7 +92,7 @@ Guardrail bands were recomputed offline from cached Bedrock guardrail assessment
 
 ## Spend
 
-Prices are the 2026-10-19 rates in `configs/study.json`. These lines are new provider charges from the run logs and from `development_scoring.additional_usd` in `outputs/metrics/20261020T040920Z_90c5fd13.json`.
+Prices are the 2026-10-19 rates in `configs/study.json`. The spend table rows are new provider charges from the run logs and from `development_scoring.additional_usd` in `outputs/metrics/20261020T040920Z_90c5fd13.json`.
 
 | Charge | USD |
 | --- | ---: |
@@ -100,4 +106,4 @@ Prices are the 2026-10-19 rates in `configs/study.json`. These lines are new pro
 | Metrics reband and rerun (cache only) | 0.00 |
 | **Total** | **18.38** |
 
-On the full-pack prediction rows, cost per 1,000 prompts is Jev $0.023, Clef $0.230, Clef-flash $0.036, and Guardrails $0.179. Median latency uses each row’s stored `latency_ms` from the original provider call, including cache replays (not zeroed): Jev 88.9 ms (live-call-only 88.0 ms, p95 291 ms), Clef-flash 303 ms, Guardrails 359 ms, and Clef 368 ms.
+On the full-pack prediction rows, cost per 1,000 prompts is Jev $0.023, Clef $0.230, Clef-flash $0.036, and Guardrails $0.179. Median latency comes from each row's stored `latency_ms` on the original provider call. Cache replays count toward latency and are not zeroed. Jev median latency is 88.9 ms, with 88.0 ms for live calls only and 291 ms at p95. Clef-flash is 303 ms, Guardrails is 359 ms, and Clef is 368 ms.
