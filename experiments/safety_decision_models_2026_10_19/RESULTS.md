@@ -1,6 +1,6 @@
 # Results
 
-Step 3 smoke tests passed for `jev`, `clef`, and `clef-flash`, with cache hits on rerun. The `guardrails` arm is deferred to step 5.
+Step 3 smoke tests passed for `jev`, `clef`, and `clef-flash`, with cache hits on the second pass. Guardrails scores are in the core-pack table.
 
 ## Jev harness check (step 4)
 
@@ -81,3 +81,20 @@ Run `run_id=20261020T040920Z_90c5fd13` (step 7 metrics). Threshold 0.5 and devel
 | emotion | clef | accuracy | 0.5910 | 0.5910 |
 | emotion | clef-flash | accuracy | 0.5795 | 0.5795 |
 | emotion | guardrails | miss_rate | 0.9700 | — |
+
+## Spend
+
+Prices are the 2026-10-19 rates in `configs/study.json`. These lines are new provider charges from the run logs and from `development_scoring.additional_usd` in `outputs/metrics/20261020T040920Z_90c5fd13.json`.
+
+| Charge | USD |
+| --- | ---: |
+| Jev harness `20261020T033822Z_0f24960e` (7,138,858 input tokens) | 0.2998 |
+| Full-pack new calls, Jev | 0.1091 |
+| Full-pack new calls, Clef | 4.7130 |
+| Full-pack new calls, Clef-flash | 0.7464 |
+| Full-pack new calls, Guardrails (24,391 text units) | 3.6586 |
+| Development-pool scoring | 8.8542 |
+| Step 3 smoke, logged token charges | 0.0027 |
+| **Total** | **18.38** |
+
+On the full-pack prediction rows, cost per 1,000 prompts is Jev $0.023, Clef $0.230, Clef-flash $0.036, and Guardrails $0.179. Median latency is Jev 89 ms, Clef-flash 303 ms, Guardrails 359 ms, and Clef 368 ms.

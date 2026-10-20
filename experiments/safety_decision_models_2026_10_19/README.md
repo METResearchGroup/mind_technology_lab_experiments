@@ -16,7 +16,7 @@ The benchmark pulls eleven public datasets: ToxiGen, OpenAI Moderation, ToxicCha
 ## Docs
 
 - [SETUP.md](./SETUP.md), credentials, install, and S3 prefix
-- [RESULTS.md](./RESULTS.md), harness numbers (filled in later steps)
+- [RESULTS.md](./RESULTS.md), harness check, core-pack metrics, and logged spend
 
 ## Plan
 
