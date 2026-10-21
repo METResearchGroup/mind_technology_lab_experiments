@@ -2,7 +2,7 @@
 
 Implements [proposal.md](../proposal.md) **Step 2** (lines 256 to 258) and the key-loading design in **Model, price, and keys** (lines 21 to 29), **The Python driver** (lines 13 to 19, harness profile only), **Tracing** (lines 88 to 90), and the allowlist plus agent signatures in **Schema and key interfaces** (lines 170 to 191).
 
-This step does **not** call the model. It does **not** add pytest, `tests/`, or `test_*.py`.
+The step does not call the model, and it does not add a pytest file, a `tests/` directory, or a `test_*.py` file.
 
 ---
 
@@ -19,16 +19,16 @@ This step does **not** call the model. It does **not** add pytest, `tests/`, or 
 
 ## Workflow (implement-from-spec, Phase 4 skipped)
 
-Follow [implement-from-spec](/tmp/ai_tools/skills/implement-from-spec/SKILL.md) phase order. **Skip Phase 4 (test design).** Use Phase 6 gates with the commands in this document instead of pytest.
+Follow the phase order in the table. Skip phase 4, test design. Use the commands in this file for the phase 6 gate.
 
 | Phase | Work in this step | Gate |
 |-------|-------------------|------|
-| 1 Scope | Caller is Step 3 `run_smoke` / `run_round` (not implemented here). This step only supplies keys, tracing env, and agent factories. | Caller named; file tree matches allowed list; out-of-scope listed below. |
+| 1 Scope | Caller is Step 3 `run_smoke` / `run_round` (not implemented here). The step supplies keys, tracing env, and agent factories. | Caller named; file tree matches the allowed list. |
 | 2 Scaffold | Create `workflow/tracing.py` and `workflow/agents.py` with imports and stub bodies if needed so imports resolve. | `PYTHONPATH` import check prints `ok`. |
 | 3 Contracts | Final signatures match proposal and this step. No `run_turn` yet. | Signatures stable; commit allowlist separately from workflow files. |
 | ~~4 Test design~~ | **Skipped** (forbidden for this plan). | N/A |
 | 5 Implement | Fill allowlist, docstrings, `configure_tracing`, `build_chat_model`, `build_role_agent`, and key call sites. | Commands below pass. |
-| 6 Done | No model invocation; no secret printed; no experiment-side Secrets Manager client. | Pass/fail section. |
+| 6 Done | No model run; no secret printed; no experiment-side Secrets Manager client. | Pass/fail section. |
 
 **Commits (two, in order):**
 
@@ -56,7 +56,7 @@ Follow [implement-from-spec](/tmp/ai_tools/skills/implement-from-spec/SKILL.md) 
 - Any test files.
 - `build_secrets_client`, `load_openai_api_key`, `load_langsmith_api_key`.
 - Calling `secrets_manager_client` or `load_secret_field` from the experiment package (they remain inside `_initialize_env_vars` only).
-- Invoking the chat model or `create_deep_agent` `.invoke` / `.ainvoke` in verification commands.
+- Running the chat model, including `create_deep_agent` `.invoke` or `.ainvoke`, in verification commands.
 
 ### Preconditions
 
@@ -161,7 +161,7 @@ ChatOpenAI(
 
 - Do **not** set `reasoning.mode`; leave default `standard`.
 - Use the experiment's constant for `25_000` if `workflow/constants.py` already defines `MAX_OUTPUT_TOKENS`; otherwise literal `25_000` is acceptable in Step 2 only.
-- This step must not invoke the model in verification.
+- The step must not run the model in verification.
 
 ### `build_role_agent(role, response_model, chat_model)`
 
@@ -222,7 +222,7 @@ uv run python -c "from lib.load_env_vars import EnvVarsContainer; value = EnvVar
 |------|------|
 | Three allowlist rows; GitHub row unchanged | Extra allowlist entries or missing new rows |
 | Experiment imports `build_chat_model`, `build_role_agent`, `configure_tracing` | Import runs `get_env_var` at module import time and breaks offline import check |
-| No model API call in this step | Any invoke/chat completion in verification or module init |
+| No model API call in this step | Any chat completion in verification or module init |
 | No new secret client in experiment code | `secrets_manager_client` / `load_secret_field` imported in `workflow/` |
 | No key material in logs or stdout | Printing or logging key values |
 | `shared/aws/secretsmanager.py` untouched | Any edit to forbidden paths |
@@ -238,11 +238,3 @@ uv run python -c "from lib.load_env_vars import EnvVarsContainer; value = EnvVar
 | `ChatOpenAI` output cap parameter name (`max_tokens` vs `max_completion_tokens`) | Match pinned `langchain-openai` docs for Responses API + `gpt-6-sol`. |
 | Step 1 package layout missing | Minimal `workflow/__init__.py` only; do not fold Step 1 into Step 2. |
 | Accidental secret fetch on import | Keep the two `get_env_var` lines inside a function not called from import check. |
-
----
-
-## Executive summary (for parent agent)
-
-- **Path:** `docs/plans/2026-10-21_social-science-idea-generation_d9ac12/steps/step2.md`
-- **Unresolved:** Exact `HarnessProfile` / `create_deep_agent` keyword names until `deepagents` is installed in the experiment env; exact `ChatOpenAI` max-output kwarg for the pinned LangChain version.
-- **Risks:** Import-time key fetch breaks offline checks; printing keys during optional AWS verification; editing `secretsmanager.py` or calling the model in Step 2.

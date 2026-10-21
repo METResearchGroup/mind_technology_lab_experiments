@@ -11,7 +11,7 @@
 
 ## Implement-from-spec phases (skip test design)
 
-Follow [implement-from-spec](/tmp/ai_tools/skills/implement-from-spec/SKILL.md) in order. **Skip Phase 4 (test design).** This plan has no pytest slice; verification is the import command below only.
+Follow the phase order in the table. Skip phase 4, test design. The plan adds no pytest file. The check for this step is the import command, and the full study command stays blocked.
 
 | Phase | Goal for this step | Gate |
 | --- | --- | --- |
@@ -27,7 +27,8 @@ Follow [implement-from-spec](/tmp/ai_tools/skills/implement-from-spec/SKILL.md) 
 - `/workspace/docs/plans/2026-10-21_social-science-idea-generation_d9ac12/proposal.md` (sections cited above)
 - `/workspace/docs/plans/2026-10-21_social-science-idea-generation_d9ac12/plan.md`
 - `experiments/social_science_idea_generation_2026_10_21/workflow/schemas.py` (`StudyResult`, `VoteRecord`, `RoundRecord`, `Ballot`, `CriterionScore`, `RevisedProposal`)
-- `experiments/social_science_idea_generation_2026_10_21/workflow/constants.py` (`MODEL_ID`, `REASONING_EFFORT`, `S3_BUCKET`, `EXPERIMENT_NAME`, `ROLE_ORDER`)
+- `experiments/social_science_idea_generation_2026_10_21/workflow/constants.py` (`MODEL_ID`, `REASONING_EFFORT`, `S3_BUCKET`, `EXPERIMENT_NAME`)
+- `experiments/social_science_idea_generation_2026_10_21/workflow/roles.py` (`ROLE_ORDER`)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/tracing.py` (`configure_tracing`)
 - `experiments/social_science_idea_generation_2026_10_21/src/run_round.py` (`run_round`, `run_vote`, `revised_proposal` if needed for `RESULTS.md`)
 - `experiments/social_science_idea_generation_2026_10_21/src/run_smoke.py` (S3 key shape and `run_id` pattern from Step 3)
@@ -71,14 +72,14 @@ Follow [implement-from-spec](/tmp/ai_tools/skills/implement-from-spec/SKILL.md) 
    - Later rounds do not receive earlier rounds' ideas; they only share the brief ([proposal.md](../proposal.md) **Who speaks**).
    - Collect `list[RoundRecord]` in order. If a round stops after a parse retry failure inside `run_turn`, do not synthesize a missing proposal in `run_study` ([proposal.md](../proposal.md) **Schema and key interfaces**, parse failure paragraph).
 
-6. **Vote:** Call `run_vote(rounds, run_id) -> VoteRecord` on a **sixth** `langsmith.uuid7` thread ([proposal.md](../proposal.md) **Tracing**, **Step 4**).
+6. **Vote:** Define `run_vote(rounds, run_id) -> VoteRecord` in `src/run_study.py` and call it from `run_study`. The vote uses a sixth `langsmith.uuid7` thread ([proposal.md](../proposal.md) **Tracing**, **Step 4**).
    **Voters (seven ballots):** the five disciplinary roles, the methodologist, and the critic. The synthesizer does not vote ([proposal.md](../proposal.md) **Decisions** item 5).
    **Ballot input:** the brief and the five **revised** proposals only; no round transcripts ([proposal.md](../proposal.md) table row **Ballot**).
    **Scores:** each ballot returns five `CriterionScore` rows with `non_obvious`, `feasible`, and `method_fits_question` as integers 1 to 5.
    **Per-proposal total on one ballot:** sum of the three scores, computed in Python inside `run_vote`, not requested from the model ([proposal.md](../proposal.md) **Schema and key interfaces** `Ballot` row).
    **Ranking:** sort round indexes by mean score total across ballots, higher first. Tie-break: higher mean `feasible`, then lower `round_index` ([proposal.md](../proposal.md) **Schema and key interfaces**).
    **`top_three`:** first three entries of `ranking`.
-   `run_study` must **call** `run_vote`; it must not reimplement ballot prompts or ranking if `run_vote` already exists from an earlier step.
+   `run_study` calls `run_vote`. Ballot prompts and ranking live only in `run_vote`.
 
 7. **Token totals:** Set `total_input_tokens` and `total_output_tokens` on `StudyResult` to the sum of `input_tokens` and `output_tokens` across every `TurnRecord` in all five rounds plus every ballot turn in `vote` (match fields on `TurnRecord` from Step 1).
 

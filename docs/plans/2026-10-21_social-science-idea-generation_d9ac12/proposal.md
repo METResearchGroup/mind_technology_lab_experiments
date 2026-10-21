@@ -1,6 +1,6 @@
 # Proposal: A workflow that returns three social science research ideas
 
-Scope: [issue 35](https://github.com/METResearchGroup/mind_technology_lab_experiments/issues/35). The proposal covers the agent workflow, the files, the saved records, and the cost estimate from the smoke run. You confirm the decisions at the end before any implementation plan. You decide whether an idea is good, feasible, or non-obvious.
+Scope: [issue 35](https://github.com/METResearchGroup/mind_technology_lab_experiments/issues/35). The proposal covers the agent workflow, the files, the saved records, and the cost estimate from the smoke run. The decisions at the end are confirmed. You decide whether an idea is good, feasible, or non-obvious.
 
 ## Overview
 
@@ -22,15 +22,11 @@ You pass `tools=[]`, and `create_deep_agent` still keeps the built-in filesystem
 
 The model id is `gpt-6-sol`. On 2026-10-21 the model page listed a 1,050,000 token context window. Standard prices for the short context are $2 per 1M input tokens, $0.20 per 1M cached input tokens, and $10 per 1M output tokens. OpenAI charges twice the input rate and 1.5 times the output rate, for the whole request, when a prompt is above 272,000 input tokens. The OpenAI reasoning guide says reasoning tokens are billed as output tokens, and the guide recommends reserving at least 25,000 tokens for reasoning and visible output when you first use a reasoning model. The output cap is the 25,000 token reserve in the OpenAI reasoning guide.
 
-The OpenAI key is secret `openai-api-key`, field `OPENAI_API_KEY`, in `us-east-2`. The field name is the constant `SECRET_KEY` in `cookbooks/how_to_use_aws_secrets_manager/main.py`. The secret value was not read. A list of secret names in `us-east-2` on 2026-10-21 includes `openai-api-key` and does not include a LangSmith secret. Decision 6 covers adding `langsmith-api-key` with field `LANGSMITH_API_KEY`.
+The OpenAI key is secret `openai-api-key`, JSON field `OPENAI_API_KEY`, in `us-east-2`. The field name is the constant `SECRET_KEY` in `cookbooks/how_to_use_aws_secrets_manager/main.py`. The LangSmith key is secret `langsmith-api-key`, JSON field `LANGSMITH_API_KEY`, in the same region. The secret values were not read.
 
-`build_secrets_client` copies the lookup in `experiments/speedup_jev_2026_09_23/shared/secrets.py` `resolve_aws_access_keys`. The lookup checks the following names in order:
+`lib/load_env_vars.py` `EnvVarsContainer.get_env_var` is the only key read. `ALLOWLIST` already maps `GITHUB_PAT_TOKEN` to secret `github-pat-token` and field `GH_TOKEN`. The same row shape gains `OPENAI_API_KEY` and `LANGSMITH_API_KEY`. `_initialize_env_vars` still calls `shared.aws.secretsmanager.secrets_manager_client` and `load_secret_field`. The experiment does not call those two functions, and it does not build its own client. The region stays `shared.aws.constants.DEFAULT_REGION_NAME`, which is `us-east-2`.
 
-- `LAB_AWS_ACCESS_KEY_ID` and `LAB_AWS_ACCESS_KEY_SECRET`
-- `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
-- `AWS_ACCESS_KEY_SECRET`
-
-Root `shared.aws.secretsmanager.secrets_manager_client` does not check `LAB_AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, or `AWS_ACCESS_KEY_SECRET`, so you do not call `secrets_manager_client` from the experiment. You still call `shared.aws.secretsmanager.load_secret_field` with the client from `build_secrets_client`. The region is `shared.aws.constants.DEFAULT_REGION_NAME`, which is `us-east-2`.
+Call sites pass `required=True`. A missing or empty value raises `ValueError`, and the message does not include the secret value. The module docstring keeps a length-only check. Do not print the key. Scripts run with the repository root on `PYTHONPATH`, and `uv run` uses the experiment `pyproject.toml`, so `from lib.load_env_vars import EnvVarsContainer` resolves in the experiment environment.
 
 ### Who speaks, and what each agent reads
 
@@ -103,7 +99,7 @@ flowchart LR
 
 The traces are for reading a round. The JSON files are the record `run_vote` and `estimate_full_run_cost` read. Local JSON under `outputs/` is gitignored. You upload the same tree from `run_smoke` and `run_study` with `shared.aws.s3.S3.upload_file` to bucket `mind-technology-lab-experiments`. The prefix matches the experiment folder, which is the storage rule in `AGENTS.md`.
 
-Root `shared/` does not import the new experiment. The new experiment does not import `experiments/speedup_jev_2026_09_23`, and the new experiment does not change `shared/`, `lib/`, or any other experiment. Agent objects and the prompt strings for a turn stay in memory. You write the JSON in the scripts and upload the files.
+Root `shared/` does not import the new experiment. The new experiment does not import `experiments/speedup_jev_2026_09_23`. The new experiment does not change root `shared/` or any other experiment. It does add the two allowlist rows in `lib/load_env_vars.py`. Agent objects and the prompt strings for a turn stay in memory. You write the JSON in the scripts and upload the files.
 
 ### Dependencies
 
@@ -111,7 +107,7 @@ The experiment has its own `pyproject.toml` and is not a uv workspace member. Ro
 
 ## File structure
 
-The driver needs the files in the repository tree and the S3 tree. The other experiment folders stay as they are.
+The driver needs the files in the repository tree and the S3 tree. The other experiment folders stay as they are. The experiment package is `workflow`, because a directory named `shared` would collide with repository `shared.aws` when both are on `PYTHONPATH`.
 
 ### Repository
 
@@ -119,19 +115,21 @@ The driver needs the files in the repository tree and the S3 tree. The other exp
 docs/plans/2026-10-21_social-science-idea-generation_d9ac12/
   proposal.md            this proposal
 
+lib/load_env_vars.py     two new ALLOWLIST rows, beside the GitHub token row
+
 experiments/social_science_idea_generation_2026_10_21/
   README.md              the three mermaid diagrams, plus how to run the smoke
-  SETUP.md               secrets, region, model id, LangSmith project
+  SETUP.md               allowlist names, region, model id, LangSmith project
   RESULTS.md             stub until a full run, then the top three proposals
   pyproject.toml         experiment dependencies, not root
   .gitignore             outputs/**/*.json
   inputs/brief.md        the committed brief
-  shared/constants.py    model id, secret ids, prices, role order, S3 names
-  shared/schemas.py      Pydantic records
-  shared/roles.py        RoleSpec and the system prompts
-  shared/tracing.py      configure_tracing, thread ids
-  shared/agents.py       key loading, ChatOpenAI, create_deep_agent
-  shared/cost.py         estimate_full_run_cost
+  workflow/constants.py    model id, prices, role order, S3 names
+  workflow/schemas.py      Pydantic records
+  workflow/roles.py        RoleSpec and the system prompts
+  workflow/tracing.py      configure_tracing, thread ids
+  workflow/agents.py       ChatOpenAI, create_deep_agent
+  workflow/cost.py         estimate_full_run_cost
   src/run_round.py       one round
   src/run_smoke.py       round 1, then the cost estimate
   src/run_study.py       five rounds, the vote, RESULTS.md, S3 upload
@@ -153,32 +151,33 @@ The records are the objects the driver writes. `run_vote` and `estimate_full_run
 
 | Model | Lives in | Role |
 | --- | --- | --- |
-| `RoleSpec` | `shared/roles.py` (new) | `role_id`, `display_name`, `system_prompt`. Kept in memory. The prompt text also lives in the file. |
-| `ResearchIdea` | `shared/schemas.py` (new) | Seed and synthesizer output. Fields: `title`, `question`, `claim`, `population`, `outcome`, `why_it_might_be_nonobvious`. |
-| `Comment` | `shared/schemas.py` (new) | One comment. Fields: `objection`, `alternative`. |
-| `MethodPlan` | `shared/schemas.py` (new) | First method pass. Fields: `design`, `data`, `comparison`, `main_threat`. |
-| `Critique` | `shared/schemas.py` (new) | Fields: `fatal` (bool), `flaws` (list of strings), `required_change`. |
-| `RevisedProposal` | `shared/schemas.py` (new) | Revision turn. Fields: `idea` (`ResearchIdea`), `method` (`MethodPlan`), `what_changed`. |
-| `CriterionScore` | `shared/schemas.py` (new) | One proposal's scores. Fields: `round_index`, `non_obvious`, `feasible`, `method_fits_question`. Each score is an int from 1 to 5. |
-| `Ballot` | `shared/schemas.py` (new) | Fields: `voter`, `scores` (five `CriterionScore` rows). The total is the sum of the three scores, computed in code. |
-| `TurnRecord` | `shared/schemas.py` (new) | One model call. Fields: `role`, `kind`, `iteration`, `payload`, `input_tokens`, `output_tokens`, `reasoning_tokens`, `latency_ms`. Stored. |
-| `RoundRecord` | `shared/schemas.py` (new) | Fields: `round_index`, `seed_role`, `thread_id`, `brief_sha256`, `turns`. Stored. The revision turn holds the `RevisedProposal`. |
-| `VoteRecord` | `shared/schemas.py` (new) | Fields: `thread_id`, `ballots`, `ranking` (round indexes, best first), `top_three`. Stored. |
-| `StudyResult` | `shared/schemas.py` (new) | Fields: `run_id`, `model_id`, `reasoning_effort`, `brief_sha256`, `rounds`, `vote`, `total_input_tokens`, `total_output_tokens`. Stored as `study.json`. |
-| `CostEstimate` | `shared/cost.py` (new) | Fields: `full_input_tokens`, `full_output_tokens`, `estimated_cost_usd`, `price_page_url`, `note`. Stored as smoke `cost.json`. |
+| `RoleSpec` | `workflow/roles.py` (new) | `role_id`, `display_name`, `system_prompt`. Kept in memory. The prompt text also lives in the file. |
+| `ResearchIdea` | `workflow/schemas.py` (new) | Seed and synthesizer output. Fields: `title`, `question`, `claim`, `population`, `outcome`, `why_it_might_be_nonobvious`. |
+| `Comment` | `workflow/schemas.py` (new) | One comment. Fields: `objection`, `alternative`. |
+| `MethodPlan` | `workflow/schemas.py` (new) | First method pass. Fields: `design`, `data`, `comparison`, `main_threat`. |
+| `Critique` | `workflow/schemas.py` (new) | Fields: `fatal` (bool), `flaws` (list of strings), `required_change`. |
+| `RevisedProposal` | `workflow/schemas.py` (new) | Revision turn. Fields: `idea` (`ResearchIdea`), `method` (`MethodPlan`), `what_changed`. |
+| `CriterionScore` | `workflow/schemas.py` (new) | One proposal's scores. Fields: `round_index`, `non_obvious`, `feasible`, `method_fits_question`. Each score is an int from 1 to 5. |
+| `Ballot` | `workflow/schemas.py` (new) | Fields: `voter`, `scores` (five `CriterionScore` rows). The total is the sum of the three scores, computed in code. |
+| `TurnRecord` | `workflow/schemas.py` (new) | One model call. Fields: `role`, `kind`, `iteration`, `payload`, `input_tokens`, `output_tokens`, `reasoning_tokens`, `latency_ms`. Stored. |
+| `RoundRecord` | `workflow/schemas.py` (new) | Fields: `round_index`, `seed_role`, `thread_id`, `brief_sha256`, `turns`. Stored. The revision turn holds the `RevisedProposal`. |
+| `VoteRecord` | `workflow/schemas.py` (new) | Fields: `thread_id`, `ballots`, `ranking` (round indexes, best first), `top_three`. Stored. |
+| `StudyResult` | `workflow/schemas.py` (new) | Fields: `run_id`, `model_id`, `reasoning_effort`, `brief_sha256`, `rounds`, `vote`, `total_input_tokens`, `total_output_tokens`. Stored as `study.json`. |
+| `CostEstimate` | `workflow/cost.py` (new) | Fields: `full_input_tokens`, `full_output_tokens`, `estimated_cost_usd`, `price_page_url`, `note`. Stored as smoke `cost.json`. |
 
 You sort `ranking` by mean score total, higher first. A tie uses the higher mean `feasible` score, then the lower `round_index`.
 
+`lib/load_env_vars.py` keeps the GitHub row and adds the two rows in the allowlist block. Call sites use `EnvVarsContainer.get_env_var(name, required=True)`.
+
 ```python
-def build_secrets_client() -> SecretsManagerClient: ...
+ALLOWLIST: Final[dict[str, tuple[str, str]]] = {
+    "GITHUB_PAT_TOKEN": ("github-pat-token", "GH_TOKEN"),
+    "OPENAI_API_KEY": ("openai-api-key", "OPENAI_API_KEY"),
+    "LANGSMITH_API_KEY": ("langsmith-api-key", "LANGSMITH_API_KEY"),
+}
+```
 
-
-def load_openai_api_key(client: SecretsManagerClient) -> str: ...
-
-
-def load_langsmith_api_key(client: SecretsManagerClient) -> str: ...
-
-
+```python
 def configure_tracing(langsmith_api_key: str) -> None: ...
 
 
@@ -223,16 +222,12 @@ def estimate_full_run_cost(round_record: RoundRecord) -> CostEstimate: ...
 def run_study(brief_path: Path, run_id: str) -> StudyResult: ...
 ```
 
-`shared/constants.py` holds the fixed values.
+`workflow/constants.py` holds the fixed values.
 
 ```python
 MODEL_ID = "gpt-6-sol"
 REASONING_EFFORT = "medium"
 MAX_OUTPUT_TOKENS = 25_000
-OPENAI_SECRET_ID = "openai-api-key"
-OPENAI_SECRET_FIELD = "OPENAI_API_KEY"
-LANGSMITH_SECRET_ID = "langsmith-api-key"
-LANGSMITH_SECRET_FIELD = "LANGSMITH_API_KEY"
 LANGSMITH_PROJECT = "social-science-idea-generation"
 S3_BUCKET = "mind-technology-lab-experiments"
 EXPERIMENT_NAME = "social_science_idea_generation_2026_10_21"
@@ -260,7 +255,7 @@ The step reads the proposal and writes the experiment package, the schemas, the 
 
 ### Step 2: Connect keys, the model, and LangSmith
 
-The step reads `openai-api-key` and `langsmith-api-key` through `load_secret_field`. The step produces `build_chat_model`, `build_role_agent`, and `configure_tracing`. The step still does not call the model.
+The step adds `OPENAI_API_KEY` and `LANGSMITH_API_KEY` to `ALLOWLIST` in `lib/load_env_vars.py`. Call sites read them with `EnvVarsContainer.get_env_var`. The step produces `build_chat_model`, `build_role_agent`, and `configure_tracing`. The step still does not call the model.
 
 ### Step 3: Run one round and estimate the cost of five rounds
 
@@ -291,12 +286,14 @@ The planning scenario is estimated before any smoke measurement. At 8,000 input 
 
 Billy's figure of about $50 in the issue was for one or two rounds on Opus 5.5 at medium effort. The $50 figure applies to Opus 5.5. The `gpt-6-sol` estimate is the $5.47 to $19.15 scenario.
 
-## Decisions to confirm
+## Decisions
 
-1. **Use the five disciplinary agents listed under Who speaks, and keep their seed order.** The issue gives a social psychologist in computational social science as the example, and it mentions computer science and communications as other perspectives. The recommendation adds a sociologist working on networks and inequality, and a political scientist working on political behavior, so each round starts from a different discipline. The alternative is that you name a different five.
-2. **Commit the brief about opinion updates quoted under Schema and key interfaces, and replace it before a run you would treat as research.** The issue does not name a topic, and the smoke run needs a fixed brief so a later cost can be compared with it. The alternative is to require a brief path on the command line and not commit a topic.
-3. **Call `gpt-6-sol` at reasoning effort `medium`, and leave reasoning mode at `standard`.** The issue names GPT 6 Sol, and medium is the API default for this model. The model page points at GPT-6.1 Sol as the newer Sol model, at the same $2 input and $10 output rates for the short context. The alternative is `gpt-6.1-sol`, or the same `gpt-6-sol` model at effort `low`.
-4. **Keep the stage order in the Python driver, with one `create_deep_agent` per turn and no tools.** Each turn still goes through Deep Agents, which is the library the issue asked for, and the driver chooses the next speaker. The alternative is one parent deep agent that delegates to role subagents and can skip a stage.
-5. **Have seven agents score the revised proposals, and compute the order from the scores.** The five disciplinary agents, the methodologist, and the critic each give three scores from 1 to 5. The synthesizer does not vote, because that role only restates the discussion. Two of the seven ballots come from the agents that wrote the design, so those ballots can favor the revision. The alternative is that only the five disciplinary agents vote.
-6. **Add a Secrets Manager secret named `langsmith-api-key` with JSON field `LANGSMITH_API_KEY` in `us-east-2` before the smoke run.** The OpenAI secret is already there, and a LangSmith secret is not. The alternative is to pass `LANGSMITH_API_KEY` only through the process environment and not add a secret.
-7. **Stop after the smoke cost note until you accept it.** A full run is 72 calls at effort `medium`, and the issue treats cost as something to check before a longer discussion. The alternative is to run all five rounds in the same change, immediately after the smoke.
+Confirmed on 2026-10-21. Decision 6 keeps the secret that is already in Secrets Manager, and it changes the read path to `lib/load_env_vars.py`.
+
+1. **Use the five disciplinary agents listed under Who speaks, and keep their seed order.** Confirmed. The issue gives a social psychologist in computational social science as the example, and it mentions computer science and communications as other perspectives. The recommendation adds a sociologist working on networks and inequality, and a political scientist working on political behavior, so each round starts from a different discipline.
+2. **Commit the brief about opinion updates quoted under Schema and key interfaces, and replace it before a run you would treat as research.** Confirmed. The issue does not name a topic, and the smoke run needs a fixed brief so a later cost can be compared with it.
+3. **Call `gpt-6-sol` at reasoning effort `medium`, and leave reasoning mode at `standard`.** Confirmed. The issue names GPT 6 Sol, and medium is the API default for this model. The model page points at GPT-6.1 Sol as the newer Sol model, at the same $2 input and $10 output rates for the short context.
+4. **Keep the stage order in the Python driver, with one `create_deep_agent` per turn and no tools.** Confirmed. Each turn still goes through Deep Agents, which is the library the issue asked for, and the driver chooses the next speaker.
+5. **Have seven agents score the revised proposals, and compute the order from the scores.** Confirmed. The five disciplinary agents, the methodologist, and the critic each give three scores from 1 to 5. The synthesizer does not vote, because that role only restates the discussion. Two of the seven ballots come from the agents that wrote the design, so those ballots can favor the revision.
+6. **Load `OPENAI_API_KEY` and `LANGSMITH_API_KEY` through `EnvVarsContainer.get_env_var`.** Confirmed, with the read path changed from a client inside the experiment. Secret `langsmith-api-key` with JSON field `LANGSMITH_API_KEY` is in `us-east-2`. Secret `openai-api-key` with JSON field `OPENAI_API_KEY` is already there. `ALLOWLIST` in `lib/load_env_vars.py` gains both names, in the same row shape as `GITHUB_PAT_TOKEN`.
+7. **Stop after the smoke cost note until you accept it.** Confirmed. A full run is 72 calls at effort `medium`, and the issue treats cost as something to check before a longer discussion.
