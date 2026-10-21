@@ -2,7 +2,7 @@
 
 ## Scope
 
-- **Depends on:** [steps/step1.md](step1.md) (experiment package, `workflow/schemas.py`, `workflow/roles.py`, `workflow/constants.py`, `inputs/brief.md`, `.gitignore` for `outputs/**/*.json`) and [steps/step2.md](step2.md) (`lib/load_env_vars.py` allowlist rows, `workflow/agents.py`, `workflow/tracing.py`, experiment `pyproject.toml` with pinned deps).
+- **Depends on:** [steps/step1.md](step1.md) (experiment package, `workflow/schemas.py`, `workflow/roles.py`, `workflow/prompts/`, `workflow/constants.py`, `inputs/brief.md`, `.gitignore` for `outputs/**/*.json`) and [steps/step2.md](step2.md) (`lib/load_env_vars.py` allowlist rows, `workflow/agents.py`, `workflow/tracing.py`, experiment `pyproject.toml` with pinned deps).
 - **Task:** Implement proposal Step 3: one full discussion round (round 1 only), LangSmith threading, local JSON records, S3 upload under `smoke/`, and `estimate_full_run_cost` from the smoke `RoundRecord`. Stop before rounds 2 through 5 and before any vote.
 - **Out of scope:** `src/run_study.py` (Step 4), `lib/load_env_vars.py` (Step 2), root `pyproject.toml`, changes under repository `shared/`, pytest, any `tests/` path, any `test_*.py`, `run_vote`, five-round execution, `study.json`, `RESULTS.md` content beyond existing stub.
 
@@ -46,6 +46,7 @@ experiments/social_science_idea_generation_2026_10_21/
 - [plan.md](../plan.md) (Step 3 summary, smoke-as-check)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/schemas.py` (`TurnRecord`, `RoundRecord`, `TurnKind`, payload models)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/roles.py` (`RoleSpec`, `ROLE_ORDER`)
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/templates/` (turn templates; read only in this step)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/constants.py` (`DISCUSSION_ITERATIONS`, price constants, `S3_BUCKET`, `EXPERIMENT_NAME`, `PRICE_PAGE_URL`)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/agents.py` (`build_chat_model`, `build_role_agent`)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/tracing.py` (`configure_tracing`)
@@ -92,7 +93,7 @@ Gate: imports resolve from the smoke `PYTHONPATH`; public signatures match the p
 
 **Ballot input (estimated, not executed in Step 3):**
 
-Build the text of one ballot prompt from the brief plus five copies of the smoke round's revised proposal. Use `revised_proposal(round_record)` for the proposal body. The five copies are the same text, because only round 1 exists. Count tokens for that prompt with `tiktoken.get_encoding("o200k_base")`. Add `tiktoken` with `uv add tiktoken` inside the experiment directory, which updates the experiment `pyproject.toml` and `uv.lock` only. If `o200k_base` is missing from the installed `tiktoken`, stop and do not substitute a character count. Then:
+Build one ballot prompt by filling `workflow/prompts/templates/ballot.md`. Use `revised_proposal(round_record)` for the proposal body. The five copies are the same text, because only round 1 exists. Use voter `Social psychologist` and `social_psychologist` for that one prompt, then multiply the token count by 7. Count tokens with `tiktoken.get_encoding("o200k_base")`. Add `tiktoken` with `uv add tiktoken` inside the experiment directory, which updates the experiment `pyproject.toml` and `uv.lock` only. If `o200k_base` is missing from the installed `tiktoken`, stop and do not substitute a character count. Then:
 
 ```text
 ballot_input = 7 * tokens_per_ballot_prompt
@@ -113,7 +114,7 @@ Do not claim a measured dollar total in code comments or in `CostEstimate` befor
 
 | Symbol | Contract |
 | --- | --- |
-| `transcript_for(kind: TurnKind, brief: str, turns: list[TurnRecord]) -> str` | Builds user-visible context only. No prior rounds. Rules match the proposal table: seed gets brief only; comment gets brief, seed payload, and earlier comments in **this** round; synthesizer gets brief and every turn so far; method (first pass) gets brief and synthesized idea; critique gets brief, idea, method; revision gets brief, idea, method, critique. Serialize payloads readably (JSON or labeled sections). |
+| `transcript_for(kind: TurnKind, brief: str, turns: list[TurnRecord]) -> str` | Loads `workflow/prompts/templates/<kind>.md` with `load_prompt` and replaces only the placeholders named for that template in proposal **Prompts**. Seed gets `{{brief}}` only. Comment gets the brief, the seed payload, and earlier comments in the round. Synthesis gets the brief and every turn so far. Method gets the brief and the synthesized idea. Critique gets the brief, the idea, and the method. Revision gets the brief, the idea, the method, and the critique. Serialize payloads as JSON. A leftover `{{` raises `ValueError`. Do not write the template text in Python. |
 | `revised_proposal(round_record: RoundRecord) -> RevisedProposal` | Reads the revision turn's `payload` into `RevisedProposal`. |
 | `run_turn(...) -> TurnRecord` | Same signature as proposal: `role`, `kind`, `response_model`, `transcript`, `thread_id`, `chat_model`. One `create_deep_agent` call via `build_role_agent`. `tools` stay empty at the harness level. Pass `metadata.thread_id` on the graph run so child runs share the thread. Record `input_tokens`, `output_tokens`, `reasoning_tokens` (0 if absent on usage), `latency_ms`. On structured parse failure or tool call when tools must be empty: retry **once**; second failure raises and aborts the round (no invented proposal). |
 | `run_round(round_index: int, brief: str, run_id: str) -> RoundRecord` | Full round orchestration. |

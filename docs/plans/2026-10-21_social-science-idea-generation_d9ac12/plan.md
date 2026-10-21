@@ -28,7 +28,7 @@ flowchart TD
 
 ## Approach
 
-Keep the stage order in a Python driver so a free parent agent cannot skip a speaker. Each turn is its own Deep Agents call, with delegation and filesystem tools off. Read keys only through the existing allowlist in `lib/load_env_vars.py`, using the same row shape as the GitHub token row already in that file. The experiment package is `workflow`, so it does not hide repository `shared.aws`. Save the round record as JSON, upload it to the experiment prefix in S3, and price the full run from the smoke round before anyone launches the other four rounds.
+Keep the stage order in a Python driver so a free parent agent cannot skip a speaker. Each turn is its own Deep Agents call, with delegation and filesystem tools off. Read keys only through the existing allowlist in `lib/load_env_vars.py`, using the same row shape as the GitHub token row already in that file. The experiment package is `workflow`, so it does not hide repository `shared.aws`. Persona and turn text live in `workflow/prompts/`, and the driver loads those files. Python source does not contain the prompt strings. Save the round record as JSON, upload it to the experiment prefix in S3, and price the full run from the smoke round before anyone launches the other four rounds.
 
 The four steps match the four steps in the proposal. Step 2 changed only in where the keys are read. The experiment calls the allowlist in `lib/load_env_vars.py`.
 
@@ -36,7 +36,7 @@ The four steps match the four steps in the proposal. Step 2 changed only in wher
 
 ### Step 1: Add the experiment records and role prompts
 
-Create the experiment package, the records, the role prompts, and the committed brief. Do not call a model. See [steps/step1.md](steps/step1.md).
+Create the experiment package, the records, the prompt files under `workflow/prompts/`, and the committed brief. Do not call a model, and do not put prompt text in Python. See [steps/step1.md](steps/step1.md).
 
 ### Step 2: Connect keys, the model, and LangSmith
 
@@ -52,7 +52,7 @@ Write the five-round runner and the vote. Do not launch that run until the smoke
 
 ## What "done" looks like
 
-1. `experiments/social_science_idea_generation_2026_10_21/` holds the driver, the brief, and a stub `RESULTS.md`.
+1. `experiments/social_science_idea_generation_2026_10_21/` holds the driver, the brief, the prompt files, and a stub `RESULTS.md`.
 2. `lib/load_env_vars.py` can return the OpenAI key and the LangSmith key by name, and the experiment does not contain its own secret client.
 3. The smoke run writes one round record and one cost note under the smoke prefix, and it does not continue into rounds 2 through 5.
 4. After the cost is accepted, the full run writes the top three proposals and the turn log, and it uploads them under the runs prefix.

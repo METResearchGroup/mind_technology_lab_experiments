@@ -2,17 +2,17 @@
 
 ## Goal
 
-Implement [proposal.md](../proposal.md) **Step 1: Add the experiment records and role prompts**, together with the **File structure** tree for `experiments/social_science_idea_generation_2026_10_21/`, the **Schema and key interfaces** Pydantic records and `workflow/constants.py` values (not the `ALLOWLIST` block in `lib/load_env_vars.py`, which is Step 2), and the **Who speaks, and what each agent reads** role list and prompt rules. Create the standalone experiment package under `workflow/` (not `shared/`, to avoid colliding with repository `shared.aws` on `PYTHONPATH`), the committed brief, and documentation stubs. Do not call OpenAI, do not load API keys, and do not add agents, tracing, cost estimation, or run scripts (those are later steps). `CostEstimate` belongs in `workflow/cost.py` in Step 3, not in this step.
+Implement [proposal.md](../proposal.md) **Step 1: Add the experiment records and role prompts**, together with the **File structure** tree for `experiments/social_science_idea_generation_2026_10_21/`, the **Schema and key interfaces** Pydantic records and `workflow/constants.py` values (not the `ALLOWLIST` block in `lib/load_env_vars.py`, which is Step 2), the **Who speaks, and what each agent reads** role list, and the **Prompts** section. Create the standalone experiment package under `workflow/` (not `shared/`, to avoid colliding with repository `shared.aws` on `PYTHONPATH`), the committed brief, and the prompt files. Do not call OpenAI, do not load API keys, and do not add agents, tracing, cost estimation, or run scripts (those are later steps). `CostEstimate` belongs in `workflow/cost.py` in Step 3, not in this step. Copy prompt text into `workflow/prompts/`. Do not put that text in a Python string.
 
 ## Scope (Phase 1)
 
 - **Caller (later):** `src/run_smoke.py`, `src/run_round.py`, and `src/run_study.py` (Step 3 and Step 4) will import `workflow.schemas`, `workflow.roles`, and `workflow.constants`. The step makes those modules importable.
-- **In scope:** Experiment folder, `pyproject.toml` with `package = false`, `uv.lock`, `.gitignore`, `inputs/brief.md`, `README.md`, `SETUP.md`, `RESULTS.md`, and `workflow/__init__.py`, `workflow/constants.py`, `workflow/schemas.py`, `workflow/roles.py` with full field contracts and role system prompts.
+- **In scope:** Experiment folder, `pyproject.toml` with `package = false`, `uv.lock`, `.gitignore`, `inputs/brief.md`, `README.md`, `SETUP.md`, `RESULTS.md`, `workflow/__init__.py`, `workflow/constants.py`, `workflow/schemas.py`, `workflow/roles.py`, `workflow/prompts/__init__.py` (`load_prompt` only), and one markdown file per prompt under `workflow/prompts/personas/` and `workflow/prompts/templates/`.
 - **Out of scope:** `lib/load_env_vars.py` allowlist rows, `workflow/agents.py`, `workflow/tracing.py`, `workflow/cost.py`, anything under `src/`, S3 upload, LangSmith configuration, model calls, Secrets Manager clients inside the experiment, pytest or any `tests/` or `test_*.py` file.
 
 ## Files to inspect
 
-- `/workspace/docs/plans/2026-10-21_social-science-idea-generation_d9ac12/proposal.md` (sections **File structure**, **Schema and key interfaces**, **Who speaks, and what each agent reads**, **Steps** Step 1, committed brief under Schema)
+- `/workspace/docs/plans/2026-10-21_social-science-idea-generation_d9ac12/proposal.md` (sections **File structure**, **Schema and key interfaces**, **Who speaks, and what each agent reads**, **Prompts**, **Steps** Step 1)
 - `/workspace/docs/plans/2026-10-21_social-science-idea-generation_d9ac12/plan.md` (Step 1 summary)
 - `/workspace/experiments/moral_outrage_classification_2026_09_19/pyproject.toml` (standalone experiment, `[tool.uv] package = false`, not a uv workspace member)
 - `/workspace/experiments/moral_outrage_classification_2026_09_19/.gitignore` (pattern for ignoring `outputs/**/*.json`)
@@ -26,7 +26,23 @@ Implement [proposal.md](../proposal.md) **Step 1: Add the experiment records and
 - `experiments/social_science_idea_generation_2026_10_21/pyproject.toml` (create via `uv add`; `package = false`)
 - `experiments/social_science_idea_generation_2026_10_21/uv.lock` (created by `uv add`)
 - `experiments/social_science_idea_generation_2026_10_21/.gitignore` (`outputs/**/*.json`)
-- `experiments/social_science_idea_generation_2026_10_21/inputs/brief.md` (exact text in the brief contract)
+- `experiments/social_science_idea_generation_2026_10_21/inputs/brief.md` (exact text in proposal **Prompts**, subsection **Research brief**)
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/__init__.py` (`load_prompt` only)
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/personas/social_psychologist.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/personas/computer_scientist.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/personas/communications_researcher.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/personas/sociologist.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/personas/political_scientist.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/personas/synthesizer.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/personas/methodologist.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/personas/critic.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/templates/seed.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/templates/comment.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/templates/synthesis.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/templates/method.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/templates/critique.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/templates/revision.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/templates/ballot.md`
 - `experiments/social_science_idea_generation_2026_10_21/workflow/__init__.py` (empty or package marker)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/constants.py`
 - `experiments/social_science_idea_generation_2026_10_21/workflow/schemas.py`
@@ -88,7 +104,7 @@ Field names and shapes match the proposal **Schema and key interfaces** table. U
 
 ### `workflow/roles.py`
 
-- **`RoleSpec`:** `role_id`, `display_name`, `system_prompt` (per proposal table).
+- **`RoleSpec`:** `role_id`, `display_name`, `system_prompt`. `display_name` values are `Social psychologist`, `Computer scientist`, `Communications researcher`, `Sociologist`, `Political scientist`, `Synthesizer`, `Methodologist`, and `Critic`. `system_prompt` is the return value of `load_prompt("personas/<role_id>.md")`, not a string literal.
 - **`ROLE_ORDER`:** tuple of exactly five `RoleSpec` instances in seed order from proposal **Who speaks**. Use these `role_id` values, in this order:
   1. `social_psychologist` for the social psychologist working on computational social science
   2. `computer_scientist` for the computer scientist working on measurement from digital traces
@@ -99,9 +115,12 @@ Field names and shapes match the proposal **Schema and key interfaces** table. U
   - `synthesizer` restates the discussion only
   - `methodologist` writes and revises the design only
   - `critic` names flaws only
-- Every system prompt must include the three rules from proposal **Who speaks**: stay in the assigned job; return only the schema; if a prior study is mentioned, say it was not checked and do not invent a citation.
+- Every persona file is the fenced text under the matching heading in proposal **Prompts**. Every template file is the fenced text under the matching **Template** heading. Do not copy the seven filled ballot subsections into extra files. Those subsections are the ballot template with the voter name already filled.
+- `load_prompt` reads UTF-8 from `workflow/prompts/` and rejects a path that leaves that directory.
 
 ### `inputs/brief.md` (exact text)
+
+Copy the fence under proposal **Prompts**, subsection **Research brief**.
 
 ```text
 The topic is how people update a stated opinion after they read a few comments in a small online group. Propose studies a social scientist could run. Prefer a design that uses public data or a small experiment. Do not propose a software product, and do not invent citations.
@@ -117,7 +136,7 @@ Follow the phase order in the table. Skip phase 4, test design. The plan uses th
 | **2 Scaffold** | Create experiment directory, docs stubs, `.gitignore`, `inputs/brief.md`, `workflow/__init__.py`, empty or minimal `constants.py` / `schemas.py` / `roles.py` stubs, run `uv add` | Tree exists; imports resolve; **commit: scaffold** |
 | **3 Contracts** | Fill `constants.py` values; define all Pydantic models with correct fields; `RoleSpec` and `ROLE_ORDER` structure without final prompt prose if split | Signatures and fields match proposal; **commit: contracts** |
 | **4 Test design** | **Skipped** | N/A |
-| **5 Implement units** | Write full `system_prompt` strings for all eight roles; ensure brief file matches exactly | Records and prompts complete; **commit: prompt text** |
+| **5 Implement units** | Copy each proposal **Prompts** fence into the named markdown file. `roles.py` loads personas through `load_prompt`. No prompt literal in Python. | Records and prompt files match the proposal; **commit: prompt text** |
 | **6 Done** | Run the import check in Commands | `len(ROLE_ORDER) == 5`; no network; no secret read |
 
 Use **three separate git commits** in order: (1) scaffold, (2) contracts, (3) prompt text. Do not batch those into one commit.
@@ -139,6 +158,25 @@ experiments/social_science_idea_generation_2026_10_21/
     constants.py
     schemas.py
     roles.py
+    prompts/
+      __init__.py
+      personas/
+        social_psychologist.md
+        computer_scientist.md
+        communications_researcher.md
+        sociologist.md
+        political_scientist.md
+        synthesizer.md
+        methodologist.md
+        critic.md
+      templates/
+        seed.md
+        comment.md
+        synthesis.md
+        method.md
+        critique.md
+        revision.md
+        ballot.md
 ```
 
 `README.md` should copy the three mermaid diagrams from the proposal (round turn flow, five rounds to vote, LangSmith thread ids). Mention that the smoke command will be documented when `src/run_smoke.py` exists in Step 3.
@@ -194,6 +232,17 @@ EOF
 
 Expected: exit code 0.
 
+Confirm prompt text is in the markdown files and not in Python:
+
+```bash
+cd /workspace/experiments/social_science_idea_generation_2026_10_21
+test -s workflow/prompts/personas/social_psychologist.md
+test -s workflow/prompts/templates/ballot.md
+if grep -R -i "invent a citation" workflow --include='*.py'; then exit 1; fi
+```
+
+Expected: exit code 0, and grep prints nothing.
+
 ## Pass / fail
 
 **Must pass**
@@ -202,11 +251,14 @@ Expected: exit code 0.
 - `len(ROLE_ORDER) == 5`
 - `workflow.schemas` models import
 - `inputs/brief.md` matches the exact brief text
+- Each persona and template file matches the fence in proposal **Prompts**
+- No Python file under the experiment contains `invent a citation`
 - `/workspace/pyproject.toml` unchanged (workspace members still `autoresearch/*` only)
 - No model call during verification
 
 **Must not happen**
 
+- A prompt string literal inside a `.py` file
 - A Secrets Manager client or secret fetch inside the experiment package
 - Any pytest file, `tests/` directory, or `test_*.py`
 - Printing or logging an API key
@@ -215,4 +267,4 @@ Expected: exit code 0.
 
 ## Done when
 
-The package, Pydantic records, role prompts, and committed brief exist under `experiments/social_science_idea_generation_2026_10_21/`, the three implementation commits are pushed (scaffold, contracts, prompt text), and the import check prints `5` with no network and no secret read. Step 2 may then extend `lib/load_env_vars.py` and add agents and tracing.
+The package, Pydantic records, prompt files, and committed brief exist under `experiments/social_science_idea_generation_2026_10_21/`, the three implementation commits are pushed (scaffold, contracts, prompt text), and the import check prints `5` with no network and no secret read. Step 2 may then extend `lib/load_env_vars.py` and add agents and tracing.

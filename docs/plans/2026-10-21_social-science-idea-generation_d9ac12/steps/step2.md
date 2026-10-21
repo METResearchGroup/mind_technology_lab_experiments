@@ -167,7 +167,7 @@ ChatOpenAI(
 Per proposal **The Python driver** and the signature block in **Schema and key interfaces**:
 
 - Call `create_deep_agent` with `tools=[]` (empty list removes domain tools only; filesystem tools still exist unless excluded via harness profile).
-- `system_prompt` = `role.system_prompt` (from `RoleSpec`).
+- `system_prompt` = `role.system_prompt`, which Step 1 loaded from `workflow/prompts/personas/<role_id>.md`. Do not paste prompt text into `agents.py`.
 - `response_format` = the Pydantic `response_model` type for the turn.
 - Register a **HarnessProfile** for model key `openai:gpt-6-sol` with:
   - `general_purpose_subagent` disabled (or the 0.7+ field name that disables the general subagent).

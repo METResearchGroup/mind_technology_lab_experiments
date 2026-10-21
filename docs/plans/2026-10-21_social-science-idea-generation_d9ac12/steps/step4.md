@@ -2,7 +2,7 @@
 
 ## Scope
 
-- **Depends on:** Steps 1 to 3 complete. Step 3 must have passed its smoke command and produced a smoke `cost.json` with a cost note a human can accept. Do not start the 72-call study until that acceptance is recorded outside this repo (for example in the issue or PR thread).
+- **Depends on:** Steps 1 to 3 complete, including `workflow/prompts/templates/ballot.md` and the seven voter personas. Step 3 must have passed its smoke command and produced a smoke `cost.json` with a cost note a human can accept. Do not start the 72-call study until that acceptance is recorded outside this repo (for example in the issue or PR thread).
 - **Caller:** `PYTHONPATH=/workspace:/workspace/experiments/social_science_idea_generation_2026_10_21 uv run --project experiments/social_science_idea_generation_2026_10_21 python -m src.run_study` (blocked in this step; see [Commands](#commands)).
 - **Task:** Implement `run_study` in `experiments/social_science_idea_generation_2026_10_21/src/run_study.py`. The function reads `inputs/brief.md`, runs five independent rounds, runs the seven-ballot vote on a sixth LangSmith thread, writes `study.json` and `RESULTS.md` locally, and uploads only those two files under the `runs/` S3 prefix. Do not launch the full study in this step.
 - **Proposal mapping:** [proposal.md](../proposal.md) section **Steps**, subsection **Step 4: Run five rounds and rank them**; **Who speaks, and what each agent reads** (round isolation and ballot transcript rule); **Tracing** (`run_vote` sixth thread); **Storage** (single `study.json`, no duplicate round objects on S3); **Schema and key interfaces** (`VoteRecord`, `StudyResult`, ranking tie-break); **Expected results** (72 calls, six threads, `RESULTS.md` contents); **Decisions** item 5 (seven voters, synthesizer does not vote) and item 7 (stop until smoke cost is accepted).
@@ -28,7 +28,8 @@ Follow the phase order in the table. Skip phase 4, test design. The plan adds no
 - `/workspace/docs/plans/2026-10-21_social-science-idea-generation_d9ac12/plan.md`
 - `experiments/social_science_idea_generation_2026_10_21/workflow/schemas.py` (`StudyResult`, `VoteRecord`, `RoundRecord`, `Ballot`, `CriterionScore`, `RevisedProposal`)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/constants.py` (`MODEL_ID`, `REASONING_EFFORT`, `S3_BUCKET`, `EXPERIMENT_NAME`)
-- `experiments/social_science_idea_generation_2026_10_21/workflow/roles.py` (`ROLE_ORDER`)
+- `experiments/social_science_idea_generation_2026_10_21/workflow/prompts/templates/ballot.md`
+- `experiments/social_science_idea_generation_2026_10_21/workflow/roles.py` (`ROLE_ORDER`, persona paths)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/tracing.py` (`configure_tracing`)
 - `experiments/social_science_idea_generation_2026_10_21/src/run_round.py` (`run_round`, `revised_proposal`)
 - `experiments/social_science_idea_generation_2026_10_21/src/run_smoke.py` (S3 key shape and `run_id` pattern from Step 3)
@@ -49,6 +50,7 @@ Follow the phase order in the table. Skip phase 4, test design. The plan adds no
 - `lib/load_env_vars.py`, anything under `/workspace/shared/` except reading APIs, root `pyproject.toml`
 - Any pytest file, `tests/`, or `test_*.py`
 - Plan or proposal markdown under `docs/plans/`
+- Prompt markdown under `workflow/prompts/` (Step 1 already wrote it)
 - Git-tracking `outputs/**/*.json` from a live run
 
 ## Work
@@ -79,7 +81,7 @@ Follow the phase order in the table. Skip phase 4, test design. The plan adds no
    **Per-proposal total on one ballot:** sum of the three scores, computed in Python inside `run_vote`, not requested from the model ([proposal.md](../proposal.md) **Schema and key interfaces** `Ballot` row).
    **Ranking:** sort round indexes by mean score total across ballots, higher first. Tie-break: higher mean `feasible`, then lower `round_index` ([proposal.md](../proposal.md) **Schema and key interfaces**).
    **`top_three`:** first three entries of `ranking`.
-   `run_study` calls `run_vote`. Ballot prompts and ranking live only in `run_vote`.
+   `run_study` calls `run_vote`. `run_vote` loads `workflow/prompts/templates/ballot.md` and the voter's persona from `RoleSpec.system_prompt`. Ranking lives only in `run_vote`. Do not paste ballot text into `run_study.py`.
 
 7. **Token totals:** Set `total_input_tokens` and `total_output_tokens` on `StudyResult` to the sum of `input_tokens` and `output_tokens` across every `TurnRecord` in all five rounds plus every `Ballot` in `vote`. Do not add `reasoning_tokens` into `output_tokens`. Billed output already includes reasoning.
 
