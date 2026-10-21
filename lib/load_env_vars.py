@@ -4,6 +4,8 @@
 Run from the repository root (requires AWS credentials for a live run):
 
     uv run python -c "from lib.load_env_vars import EnvVarsContainer; value = EnvVarsContainer.get_env_var('GITHUB_PAT_TOKEN', required=True); print('ok', len(value))"
+    uv run python -c "from lib.load_env_vars import EnvVarsContainer; value = EnvVarsContainer.get_env_var('OPENAI_API_KEY', required=True); print('ok', len(value))"
+    uv run python -c "from lib.load_env_vars import EnvVarsContainer; value = EnvVarsContainer.get_env_var('LANGSMITH_API_KEY', required=True); print('ok', len(value))"
 """
 
 from __future__ import annotations
@@ -15,6 +17,8 @@ from shared.aws.secretsmanager import load_secret_field, secrets_manager_client
 
 ALLOWLIST: Final[dict[str, tuple[str, str]]] = {
     "GITHUB_PAT_TOKEN": ("github-pat-token", "GH_TOKEN"),
+    "OPENAI_API_KEY": ("openai-api-key", "OPENAI_API_KEY"),
+    "LANGSMITH_API_KEY": ("langsmith-api-key", "LANGSMITH_API_KEY"),
 }
 
 
