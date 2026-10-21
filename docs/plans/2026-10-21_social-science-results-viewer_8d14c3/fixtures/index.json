@@ -1,0 +1,10 @@
+{
+  "runs": [
+    {
+      "run_id": "mock-2026-10-21",
+      "uploaded_at": "2026-10-21T18:40:12Z",
+      "study_file": "study.json",
+      "source": "fixture"
+    }
+  ]
+}
