@@ -1,0 +1,1 @@
+The topic is how people update a stated opinion after they read a few comments in a small online group. Propose studies a social scientist could run. Prefer a design that uses public data or a small experiment. Do not propose a software product, and do not invent citations.
