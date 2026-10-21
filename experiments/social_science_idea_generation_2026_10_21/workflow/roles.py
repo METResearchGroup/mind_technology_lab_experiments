@@ -10,10 +10,12 @@ Run from the repository root:
 
 from dataclasses import dataclass
 
+from workflow.prompts import load_prompt
+
 
 @dataclass(frozen=True)
 class RoleSpec:
-    """One speaker. ``system_prompt`` is filled from the persona file."""
+    """One speaker. ``system_prompt`` is the persona file for ``role_id``."""
 
     role_id: str
     display_name: str
@@ -21,7 +23,12 @@ class RoleSpec:
 
 
 def _role(role_id: str, display_name: str) -> RoleSpec:
-    return RoleSpec(role_id=role_id, display_name=display_name, system_prompt="")
+    prompt_path = f"personas/{role_id}.md"
+    return RoleSpec(
+        role_id=role_id,
+        display_name=display_name,
+        system_prompt=load_prompt(prompt_path),
+    )
 
 
 ROLE_ORDER: tuple[RoleSpec, ...] = (
