@@ -1,8 +1,8 @@
 # Social science idea generation
 
-One brief goes through a fixed discussion. Each round starts with a different discipline. The other four roles comment twice. A synthesizer, a methodologist, and a critic then produce one revised proposal. After five rounds, seven agents score the revisions and the driver keeps the top three.
+One brief goes through a fixed discussion. Each round starts with a different discipline, the other four roles comment twice, and a synthesizer, a methodologist, and a critic then produce one revised proposal. After five rounds, seven agents score the revisions, and the driver keeps the top three.
 
-The smoke run is round 1 plus a cost note. It stops before rounds 2 through 5 and before the vote.
+The smoke run is round 1 plus a cost note, and it stops before rounds 2 through 5 and before the vote.
 
 ## Round
 

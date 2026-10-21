@@ -1,6 +1,6 @@
 # Setup
 
-This experiment is standalone. Install from this folder, not from the repository root.
+This experiment is standalone. Install from this folder instead of the repository root.
 
 ```bash
 cd experiments/social_science_idea_generation_2026_10_21 && uv sync
@@ -18,7 +18,7 @@ The command creates a local `.venv` for this experiment, and it does not change 
 
 ## LangSmith
 
-Project name: `social-science-idea-generation`
+The LangSmith project name is `social-science-idea-generation`.
 
 ## Keys
 
