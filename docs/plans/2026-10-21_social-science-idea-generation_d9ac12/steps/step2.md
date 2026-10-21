@@ -1,6 +1,6 @@
 # Step 2: Connect keys, the model, and LangSmith
 
-Implements [proposal.md](../proposal.md) **Step 2** (lines 256 to 258) and the key-loading design in **Model, price, and keys** (lines 21 to 29), **The Python driver** (lines 13 to 19, harness profile only), **Tracing** (lines 88 to 90), and the allowlist plus agent signatures in **Schema and key interfaces** (lines 170 to 191).
+Implements [proposal.md](../proposal.md) **Step 2**, the key-loading design in **Model, price, and keys**, the harness profile in **The Python driver**, **Tracing**, and the allowlist plus agent signatures in **Schema and key interfaces**.
 
 The step does not call the model, and it does not add a pytest file, a `tests/` directory, or a `test_*.py` file.
 
@@ -10,10 +10,10 @@ The step does not call the model, and it does not add a pytest file, a `tests/` 
 
 1. Extend `ALLOWLIST` in `lib/load_env_vars.py` with OpenAI and LangSmith rows while keeping the GitHub row.
 2. Add `workflow/tracing.py` with `configure_tracing`.
-3. Add `workflow/agents.py` with `build_chat_model`, `build_role_agent`, and the two `EnvVarsContainer.get_env_var(..., required=True)` call sites (exact names below).
+3. Add `workflow/agents.py` with `build_chat_model` and `build_role_agent`. Those functions take the key string as an argument. `run_smoke`, `run_round`, and `run_study` call `EnvVarsContainer.get_env_var`. `agents.py` does not fetch secrets.
 4. Prove wiring with offline commands (allowlist print and import check).
 
-**Done when:** pass/fail at the bottom holds, two commits are pushed, and no forbidden file changed.
+**Done when:** the pass/fail table at the end of this file holds, two commits are pushed, and no forbidden file changed.
 
 ---
 
@@ -27,7 +27,7 @@ Follow the phase order in the table. Skip phase 4, test design. Use the commands
 | 2 Scaffold | Create `workflow/tracing.py` and `workflow/agents.py` with imports and stub bodies if needed so imports resolve. | `PYTHONPATH` import check prints `ok`. |
 | 3 Contracts | Final signatures match proposal and this step. No `run_turn` yet. | Signatures stable; commit allowlist separately from workflow files. |
 | ~~4 Test design~~ | **Skipped** (forbidden for this plan). | N/A |
-| 5 Implement | Fill allowlist, docstrings, `configure_tracing`, `build_chat_model`, `build_role_agent`, and key call sites. | Commands below pass. |
+| 5 Implement | Fill allowlist, docstrings, `configure_tracing`, `build_chat_model`, and `build_role_agent`. | Commands in this file pass. |
 | 6 Done | No model run; no secret printed; no experiment-side Secrets Manager client. | Pass/fail section. |
 
 **Commits (two, in order):**
@@ -60,7 +60,7 @@ Follow the phase order in the table. Skip phase 4, test design. Use the commands
 
 ### Preconditions
 
-- Step 1 should exist so `workflow` is a package under `experiments/social_science_idea_generation_2026_10_21/` with `RoleSpec` in `workflow/roles.py` and Pydantic models in `workflow/schemas.py`. If Step 1 is not merged yet, create only the minimal `workflow/__init__.py` needed for imports; do not implement Step 1 schemas in this step.
+- Step 1 is already done. `workflow` is a package under `experiments/social_science_idea_generation_2026_10_21/` with `RoleSpec` and `ROLE_ORDER` in `workflow/roles.py` and Pydantic models, including `TurnKind`, in `workflow/schemas.py`. Do not recreate Step 1 files in this step.
 
 ### Runtime layout
 
@@ -118,7 +118,7 @@ Per proposal **Tracing** (lines 88 to 90):
 - Use `os.environ[...]` (or equivalent) because LangSmith reads these from the process environment. This is not a Secrets Manager fetch.
 - Do **not** log or print the key.
 
-Thread id helpers (`langsmith.uuid7`) belong in this module in a later step when `run_round` exists; optional stub is out of scope unless Step 1 already added names.
+`langsmith.uuid7` thread ids are created in `run_round` and in `run_vote`. Do not add a thread-id helper in `tracing.py`.
 
 ---
 
@@ -126,23 +126,22 @@ Thread id helpers (`langsmith.uuid7`) belong in this module in a later step when
 
 ### Imports
 
-- `from lib.load_env_vars import EnvVarsContainer`
 - `ChatOpenAI` from `langchain_openai` (or the import path pinned in the experiment `pyproject.toml`).
 - `create_deep_agent` and harness types from `deepagents` per installed version.
 - `RoleSpec` from `workflow.roles`.
 - Pydantic `BaseModel` for `response_model` typing.
 - Return type for the agent: `CompiledStateGraph` (or the type `create_deep_agent` returns in the installed version).
 
-### Key call sites (exact lines)
+### Key reads
 
-These two lines must appear in `agents.py` (not in a separate secrets module). They must **not** run at import time, so the import check works without AWS:
+`agents.py` does not call `EnvVarsContainer.get_env_var`. `build_chat_model` takes `api_key: str`. `configure_tracing` takes `langsmith_api_key: str`. Step 3 and Step 4 call these two lines before any model use, inside `run_smoke`, `run_round`, or `run_study`, and not at import time:
 
 ```python
 openai_api_key = EnvVarsContainer.get_env_var("OPENAI_API_KEY", required=True)
 langsmith_api_key = EnvVarsContainer.get_env_var("LANGSMITH_API_KEY", required=True)
 ```
 
-Place them in a function that Step 3 will call before model use (for example a small `read_allowlisted_keys()` returning `(openai_api_key, langsmith_api_key)`). Do **not** name helpers `load_openai_api_key` or `load_langsmith_api_key`. Do not add `build_secrets_client`.
+Do not add `read_allowlisted_keys`, `load_openai_api_key`, `load_langsmith_api_key`, or `build_secrets_client`.
 
 ### `build_chat_model(api_key: str) -> ChatOpenAI`
 
@@ -165,7 +164,7 @@ ChatOpenAI(
 
 ### `build_role_agent(role, response_model, chat_model)`
 
-Per proposal **The Python driver** (lines 15 to 17) and signature block (lines 187 to 191):
+Per proposal **The Python driver** and the signature block in **Schema and key interfaces**:
 
 - Call `create_deep_agent` with `tools=[]` (empty list removes domain tools only; filesystem tools still exist unless excluded via harness profile).
 - `system_prompt` = `role.system_prompt` (from `RoleSpec`).
@@ -221,7 +220,7 @@ uv run python -c "from lib.load_env_vars import EnvVarsContainer; value = EnvVar
 | Pass | Fail |
 |------|------|
 | Three allowlist rows; GitHub row unchanged | Extra allowlist entries or missing new rows |
-| Experiment imports `build_chat_model`, `build_role_agent`, `configure_tracing` | Import runs `get_env_var` at module import time and breaks offline import check |
+| Experiment imports `build_chat_model`, `build_role_agent`, `configure_tracing` | Import runs `get_env_var` at module import time |
 | No model API call in this step | Any chat completion in verification or module init |
 | No new secret client in experiment code | `secrets_manager_client` / `load_secret_field` imported in `workflow/` |
 | No key material in logs or stdout | Printing or logging key values |
@@ -236,5 +235,4 @@ uv run python -c "from lib.load_env_vars import EnvVarsContainer; value = EnvVar
 |------|------------|
 | `deepagents` harness API drift vs proposal field names | Inspect installed package before implementing `build_role_agent`; document actual field names if they differ. |
 | `ChatOpenAI` output cap parameter name (`max_tokens` vs `max_completion_tokens`) | Match pinned `langchain-openai` docs for Responses API + `gpt-6-sol`. |
-| Step 1 package layout missing | Minimal `workflow/__init__.py` only; do not fold Step 1 into Step 2. |
-| Accidental secret fetch on import | Keep the two `get_env_var` lines inside a function not called from import check. |
+| Accidental secret fetch on import | Do not call `get_env_var` from `agents.py` or from module import. |

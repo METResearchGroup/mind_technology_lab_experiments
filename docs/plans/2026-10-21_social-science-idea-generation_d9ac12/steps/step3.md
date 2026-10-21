@@ -33,7 +33,7 @@ Follow the phase order in the table in this file. Skip phase 4, test design. The
 ```text
 experiments/social_science_idea_generation_2026_10_21/
   workflow/cost.py          new
-  src/__init__.py           add only if needed for `python -m src.run_smoke`
+  src/__init__.py           empty package marker, required for `python -m src.run_smoke`
   src/run_round.py          new
   src/run_smoke.py          new
 ```
@@ -45,12 +45,13 @@ experiments/social_science_idea_generation_2026_10_21/
 - [proposal.md](../proposal.md) (sections cited above)
 - [plan.md](../plan.md) (Step 3 summary, smoke-as-check)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/schemas.py` (`TurnRecord`, `RoundRecord`, `TurnKind`, payload models)
-- `experiments/social_science_idea_generation_2026_10_21/workflow/roles.py` (`RoleSpec`, role lookup, `ROLE_ORDER` or equivalent from `workflow/constants.py`)
-- `experiments/social_science_idea_generation_2026_10_21/workflow/constants.py` (`ROLE_ORDER`, `DISCUSSION_ITERATIONS`, price constants, `S3_BUCKET`, `EXPERIMENT_NAME`, `PRICE_PAGE_URL`)
+- `experiments/social_science_idea_generation_2026_10_21/workflow/roles.py` (`RoleSpec`, `ROLE_ORDER`)
+- `experiments/social_science_idea_generation_2026_10_21/workflow/constants.py` (`DISCUSSION_ITERATIONS`, price constants, `S3_BUCKET`, `EXPERIMENT_NAME`, `PRICE_PAGE_URL`)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/agents.py` (`build_chat_model`, `build_role_agent`)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/tracing.py` (`configure_tracing`)
 - `lib/load_env_vars.py` (`EnvVarsContainer.get_env_var`, read-only in this step)
 - `shared/aws/s3.py` (`S3.upload_file`)
+- `shared/aws/constants.py` (`DEFAULT_REGION_NAME`, `us-east-2`)
 
 ## Files allowed to change
 
@@ -77,7 +78,7 @@ Gate: imports resolve from the smoke `PYTHONPATH`; public signatures match the p
 
 | Symbol | Contract |
 | --- | --- |
-| `CostEstimate` | Pydantic model (or dataclass if Step 1 standardized on Pydantic everywhere). Fields: `full_input_tokens`, `full_output_tokens`, `estimated_cost_usd`, `price_page_url`, `note`. |
+| `CostEstimate` | Pydantic model. Fields: `full_input_tokens`, `full_output_tokens`, `estimated_cost_usd`, `price_page_url`, `note`. |
 | `estimate_full_run_cost(round_record: RoundRecord) -> CostEstimate` | Pure function. No network. No hard-coded dollar amount from a real run. Uses constants `INPUT_USD_PER_MILLION` (2.0) and `OUTPUT_USD_PER_MILLION` (10.0) from `workflow/constants.py`. Sets `price_page_url` to `PRICE_PAGE_URL`. |
 
 **Token sums from the smoke round:**
@@ -103,7 +104,8 @@ estimated_cost_usd = full_input / 1_000_000 * INPUT_USD_PER_MILLION + full_outpu
 **`note` field (required wording intent):**
 
 - State that the figure is **estimated from the smoke round** (round 1), not measured across five rounds.
-- State that a prompt over **272,000 input tokens** uses the long-context schedule (2x input and 1.5x output for the **whole** request) per the model page in the proposal.
+- State that a prompt over **272,000 input tokens** uses the long-context schedule (2x input and 1.5x output for the **whole** request).
+- State that the formula stays on the short-context rates and does not switch schedules.
 
 Do not claim a measured dollar total in code comments or in `CostEstimate` before the smoke run completes. After smoke, `estimated_cost_usd` is computed from the formula above.
 
@@ -113,7 +115,7 @@ Do not claim a measured dollar total in code comments or in `CostEstimate` befor
 | --- | --- |
 | `transcript_for(kind: TurnKind, brief: str, turns: list[TurnRecord]) -> str` | Builds user-visible context only. No prior rounds. Rules match the proposal table: seed gets brief only; comment gets brief, seed payload, and earlier comments in **this** round; synthesizer gets brief and every turn so far; method (first pass) gets brief and synthesized idea; critique gets brief, idea, method; revision gets brief, idea, method, critique. Serialize payloads readably (JSON or labeled sections). |
 | `revised_proposal(round_record: RoundRecord) -> RevisedProposal` | Reads the revision turn's `payload` into `RevisedProposal`. |
-| `run_turn(...) -> TurnRecord` | Same signature as proposal: `role`, `kind`, `response_model`, `transcript`, `thread_id`, `chat_model`. One `create_deep_agent` invocation via `build_role_agent`. `tools` stay empty at the harness level. Pass `metadata.thread_id` on the graph run so child runs share the thread. Record `input_tokens`, `output_tokens`, `reasoning_tokens` (0 if absent on usage), `latency_ms`. On structured parse failure or tool call when tools must be empty: retry **once**; second failure raises and aborts the round (no invented proposal). |
+| `run_turn(...) -> TurnRecord` | Same signature as proposal: `role`, `kind`, `response_model`, `transcript`, `thread_id`, `chat_model`. One `create_deep_agent` call via `build_role_agent`. `tools` stay empty at the harness level. Pass `metadata.thread_id` on the graph run so child runs share the thread. Record `input_tokens`, `output_tokens`, `reasoning_tokens` (0 if absent on usage), `latency_ms`. On structured parse failure or tool call when tools must be empty: retry **once**; second failure raises and aborts the round (no invented proposal). |
 | `run_round(round_index: int, brief: str, run_id: str) -> RoundRecord` | Full round orchestration. |
 
 **Round flow (round 1 in smoke; `run_round` must support any `round_index` 1..5 for Step 4):**
@@ -122,12 +124,12 @@ Do not claim a measured dollar total in code comments or in `CostEstimate` befor
 2. `chat_model = build_chat_model(EnvVarsContainer.get_env_var("OPENAI_API_KEY", required=True))`.
 3. `thread_id = str(langsmith.uuid7())` (one id per round).
 4. `seed_role = ROLE_ORDER[round_index - 1]` (round 1 seed is the social psychologist).
-5. **Seed:** one `run_turn` with seed role, kind seed, `ResearchIdea`.
-6. **Comments:** `DISCUSSION_ITERATIONS` (2) passes. Each pass, four agents comment in rotation starting with the role **after** `seed_role` in `ROLE_ORDER`, skipping the seed. Eight comment turns total. Seed does not comment on its own idea.
-7. **Synthesizer:** one turn, `ResearchIdea` (or schema Step 1 chose for synthesizer output).
-8. **Methodologist:** first pass, `MethodPlan`.
-9. **Critic:** `Critique`.
-10. **Methodologist:** revision, `RevisedProposal`.
+5. **Seed:** one `run_turn` with seed role, kind `seed`, `ResearchIdea`.
+6. **Comments:** `DISCUSSION_ITERATIONS` (2) passes. Each pass, four agents comment in rotation starting with the role **after** `seed_role` in `ROLE_ORDER`, skipping the seed. Eight comment turns total, kind `comment`. Seed does not comment on its own idea.
+7. **Synthesizer:** one turn, kind `synthesis`, `ResearchIdea`.
+8. **Methodologist:** first pass, kind `method`, `MethodPlan`.
+9. **Critic:** kind `critique`, `Critique`.
+10. **Methodologist:** revision, kind `revision`, `RevisedProposal`.
 
 **Call count per round:** 1 + 8 + 1 + 1 + 1 + 1 = **13** model calls.
 
@@ -154,7 +156,7 @@ s3://mind-technology-lab-experiments/experiments/social_science_idea_generation_
 s3://mind-technology-lab-experiments/experiments/social_science_idea_generation_2026_10_21/smoke/<run_id>/cost.json
 ```
 
-Use `S3(S3_BUCKET).upload_file(local_path, key)` from `shared.aws.s3`. Prefix matches `EXPERIMENT_NAME` in constants and `AGENTS.md` storage rule.
+Use `S3(S3_BUCKET, region_name=DEFAULT_REGION_NAME).upload_file(local_path, key)` from `shared.aws.s3`, with `DEFAULT_REGION_NAME` from `shared.aws.constants`. Prefix matches `EXPERIMENT_NAME` in constants and `AGENTS.md` storage rule.
 
 Add an empty `src/__init__.py` so `python -m src.run_smoke` works when `PYTHONPATH` includes the experiment directory.
 
@@ -166,7 +168,7 @@ One Git commit per unit. Do not batch.
 | --- | --- | --- |
 | 1 | `cost.py` contracts | `workflow/cost.py` with `CostEstimate` and full `estimate_full_run_cost` implementation (no API). |
 | 2 | Round driver | `src/run_round.py` with `transcript_for`, `revised_proposal`, `run_turn`, `run_round`. |
-| 3 | Smoke entrypoint | `src/run_smoke.py` (+ `src/__init__.py` if needed). |
+| 3 | Smoke entrypoint | `src/run_smoke.py` and empty `src/__init__.py`. |
 
 After commit 3, run verification (Phase 6). Do not start rounds 2 through 5. Do not call `run_vote`.
 
@@ -192,7 +194,7 @@ PYTHONPATH=/workspace:/workspace/experiments/social_science_idea_generation_2026
 
 **Must fail (regression checks):**
 
-- Running five rounds or invoking `run_vote` from smoke.
+- Running five rounds or calling `run_vote` from smoke.
 - Printing `OPENAI_API_KEY`, `LANGSMITH_API_KEY`, or any secret value.
 - Adding a second Secrets Manager or env wrapper inside the experiment (keys only via `EnvVarsContainer`).
 - Creating `src/run_study.py`, pytest files, or `tests/` in this step.
@@ -211,7 +213,7 @@ Call `configure_tracing(langsmith_api_key)` before any model call. Do not print 
 
 ## Done when
 
-1. Three commits land in order: `cost.py`, `run_round.py`, `run_smoke.py` (plus `src/__init__.py` if used).
+1. Three commits land in order: `cost.py`, `run_round.py`, `run_smoke.py` plus empty `src/__init__.py`.
 2. Smoke command above exits 0 with evidence (terminal output, local JSON, S3 listing or head object).
 3. `cost.json` reflects the formula in [Expected results](../proposal.md#expected-results) applied to the smoke `RoundRecord`.
 4. Step 4 can start only after a human accepts the smoke cost note (Decision 7); this step does not run `run_study`.

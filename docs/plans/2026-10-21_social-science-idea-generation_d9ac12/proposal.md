@@ -103,7 +103,7 @@ Root `shared/` does not import the new experiment. The new experiment does not i
 
 ### Dependencies
 
-The experiment has its own `pyproject.toml` and is not a uv workspace member. Root workspace members are only `autoresearch/*`, and the root environment is for repo tooling. The experiment depends on `deepagents`, `langchain` with the OpenAI extra, `langsmith`, `pydantic`, and `boto3`. You pin the versions in the implementation plan, to the releases current then. The root `pyproject.toml` stays unchanged.
+The experiment has its own `pyproject.toml` and is not a uv workspace member. Root workspace members are only `autoresearch/*`, and the root environment is for repo tooling. The experiment depends on `deepagents`, `langchain` with the OpenAI extra, `langsmith`, `pydantic`, `boto3`, and `tiktoken`. Step 3 adds `tiktoken` so the ballot prompt can be counted with encoding `o200k_base`. You pin the versions when you run `uv add`, to the releases current then. The root `pyproject.toml` stays unchanged.
 
 ## File structure
 
@@ -122,17 +122,20 @@ experiments/social_science_idea_generation_2026_10_21/
   SETUP.md               allowlist names, region, model id, LangSmith project
   RESULTS.md             stub until a full run, then the top three proposals
   pyproject.toml         experiment dependencies, not root
+  uv.lock                pins written by uv add
   .gitignore             outputs/**/*.json
   inputs/brief.md        the committed brief
-  workflow/constants.py    model id, prices, role order, S3 names
-  workflow/schemas.py      Pydantic records
-  workflow/roles.py        RoleSpec and the system prompts
-  workflow/tracing.py      configure_tracing, thread ids
+  workflow/__init__.py     package marker
+  workflow/constants.py    model id, prices, S3 names
+  workflow/schemas.py      Pydantic records, including TurnKind
+  workflow/roles.py        RoleSpec, ROLE_ORDER, and the system prompts
+  workflow/tracing.py      configure_tracing
   workflow/agents.py       ChatOpenAI, create_deep_agent
   workflow/cost.py         estimate_full_run_cost
+  src/__init__.py          package marker for python -m
   src/run_round.py       one round
   src/run_smoke.py       round 1, then the cost estimate
-  src/run_study.py       five rounds, the vote, RESULTS.md, S3 upload
+  src/run_study.py       five rounds, run_vote, RESULTS.md, S3 upload
 ```
 
 ### S3
@@ -158,8 +161,9 @@ The records are the objects the driver writes. `run_vote` and `estimate_full_run
 | `Critique` | `workflow/schemas.py` (new) | Fields: `fatal` (bool), `flaws` (list of strings), `required_change`. |
 | `RevisedProposal` | `workflow/schemas.py` (new) | Revision turn. Fields: `idea` (`ResearchIdea`), `method` (`MethodPlan`), `what_changed`. |
 | `CriterionScore` | `workflow/schemas.py` (new) | One proposal's scores. Fields: `round_index`, `non_obvious`, `feasible`, `method_fits_question`. Each score is an int from 1 to 5. |
-| `Ballot` | `workflow/schemas.py` (new) | Fields: `voter`, `scores` (five `CriterionScore` rows). The total is the sum of the three scores, computed in code. |
-| `TurnRecord` | `workflow/schemas.py` (new) | One model call. Fields: `role`, `kind`, `iteration`, `payload`, `input_tokens`, `output_tokens`, `reasoning_tokens`, `latency_ms`. Stored. |
+| `Ballot` | `workflow/schemas.py` (new) | Fields: `voter`, `scores` (five `CriterionScore` rows), `input_tokens`, `output_tokens`, `reasoning_tokens`. The score total is the sum of the three scores, computed in code. Token fields come from that ballot's model call. |
+| `TurnKind` | `workflow/schemas.py` (new) | String enum: `seed`, `comment`, `synthesis`, `method`, `critique`, `revision`, `ballot`. |
+| `TurnRecord` | `workflow/schemas.py` (new) | One model call. Fields: `role`, `kind` (`TurnKind`), `iteration`, `payload`, `input_tokens`, `output_tokens`, `reasoning_tokens`, `latency_ms`. Stored. |
 | `RoundRecord` | `workflow/schemas.py` (new) | Fields: `round_index`, `seed_role`, `thread_id`, `brief_sha256`, `turns`. Stored. The revision turn holds the `RevisedProposal`. |
 | `VoteRecord` | `workflow/schemas.py` (new) | Fields: `thread_id`, `ballots`, `ranking` (round indexes, best first), `top_three`. Stored. |
 | `StudyResult` | `workflow/schemas.py` (new) | Fields: `run_id`, `model_id`, `reasoning_effort`, `brief_sha256`, `rounds`, `vote`, `total_input_tokens`, `total_output_tokens`. Stored as `study.json`. |
@@ -263,7 +267,7 @@ The step adds `OPENAI_API_KEY` and `LANGSMITH_API_KEY` to `ALLOWLIST` in `lib/lo
 
 ### Step 4: Run five rounds and rank them
 
-`run_study` reads the same brief, runs rounds 1 through 5, and then runs the seven ballots on a sixth thread. `run_study` writes `study.json` and `RESULTS.md`, and uploads both under `runs/`. `study.json` contains the rounds and the vote, so you do not write a second copy of each round. Step 4 waits until you accept the smoke cost.
+`run_study` reads the same brief, runs rounds 1 through 5, and then runs the seven ballots on a sixth thread. `run_vote` is defined in `src/run_study.py`. `run_study` writes `study.json` and `RESULTS.md`, and uploads both under `runs/`. `study.json` contains the rounds and the vote, so you do not write a second copy of each round. Step 4 waits until you accept the smoke cost.
 
 ## Expected results
 
@@ -282,7 +286,7 @@ estimated_cost_usd = full_input / 1000000 * 2 + full_output / 1000000 * 10
 
 `revision_output_tokens` overestimates one ballot's output, because a ballot is fifteen integers and a revision is a full proposal. Multiplying the smoke round by 5 assumes the later rounds are about the same length as round 1.
 
-The planning scenario is estimated before any smoke measurement. At 8,000 input tokens and 6,000 output tokens on each of 72 calls, input is `72 * 8000 / 1000000 * 2` = $1.15. Output is `72 * 6000 / 1000000 * 10` = $4.32. The scenario total is $5.47. If every call used the full 25,000 output token cap, output would be `72 * 25000 / 1000000 * 10` = $18.00. The same input assumption would bring that total to $19.15. The cap limits the output bill. Input tokens can exceed the cap. A prompt over 272,000 tokens uses the long context schedule.
+The planning scenario is estimated before any smoke measurement. At 8,000 input tokens and 6,000 output tokens on each of 72 calls, input is `72 * 8000 / 1000000 * 2` = $1.15. Output is `72 * 6000 / 1000000 * 10` = $4.32. The scenario total is $5.47. If every call used the full 25,000 output token cap, output would be `72 * 25000 / 1000000 * 10` = $18.00. The same input assumption would bring that total to $19.15. The cap limits the output bill. Input tokens can exceed the cap. A prompt over 272,000 input tokens uses the long context schedule, which is 2x input and 1.5x output for the whole request. The formula stays on the short-context rates and does not switch. The cost note must say that.
 
 Billy's figure of about $50 in the issue was for one or two rounds on Opus 5.5 at medium effort. The $50 figure applies to Opus 5.5. The `gpt-6-sol` estimate is the $5.47 to $19.15 scenario.
 

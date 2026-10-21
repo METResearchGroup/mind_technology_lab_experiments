@@ -2,12 +2,12 @@
 
 ## Scope
 
-- **Depends on:** Steps 1 to 3 complete. Step 3 must have passed its import check and produced a smoke `cost.json` with a cost note a human can accept. Do not start the 72-call study until that acceptance is recorded outside this repo (for example in the issue or PR thread).
+- **Depends on:** Steps 1 to 3 complete. Step 3 must have passed its smoke command and produced a smoke `cost.json` with a cost note a human can accept. Do not start the 72-call study until that acceptance is recorded outside this repo (for example in the issue or PR thread).
 - **Caller:** `PYTHONPATH=/workspace:/workspace/experiments/social_science_idea_generation_2026_10_21 uv run --project experiments/social_science_idea_generation_2026_10_21 python -m src.run_study` (blocked in this step; see [Commands](#commands)).
 - **Task:** Implement `run_study` in `experiments/social_science_idea_generation_2026_10_21/src/run_study.py`. The function reads `inputs/brief.md`, runs five independent rounds, runs the seven-ballot vote on a sixth LangSmith thread, writes `study.json` and `RESULTS.md` locally, and uploads only those two files under the `runs/` S3 prefix. Do not launch the full study in this step.
 - **Proposal mapping:** [proposal.md](../proposal.md) section **Steps**, subsection **Step 4: Run five rounds and rank them**; **Who speaks, and what each agent reads** (round isolation and ballot transcript rule); **Tracing** (`run_vote` sixth thread); **Storage** (single `study.json`, no duplicate round objects on S3); **Schema and key interfaces** (`VoteRecord`, `StudyResult`, ranking tie-break); **Expected results** (72 calls, six threads, `RESULTS.md` contents); **Decisions** item 5 (seven voters, synthesizer does not vote) and item 7 (stop until smoke cost is accepted).
 - **Plan mapping:** [plan.md](../plan.md) Step 4 and **What "done" looks like** items 4 and 5.
-- **Out of scope:** Running the 72-call study before smoke cost acceptance; pytest, `tests/`, or any `test_*.py`; re-implementing `run_round`, `run_vote`, or `estimate_full_run_cost`; editing `lib/load_env_vars.py`, repository `shared/`, root `pyproject.toml`; uploading per-round JSON or `vote.json`; committing `outputs/**/study.json` from a live run.
+- **Out of scope:** Running the 72-call study before smoke cost acceptance; pytest, `tests/`, or any `test_*.py`; re-implementing `run_round` or `estimate_full_run_cost`; editing `lib/load_env_vars.py`, repository `shared/`, root `pyproject.toml`; uploading per-round JSON or `vote.json`; committing `outputs/**/study.json` from a live run. Define `run_vote` in `src/run_study.py`.
 
 ## Implement-from-spec phases (skip test design)
 
@@ -30,7 +30,7 @@ Follow the phase order in the table. Skip phase 4, test design. The plan adds no
 - `experiments/social_science_idea_generation_2026_10_21/workflow/constants.py` (`MODEL_ID`, `REASONING_EFFORT`, `S3_BUCKET`, `EXPERIMENT_NAME`)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/roles.py` (`ROLE_ORDER`)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/tracing.py` (`configure_tracing`)
-- `experiments/social_science_idea_generation_2026_10_21/src/run_round.py` (`run_round`, `run_vote`, `revised_proposal` if needed for `RESULTS.md`)
+- `experiments/social_science_idea_generation_2026_10_21/src/run_round.py` (`run_round`, `revised_proposal`)
 - `experiments/social_science_idea_generation_2026_10_21/src/run_smoke.py` (S3 key shape and `run_id` pattern from Step 3)
 - `experiments/social_science_idea_generation_2026_10_21/inputs/brief.md`
 - `experiments/social_science_idea_generation_2026_10_21/RESULTS.md` (stub from Step 1; leave unchanged until an allowed full run)
@@ -75,13 +75,13 @@ Follow the phase order in the table. Skip phase 4, test design. The plan adds no
 6. **Vote:** Define `run_vote(rounds, run_id) -> VoteRecord` in `src/run_study.py` and call it from `run_study`. The vote uses a sixth `langsmith.uuid7` thread ([proposal.md](../proposal.md) **Tracing**, **Step 4**).
    **Voters (seven ballots):** the five disciplinary roles, the methodologist, and the critic. The synthesizer does not vote ([proposal.md](../proposal.md) **Decisions** item 5).
    **Ballot input:** the brief and the five **revised** proposals only; no round transcripts ([proposal.md](../proposal.md) table row **Ballot**).
-   **Scores:** each ballot returns five `CriterionScore` rows with `non_obvious`, `feasible`, and `method_fits_question` as integers 1 to 5.
+   **Scores:** each ballot returns five `CriterionScore` rows with `non_obvious`, `feasible`, and `method_fits_question` as integers 1 to 5. Kind for the model call is `ballot`. Store `input_tokens`, `output_tokens`, and `reasoning_tokens` on the `Ballot` (0 when usage omits reasoning).
    **Per-proposal total on one ballot:** sum of the three scores, computed in Python inside `run_vote`, not requested from the model ([proposal.md](../proposal.md) **Schema and key interfaces** `Ballot` row).
    **Ranking:** sort round indexes by mean score total across ballots, higher first. Tie-break: higher mean `feasible`, then lower `round_index` ([proposal.md](../proposal.md) **Schema and key interfaces**).
    **`top_three`:** first three entries of `ranking`.
    `run_study` calls `run_vote`. Ballot prompts and ranking live only in `run_vote`.
 
-7. **Token totals:** Set `total_input_tokens` and `total_output_tokens` on `StudyResult` to the sum of `input_tokens` and `output_tokens` across every `TurnRecord` in all five rounds plus every ballot turn in `vote` (match fields on `TurnRecord` from Step 1).
+7. **Token totals:** Set `total_input_tokens` and `total_output_tokens` on `StudyResult` to the sum of `input_tokens` and `output_tokens` across every `TurnRecord` in all five rounds plus every `Ballot` in `vote`. Do not add `reasoning_tokens` into `output_tokens`. Billed output already includes reasoning.
 
 8. **Assemble `StudyResult`:**
    `run_id`, `model_id` (`MODEL_ID`), `reasoning_effort` (`REASONING_EFFORT`), `brief_sha256`, `rounds`, `vote`, `total_input_tokens`, `total_output_tokens`.
@@ -105,7 +105,7 @@ Follow the phase order in the table. Skip phase 4, test design. The plan adds no
 
 ### 3. Import style
 
-Step 3 chose whether `src` is a package. Use the same style for `run_study` imports (`from src.run_round import run_round, run_vote` vs `from run_round import ...`). The verification command below must match that choice. If `src` is not a package, document the chosen `PYTHONPATH` in a one-line comment at the top of `run_study.py`.
+`src` is a package because Step 3 adds an empty `src/__init__.py`. Import the round driver with `from src.run_round import run_round, revised_proposal`. Define `run_vote` in `src/run_study.py`. Do not import `run_vote` from `run_round`.
 
 ## Interfaces (must match proposal)
 
@@ -135,8 +135,6 @@ run_study
 
 **Expected:** exit code 0. No OpenAI call. No LangSmith trace. No S3 upload. `RESULTS.md` remains the Step 1 stub.
 
-If Step 3 used a non-package import path, adjust the `-c` import to match and note that in `run_study.py`.
-
 ### Blocked: full study (out of scope until smoke cost is accepted)
 
 Do **not** run this command in Step 4. Run it only after a person accepts the smoke cost note from Step 3 ([proposal.md](../proposal.md) **Decisions** item 7).
@@ -159,7 +157,7 @@ PYTHONPATH=/workspace:/workspace/experiments/social_science_idea_generation_2026
 | Pass | Fail |
 | --- | --- |
 | Verification command prints `run_study` with exit 0 | Running the blocked 72-call command during Step 4 |
-| `run_study.py` calls `run_round` and `run_vote` without reimplementing them | Adding pytest or `tests/` |
+| `run_study.py` calls `run_round` and defines `run_vote` in this file | Adding pytest or `tests/` |
 | Vote rules match proposal (seven voters, three criteria, totals in code, ranking tie-break) | Printing `OPENAI_API_KEY` or `LANGSMITH_API_KEY` |
 | Blocked command documented and explicitly out of scope until cost acceptance | Uploading a second copy of each round JSON to `runs/` |
 | Single git commit for `src/run_study.py` only | Committing `study.json` from a live run |

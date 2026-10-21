@@ -26,7 +26,7 @@ Implement [proposal.md](../proposal.md) **Step 1: Add the experiment records and
 - `experiments/social_science_idea_generation_2026_10_21/pyproject.toml` (create via `uv add`; `package = false`)
 - `experiments/social_science_idea_generation_2026_10_21/uv.lock` (created by `uv add`)
 - `experiments/social_science_idea_generation_2026_10_21/.gitignore` (`outputs/**/*.json`)
-- `experiments/social_science_idea_generation_2026_10_21/inputs/brief.md` (exact text in Contracts below)
+- `experiments/social_science_idea_generation_2026_10_21/inputs/brief.md` (exact text in the brief contract)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/__init__.py` (empty or package marker)
 - `experiments/social_science_idea_generation_2026_10_21/workflow/constants.py`
 - `experiments/social_science_idea_generation_2026_10_21/workflow/schemas.py`
@@ -67,7 +67,7 @@ PRICE_PAGE_URL = "https://developers.openai.com/api/docs/models/gpt-6-sol"
 
 ### `workflow/schemas.py` (Pydantic models)
 
-Field names and shapes match the proposal **Schema and key interfaces** table. Use `pydantic` `BaseModel` (and appropriate types). `Ballot` does not include a total field; totals are computed in code later. `CostEstimate` is not defined in this step (Step 3, `workflow/cost.py`).
+Field names and shapes match the proposal **Schema and key interfaces** table. Use `pydantic` `BaseModel` (and appropriate types). `Ballot` does not include a score-total field; score totals are computed in code later. `CostEstimate` is not defined in this step (Step 3, `workflow/cost.py`).
 
 | Model | Fields |
 | --- | --- |
@@ -77,8 +77,9 @@ Field names and shapes match the proposal **Schema and key interfaces** table. U
 | `Critique` | `fatal` (`bool`), `flaws` (`list[str]`), `required_change` |
 | `RevisedProposal` | `idea` (`ResearchIdea`), `method` (`MethodPlan`), `what_changed` |
 | `CriterionScore` | `round_index` (`int`), `non_obvious` (`int`, 1 to 5), `feasible` (`int`, 1 to 5), `method_fits_question` (`int`, 1 to 5) |
-| `Ballot` | `voter`, `scores` (list of five `CriterionScore`) |
-| `TurnRecord` | `role`, `kind`, `iteration`, `payload`, `input_tokens`, `output_tokens`, `reasoning_tokens`, `latency_ms` |
+| `Ballot` | `voter`, `scores` (list of five `CriterionScore`), `input_tokens`, `output_tokens`, `reasoning_tokens` |
+| `TurnKind` | string enum: `seed`, `comment`, `synthesis`, `method`, `critique`, `revision`, `ballot` |
+| `TurnRecord` | `role`, `kind` (`TurnKind`), `iteration`, `payload`, `input_tokens`, `output_tokens`, `reasoning_tokens`, `latency_ms` |
 | `RoundRecord` | `round_index`, `seed_role`, `thread_id`, `brief_sha256`, `turns` |
 | `VoteRecord` | `thread_id`, `ballots`, `ranking`, `top_three` |
 | `StudyResult` | `run_id`, `model_id`, `reasoning_effort`, `brief_sha256`, `rounds`, `vote`, `total_input_tokens`, `total_output_tokens` |
@@ -112,12 +113,12 @@ Follow the phase order in the table. Skip phase 4, test design. The plan uses th
 
 | Phase | What to do in Step 1 | Gate |
 | --- | --- | --- |
-| **1 Scope** | Caller named above; file tree from proposal **File structure** (only paths in scope for this step); out-of-scope listed | Clear boundary, no model or key loading |
+| **1 Scope** | Caller in the Scope section; file tree from proposal **File structure** (only paths in scope for this step); out-of-scope listed | Clear boundary, no model or key loading |
 | **2 Scaffold** | Create experiment directory, docs stubs, `.gitignore`, `inputs/brief.md`, `workflow/__init__.py`, empty or minimal `constants.py` / `schemas.py` / `roles.py` stubs, run `uv add` | Tree exists; imports resolve; **commit: scaffold** |
 | **3 Contracts** | Fill `constants.py` values; define all Pydantic models with correct fields; `RoleSpec` and `ROLE_ORDER` structure without final prompt prose if split | Signatures and fields match proposal; **commit: contracts** |
 | **4 Test design** | **Skipped** | N/A |
 | **5 Implement units** | Write full `system_prompt` strings for all eight roles; ensure brief file matches exactly | Records and prompts complete; **commit: prompt text** |
-| **6 Done** | Run import check command below | `len(ROLE_ORDER) == 5`; no network; no secret read |
+| **6 Done** | Run the import check in Commands | `len(ROLE_ORDER) == 5`; no network; no secret read |
 
 Use **three separate git commits** in order: (1) scaffold, (2) contracts, (3) prompt text. Do not batch those into one commit.
 

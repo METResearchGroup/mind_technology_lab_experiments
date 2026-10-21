@@ -15,7 +15,7 @@ The work adds one experiment that runs five discussion rounds and returns three 
 
 ## Happy flow
 
-You start from one brief. Each round begins with a different disciplinary agent, the other four comment twice, and a synthesizer, a methodologist, and a critic produce one revised proposal. After five rounds, seven agents score the revisions and you keep the top three, with the turn log and one LangSmith thread per round.
+You start from one brief. Each round begins with a different disciplinary agent, the other four comment twice, and a synthesizer, a methodologist, and a critic produce one revised proposal. After five rounds, seven agents score the revisions and you keep the top three, with the turn log, one LangSmith thread per round, and a sixth thread for the vote.
 
 ```mermaid
 flowchart TD
