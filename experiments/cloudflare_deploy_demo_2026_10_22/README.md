@@ -2,7 +2,7 @@
 
 This folder is a small app you can deploy to Cloudflare. It is here so we can see the current path for a FastAPI backend and a Next.js frontend on Workers, including storage bindings and secrets, before moving larger services off Railway.
 
-Nothing in this folder is deployed yet. The Live URLs section has the commands to run once a Cloudflare API token exists.
+This copy is deployed. The Live URLs section has the workers.dev addresses. Cloudflare credentials for this lab live in AWS Secrets Manager in `us-east-2`, under the secret names `cloudflare-api-token` and `cloudflare-r2-credentials`. Those names are not the token values. Do not print or commit the values.
 
 ## How it fits together
 
@@ -14,7 +14,7 @@ Browser
 Next.js Worker (vinext)          name: cloudflare-deploy-demo-web
   |  POST /api/notes
   |  Authorization: Bearer NOTE_TOKEN
-  |  (a server action adds the token, so the browser never sees it)
+  |  (a server action adds the token and calls the API through a service binding)
   v
 FastAPI Worker (Python)          name: cloudflare-deploy-demo-api
   |
@@ -31,7 +31,9 @@ The API has three routes.
 - `GET /api/notes` returns the latest 20 notes. Reading is public.
 - `POST /api/notes` stores one note. The JSON body is `{ "body": "..." }` and the text can be 1 to 200 characters. The request must send `Authorization: Bearer <NOTE_TOKEN>`. A missing or wrong token gets 401. A missing token configuration or a database error gets 503.
 
-The page at `/` loads health and notes in the browser, so you can see the cross-origin headers. The save form posts to the Next.js Worker. That Worker reads `NOTE_TOKEN` from its own secret and calls the API.
+The page at `/` loads health and notes in the browser, so you can see the cross-origin headers. The save form posts to the Next.js Worker. That Worker reads `NOTE_TOKEN` from its own secret and calls the API through a service binding named `API`.
+
+A service binding is a direct Worker-to-Worker call. Both of these Workers are on `workers.dev`, which is one Cloudflare zone. A global `fetch()` from one Worker to another Worker on that same zone fails. The browser calls are not affected, because they come from the public internet.
 
 ## Why this stack
 
@@ -49,7 +51,7 @@ Current vinext setup for a new Cloudflare app writes `cloudflare.config.ts` and 
 
 State is D1, not Workers KV. KV is a key-value store with a daily write limit that is tight on the free plan (1,000 writes a day). D1 is closer to the database a FastAPI service already expects, and the migration file shows how a binding is created and applied. The Python Worker reads it from the request environment as `env.DB`.
 
-The two apps are separate Workers on purpose. A service binding could let the page call the API inside Cloudflare without a public URL. This demo uses a public URL so the browser call and the CORS headers are visible. CORS is the rule that lets a page on one origin call an API on another.
+The two apps are separate Workers on purpose. The browser uses the public API URL, so the CORS headers are visible. CORS is the rule that lets a page on one origin call an API on another. The save path uses a service binding, because that call starts inside the page Worker.
 
 ## API token permissions
 
@@ -157,7 +159,7 @@ python3 experiments/cloudflare_deploy_demo_2026_10_22/scripts/smoke.py \
   http://127.0.0.1:8787 http://127.0.0.1:3001
 ```
 
-The script checks health, the notes list, a write without a token (that must be 401), and the CORS headers. It does not read `.dev.vars`.
+The script checks health, the notes list, a write without a token (that must be 401), and the CORS headers. It does not read `.dev.vars`. It sends a User-Agent, because `workers.dev` answers `1010` when that header is missing.
 
 `npm run build` in `frontend/` produces the Worker bundle under `dist/`. `npm run start` serves that bundle locally with Wrangler on port 8788. The API allows that origin too.
 
@@ -165,16 +167,20 @@ The script checks health, the notes list, a write without a token (that must be 
 
 ## Deploy
 
-Do this only after `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are set in the environment. Do not put the token in a file in git.
+Load `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` from the Secrets Manager secret `cloudflare-api-token`. The R2 keys are in `cloudflare-r2-credentials`. This demo does not use R2. Do not put either secret in a file in git, and do not print the values.
 
-The API config contains a placeholder D1 id, `00000000-0000-0000-0000-000000000001`. Local migrations accept it. A remote deploy does not. Replace it before you deploy.
+The token used for this deploy is account-scoped. `GET /user/tokens/verify` returns 401. `GET /accounts/{account_id}/tokens/verify` returns active.
+
+`backend/wrangler.jsonc` already has the live D1 id for database `cloudflare-deploy-demo`: `89b1d314-af1f-45e1-bbe7-6268042b3703`. The migration `0001_notes.sql` is applied on that database. On an account that does not have the database yet, create it and put the new id in the config:
 
 ```bash
 cd experiments/cloudflare_deploy_demo_2026_10_22/backend
 uv run pywrangler d1 create cloudflare-deploy-demo
 ```
 
-Copy the printed `database_id` into `backend/wrangler.jsonc`. Then apply the migration and set the secret. `secret put` asks you to paste the token. Do not pass the token as an argument. That command also uploads the Worker.
+The account also needs a `workers.dev` subdomain before the first deploy. This account uses `mind-technology-lab`, so the Workers are at `https://<name>.mind-technology-lab.workers.dev`.
+
+Set `NOTE_TOKEN` with `secret put`. That command asks you to paste the token. Do not pass the token as an argument. That command also uploads the Worker.
 
 ```bash
 uv run pywrangler d1 migrations apply cloudflare-deploy-demo --remote
@@ -182,9 +188,9 @@ uv run pywrangler secret put NOTE_TOKEN
 uv run pywrangler deploy
 ```
 
-Wrangler prints an API URL like `https://cloudflare-deploy-demo-api.<account>.workers.dev`.
+Wrangler prints an API URL like `https://cloudflare-deploy-demo-api.mind-technology-lab.workers.dev`.
 
-Put that URL in `frontend/wrangler.jsonc` as `vars.API_BASE_URL`. Then build and set the same token on the page Worker.
+Put that URL in `frontend/wrangler.jsonc` as `vars.API_BASE_URL`. The `services` entry named `API` must point at the API Worker name. Then build and set the same token on the page Worker.
 
 ```bash
 cd experiments/cloudflare_deploy_demo_2026_10_22/frontend
@@ -222,7 +228,7 @@ npm run deploy
 - Production values are set with `pywrangler secret put` and `wrangler secret put`.
 - `secrets.required` in both Wrangler configs makes a deploy fail when `NOTE_TOKEN` is missing.
 - The health check reports whether the secret is present. It does not return the value.
-- The page's server action reads the secret on the Worker. The browser script does not.
+- The page's server action reads the secret on the Worker and sends it through the `API` service binding. The browser script does not.
 
 `CORS_ORIGINS` and `API_BASE_URL` are plain variables. They are public URLs, not secrets.
 
@@ -267,14 +273,12 @@ Cron backup jobs only partly fit. A Cron Trigger can run on a schedule. Free acc
 
 ## Live URLs
 
-TODO. `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are not set here, so this copy stops before deploy.
+- API: `https://cloudflare-deploy-demo-api.mind-technology-lab.workers.dev`
+- Page: `https://cloudflare-deploy-demo-web.mind-technology-lab.workers.dev`
+- Health: `https://cloudflare-deploy-demo-api.mind-technology-lab.workers.dev/health`
+- Notes: `https://cloudflare-deploy-demo-api.mind-technology-lab.workers.dev/api/notes`
 
-When those two values are present, run the commands in the Deploy section. Then replace this section with the printed URLs.
-
-- API: `https://cloudflare-deploy-demo-api.<account>.workers.dev`
-- Page: `https://cloudflare-deploy-demo-web.<account>.workers.dev`
-- Health: `https://cloudflare-deploy-demo-api.<account>.workers.dev/health`
-- Notes: `https://cloudflare-deploy-demo-api.<account>.workers.dev/api/notes`
+D1 database name: `cloudflare-deploy-demo`. Database id: `89b1d314-af1f-45e1-bbe7-6268042b3703`.
 
 ## Sources
 

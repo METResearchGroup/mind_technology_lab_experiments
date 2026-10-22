@@ -17,8 +17,12 @@ def _request(
     body: bytes | None = None,
     headers: dict[str, str] | None = None,
 ) -> tuple[int, dict[str, str], bytes]:
+    # workers.dev returns 1010 for clients that send no User-Agent.
+    request_headers = {"user-agent": "cloudflare-deploy-demo-smoke/1.0"}
+    if headers:
+        request_headers.update(headers)
     request = urllib.request.Request(
-        url, data=body, method=method, headers=headers or {}
+        url, data=body, method=method, headers=request_headers
     )
     try:
         with urllib.request.urlopen(request, timeout=10) as response:

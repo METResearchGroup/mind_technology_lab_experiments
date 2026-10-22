@@ -4,6 +4,7 @@
   "main": "src/main.py",
   "compatibility_date": "2026-10-22",
   "compatibility_flags": ["python_workers"],
+  "workers_dev": true,
   "observability": {
     "enabled": true,
     "logs": {
@@ -17,8 +18,7 @@
   },
   "vars": {
     // Comma-separated browser origins allowed to call this API.
-    // Add the deployed frontend origin before a production deploy.
-    "CORS_ORIGINS": "http://localhost:3001,http://127.0.0.1:3001,http://localhost:8788,http://127.0.0.1:8788"
+    "CORS_ORIGINS": "https://cloudflare-deploy-demo-web.mind-technology-lab.workers.dev,http://localhost:3001,http://127.0.0.1:3001,http://localhost:8788,http://127.0.0.1:8788"
   },
   // NOTE_TOKEN is a secret. Set it with `pywrangler secret put NOTE_TOKEN`.
   // Local development reads it from .dev.vars, which is not committed.
@@ -29,9 +29,7 @@
     {
       "binding": "DB",
       "database_name": "cloudflare-deploy-demo",
-      // Replace this placeholder after `pywrangler d1 create cloudflare-deploy-demo`.
-      // Local `migrations apply --local` works with this id. Remote deploy does not.
-      "database_id": "00000000-0000-0000-0000-000000000001",
+      "database_id": "89b1d314-af1f-45e1-bbe7-6268042b3703",
       "migrations_dir": "migrations"
     }
   ]

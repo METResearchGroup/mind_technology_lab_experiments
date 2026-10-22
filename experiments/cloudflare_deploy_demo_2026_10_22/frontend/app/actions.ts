@@ -27,7 +27,8 @@ export async function addNote(formData: FormData): Promise<NoteResult> {
 
   let response: Response;
   try {
-    response = await fetch(`${base}/api/notes`, {
+    // Service bindings ignore the hostname and deliver the path to the API Worker.
+    response = await env.API.fetch(`${base}/api/notes`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
