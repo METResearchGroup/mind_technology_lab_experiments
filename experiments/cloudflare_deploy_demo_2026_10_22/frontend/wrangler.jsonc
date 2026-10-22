@@ -1,0 +1,53 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cloudflare-deploy-demo-web",
+  // The local Workers runtime in this vinext toolchain accepts dates through 2026-10-19.
+  "compatibility_date": "2026-10-19",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": true,
+  "main": "vinext/server/fetch-handler",
+  "assets": {
+    "directory": "dist/client",
+    "html_handling": "none",
+    "not_found_handling": "none",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/*",
+      "!/_next/static/*",
+      "!/*/_next/static/*"
+    ]
+  },
+  "dev": {
+    "port": 8788
+  },
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1
+    },
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 1
+    }
+  },
+  "vars": {
+    // Public API origin. The browser reads health and notes from this URL.
+    "API_BASE_URL": "https://cloudflare-deploy-demo-api.mind-technology-lab.workers.dev"
+  },
+  // Writes go through this binding. A Worker cannot fetch another workers.dev
+  // Worker on the same zone with the global fetch() API.
+  "services": [
+    {
+      "binding": "API",
+      "service": "cloudflare-deploy-demo-api"
+    }
+  ],
+  // NOTE_TOKEN is a secret. The server action sends it to the API.
+  // Local development reads it from .dev.vars, which is not committed.
+  "secrets": {
+    "required": ["NOTE_TOKEN"]
+  }
+}

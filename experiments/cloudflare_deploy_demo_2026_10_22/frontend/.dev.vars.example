@@ -1,0 +1,5 @@
+# Copy this file to .dev.vars for local `npm run dev`.
+# .dev.vars is gitignored. Do not put a production token here.
+# Use the same value as the API Worker's NOTE_TOKEN.
+# Deployed Workers receive it from `wrangler secret put NOTE_TOKEN`.
+NOTE_TOKEN=local-dev-only
