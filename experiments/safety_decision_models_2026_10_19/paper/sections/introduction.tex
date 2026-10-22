@@ -1,0 +1,18 @@
+\section{Introduction}
+
+Input screening trades missed harm against over-refusal, latency, and cost.
+Two commercial families implement that layer differently.
+Typed decision models, including TypeSafe Jev~\cite{typesafe2026jevmodels,deusser2026jevbenchmark}, Cloudflare Clef, and Clef-flash~\cite{cloudflare2026clef,cloudflare2026clefflash}, take fixed questions on prompt text and return probabilities or discrete choices.
+Amazon Bedrock Guardrails~\cite{aws2024bedrockguardrails} scores input through \texttt{ApplyGuardrail} and maps ordinal bands on six content filters to block decisions.
+Prior Jev benchmarks~\cite{deusser2026jevbenchmark} do not place a managed guardrail on the same rows under harmonized miss and false-positive definitions.
+
+We pre-registered the guardrail category crosswalk (JailbreakBench harmful rows to Prompt Attack only), union/intersection/cascade stacks with the medium-strength guardrail, and Bedrock strength rules on matched bands; development thresholds and score-0.5 contrasts follow the stated tuning rule.
+Post-hoc analyses, including any-filter maximum band on cached JailbreakBench guardrail outputs and stack variants that reuse those bands, are labeled throughout and do not refit decision-model thresholds.
+
+We evaluate four arms on eleven public prompt-only datasets (safety sets plus GoEmotions and Emotion for emotionally loaded non-harm text).
+We report tuned decision-model thresholds and scores at 0.5, guardrail metrics at medium strength under a dataset-to-filter crosswalk fixed before test scoring, and pre-registered stacks (union, intersection, cascade) from cached predictions.
+We do not measure downstream chat-model compliance or user outcomes in live sessions.
+
+Before the full pack we reran the public Jev harness (\texttt{20261020T033822Z\_0f24960e}, PASS).
+Headline numbers below use \texttt{20261020T040920Z\_90c5fd13}.
+Section~\ref{sec:related} situates prior benchmarks; Sections~\ref{sec:systems} through~\ref{sec:methods} describe arms, data, and metrics; Section~\ref{sec:results} reports empirical findings; Sections~\ref{sec:discussion} through~\ref{sec:conclusion} interpret deployment trade-offs.

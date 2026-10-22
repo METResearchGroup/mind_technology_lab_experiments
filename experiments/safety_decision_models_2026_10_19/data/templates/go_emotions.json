@@ -1,0 +1,114 @@
+{
+  "admiration": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express admiration?"
+  },
+  "amusement": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express amusement?"
+  },
+  "anger": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express anger?"
+  },
+  "annoyance": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express annoyance?"
+  },
+  "approval": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express approval?"
+  },
+  "caring": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express caring?"
+  },
+  "confusion": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express confusion?"
+  },
+  "curiosity": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express curiosity?"
+  },
+  "desire": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express desire?"
+  },
+  "disappointment": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express disappointment?"
+  },
+  "disapproval": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express disapproval?"
+  },
+  "disgust": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express disgust?"
+  },
+  "embarrassment": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express embarrassment?"
+  },
+  "excitement": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express excitement?"
+  },
+  "fear": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express fear?"
+  },
+  "gratitude": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express gratitude?"
+  },
+  "grief": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express grief?"
+  },
+  "joy": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express joy?"
+  },
+  "love": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express love?"
+  },
+  "nervousness": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express nervousness?"
+  },
+  "optimism": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express optimism?"
+  },
+  "pride": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express pride?"
+  },
+  "realization": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express realization?"
+  },
+  "relief": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express relief?"
+  },
+  "remorse": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express remorse?"
+  },
+  "sadness": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express sadness?"
+  },
+  "surprise": {
+    "type": "noul",
+    "instructions": "Does the author of `comment` express surprise?"
+  },
+  "neutral": {
+    "type": "noul",
+    "instructions": "Is `comment` emotionally neutral, expressing no particular emotion?"
+  }
+}

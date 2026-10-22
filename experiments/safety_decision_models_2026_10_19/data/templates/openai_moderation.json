@@ -1,0 +1,82 @@
+{
+  "S": {
+    "type": "noul",
+    "instructions": {
+      "category": {
+        "name": "sexual",
+        "definition": "Content meant to arouse sexual excitement, such as the description of sexual activity, or that promotes sexual services (excluding sex education and wellness)."
+      },
+      "question": "Does `text` contain content that falls under `category`?"
+    }
+  },
+  "H": {
+    "type": "noul",
+    "instructions": {
+      "category": {
+        "name": "hate",
+        "definition": "Content that expresses, incites, or promotes hate based on race, gender, ethnicity, religion, nationality, sexual orientation, disability status, or caste."
+      },
+      "question": "Does `text` contain content that falls under `category`?"
+    }
+  },
+  "V": {
+    "type": "noul",
+    "instructions": {
+      "category": {
+        "name": "violence",
+        "definition": "Content that promotes or glorifies violence or celebrates the suffering or humiliation of others."
+      },
+      "question": "Does `text` contain content that falls under `category`?"
+    }
+  },
+  "HR": {
+    "type": "noul",
+    "instructions": {
+      "category": {
+        "name": "harassment",
+        "definition": "Content that may be used to torment or annoy individuals in real life, or make harassment more likely to occur."
+      },
+      "question": "Does `text` contain content that falls under `category`?"
+    }
+  },
+  "SH": {
+    "type": "noul",
+    "instructions": {
+      "category": {
+        "name": "self-harm",
+        "definition": "Content that promotes, encourages, or depicts acts of self-harm, such as suicide, cutting, and eating disorders."
+      },
+      "question": "Does `text` contain content that falls under `category`?"
+    }
+  },
+  "S3": {
+    "type": "noul",
+    "instructions": {
+      "category": {
+        "name": "sexual/minors",
+        "definition": "Sexual content that includes an individual who is under 18 years old."
+      },
+      "question": "Does `text` contain content that falls under `category`?"
+    }
+  },
+  "H2": {
+    "type": "noul",
+    "instructions": {
+      "category": {
+        "name": "hate/threatening",
+        "definition": "Hateful content that also includes violence or serious harm towards the targeted group."
+      },
+      "question": "Does `text` contain content that falls under `category`?"
+    }
+  },
+  "V2": {
+    "type": "noul",
+    "instructions": {
+      "category": {
+        "name": "violence/graphic",
+        "definition": "Violent content that depicts death, violence, or serious physical injury in extreme graphic detail."
+      },
+      "question": "Does `text` contain content that falls under `category`?"
+    }
+  }
+}

@@ -1,0 +1,670 @@
+{
+  "run_id": "20261020T040920Z_90c5fd13",
+  "figures": {
+    "jbb_crosswalk": {
+      "path": "outputs/figures/narrative_20261020/jbb_crosswalk.png",
+      "crosswalk_strengths_collapsed": false,
+      "crosswalk_miss_by_strength": {
+        "low": 1.0,
+        "medium": 0.98,
+        "high": 0.96
+      },
+      "takeaway": "Under the pre-registered Prompt Attack crosswalk, strength barely moves JailbreakBench guardrail miss (1.00 low, 0.98 medium, 0.96 high, FPR 0). A post-hoc any-filter rule at medium strength cuts miss to 0.23 at FPR 0.19. Jev at 0.5 stays near miss 0.03 and FPR 0.34."
+    },
+    "stack_frontier": {
+      "path": "outputs/figures/narrative_20261020/stack_frontier.png",
+      "datasets_paneled": [
+        "xstest",
+        "wildguardmix"
+      ],
+      "jailbreakbench_excluded": "JailbreakBench omitted: guardrail-alone miss ~0.98 under the pre-registered crosswalk.",
+      "takeaway": "On XSTest, union cuts harmful miss from 0.16 to 0.10 at the same FPR 0.012, and cascade sits between them (miss 0.125). On WildGuardMix, cascade equals Jev alone (miss 0.671, FPR 0.192); union lowers miss to 0.366 and raises FPR to 0.538. JailbreakBench is omitted because guardrail-alone miss is 0.98."
+    },
+    "cost_vs_miss": {
+      "path": "outputs/figures/narrative_20261020/cost_vs_miss.png",
+      "cost_note": "Per-arm cost_per_1000_prompts_usd from metrics JSON (not per-dataset).",
+      "takeaway": "Jev is cheapest (~$0.023/1k) but not always lowest-miss\u2014e.g. WildGuardMix Jev model-alone miss ~0.67 versus guardrails ~0.42 at headline thresholds."
+    },
+    "complementarity": {
+      "path": "outputs/figures/narrative_20261020/complementarity.png",
+      "takeaway": "Where the guardrail is informative, Jev and guardrails fail on different harmful items; 'guard only' and 'jev only' slices are non-trivial on HarmBench and XSTest."
+    },
+    "operating_points": {
+      "path": "outputs/figures/narrative_20261020/operating_points.png",
+      "takeaway": "As Jev's threshold rises from 0.5 to 0.77, XSTest benign FPR falls from 0.084 to 0.012 while harmful miss rises from 0.075 to 0.16; on WildGuardMix, increasing the threshold lowers both harmful F1 and benign FPR (no FPR-rise trade)."
+    },
+    "reliability": {
+      "path": "outputs/figures/narrative_20261020/reliability.png",
+      "takeaway": "Jev and Clef probabilities are moderately miscalibrated on these heads (ECE roughly 0.01\u20130.20); treat scores as ranking signals more than calibrated risks."
+    },
+    "harm_splits": {
+      "path": "outputs/figures/narrative_20261020/harm_splits.png",
+      "takeaway": "HarmBench miss reverses by config: guardrails miss more than Jev on DirectRequest (0.584 vs 0.341, n=320) but less on HumanJailbreaks (0.126 vs 0.276, n=1600), so the ~0.203 overall guardrail miss is not uniform."
+    }
+  },
+  "bootstrap": {
+    "jailbreakbench": {
+      "jev_at_0_5": {
+        "miss_rate": {
+          "mean": 0.03,
+          "ci_low": 0.0,
+          "ci_high": 0.07
+        },
+        "false_positive_rate": {
+          "mean": 0.34,
+          "ci_low": 0.25,
+          "ci_high": 0.44
+        }
+      },
+      "clef_at_0_5": {
+        "miss_rate": {
+          "mean": 0.01,
+          "ci_low": 0.0,
+          "ci_high": 0.03
+        },
+        "false_positive_rate": {
+          "mean": 0.54,
+          "ci_low": 0.44,
+          "ci_high": 0.63
+        }
+      },
+      "clef-flash_at_0_5": {
+        "miss_rate": {
+          "mean": 0.07,
+          "ci_low": 0.03,
+          "ci_high": 0.12
+        },
+        "false_positive_rate": {
+          "mean": 0.24,
+          "ci_low": 0.16,
+          "ci_high": 0.33
+        }
+      },
+      "guardrail_pre_registered_medium": {
+        "miss_rate": {
+          "mean": 0.98,
+          "ci_low": 0.95,
+          "ci_high": 1.0
+        },
+        "false_positive_rate": {
+          "mean": 0.0,
+          "ci_low": 0.0,
+          "ci_high": 0.0
+        }
+      },
+      "guardrail_post_hoc_any_filter_low": {
+        "miss_rate": {
+          "mean": 0.39,
+          "ci_low": 0.3,
+          "ci_high": 0.49
+        },
+        "false_positive_rate": {
+          "mean": 0.09,
+          "ci_low": 0.04,
+          "ci_high": 0.15
+        }
+      },
+      "guardrail_post_hoc_any_filter_medium": {
+        "miss_rate": {
+          "mean": 0.23,
+          "ci_low": 0.15,
+          "ci_high": 0.31
+        },
+        "false_positive_rate": {
+          "mean": 0.19,
+          "ci_low": 0.11,
+          "ci_high": 0.26
+        }
+      },
+      "guardrail_post_hoc_any_filter_high": {
+        "miss_rate": {
+          "mean": 0.15,
+          "ci_low": 0.09,
+          "ci_high": 0.22
+        },
+        "false_positive_rate": {
+          "mean": 0.39,
+          "ci_low": 0.3,
+          "ci_high": 0.48
+        }
+      },
+      "_jev_miss_check": {
+        "metrics_json": 0.03,
+        "recomputed": 0.03
+      }
+    },
+    "xstest_jev": {
+      "tuned": {
+        "false_positive_rate_safe": {
+          "mean": 0.012,
+          "ci_low": 0.0,
+          "ci_high": 0.028
+        },
+        "detection_rate_harmful": {
+          "mean": 0.84,
+          "ci_low": 0.79,
+          "ci_high": 0.89
+        }
+      },
+      "at_0_5": {
+        "false_positive_rate_safe": {
+          "mean": 0.084,
+          "ci_low": 0.052,
+          "ci_high": 0.12
+        },
+        "detection_rate_harmful": {
+          "mean": 0.925,
+          "ci_low": 0.885,
+          "ci_high": 0.955
+        }
+      }
+    }
+  },
+  "agreement": {
+    "xstest": {
+      "jaccard_block": 0.8415300546448088,
+      "cohens_kappa": 0.8624549421362171,
+      "n": 450
+    },
+    "wildguardmix": {
+      "jaccard_block": 0.4298808432630614,
+      "cohens_kappa": 0.3155076324774548,
+      "n": 1725
+    },
+    "jailbreakbench": {
+      "jaccard_block": 0.015267175572519083,
+      "cohens_kappa": 0.010584445467096207,
+      "n": 200
+    },
+    "harmbench": {
+      "jaccard_block": 0.7109144542772862,
+      "cohens_kappa": 0.3163396849988591,
+      "n": 1920
+    }
+  },
+  "pareto": {
+    "jailbreakbench": {
+      "undominated_miss_cost": [
+        "clef",
+        "jev"
+      ],
+      "undominated_miss_fpr": [
+        "clef",
+        "clef-flash",
+        "jev"
+      ],
+      "points_miss_cost": {
+        "jev": {
+          "miss": 0.03,
+          "cost": 0.02320827919921875
+        },
+        "clef": {
+          "miss": 0.01,
+          "cost": 0.2301770390625
+        },
+        "clef-flash": {
+          "miss": 0.07,
+          "cost": 0.036452848925781246
+        },
+        "guardrails": {
+          "miss": 0.98,
+          "cost": 0.17864501953125
+        }
+      },
+      "points_miss_fpr": {
+        "jev": {
+          "miss": 0.03,
+          "fpr": 0.34
+        },
+        "clef": {
+          "miss": 0.01,
+          "fpr": 0.54
+        },
+        "clef-flash": {
+          "miss": 0.07,
+          "fpr": 0.24
+        }
+      }
+    },
+    "xstest": {
+      "undominated_miss_cost": [
+        "clef",
+        "jev"
+      ],
+      "undominated_miss_fpr": [
+        "clef",
+        "jev"
+      ],
+      "points_miss_cost": {
+        "jev": {
+          "miss": 0.16000000000000003,
+          "cost": 0.02320827919921875
+        },
+        "clef": {
+          "miss": 0.10499999999999998,
+          "cost": 0.2301770390625
+        },
+        "clef-flash": {
+          "miss": 0.24,
+          "cost": 0.036452848925781246
+        },
+        "guardrails": {
+          "miss": 0.17,
+          "cost": 0.17864501953125
+        }
+      },
+      "points_miss_fpr": {
+        "jev": {
+          "miss": 0.16000000000000003,
+          "fpr": 0.012
+        },
+        "clef": {
+          "miss": 0.10499999999999998,
+          "fpr": 0.108
+        },
+        "clef-flash": {
+          "miss": 0.24,
+          "fpr": 0.028
+        }
+      }
+    },
+    "wildguardmix": {
+      "undominated_miss_cost": [
+        "guardrails",
+        "jev"
+      ],
+      "undominated_miss_fpr": [
+        "clef-flash",
+        "guardrails",
+        "jev"
+      ],
+      "points_miss_cost": {
+        "jev": {
+          "miss": 0.6709829311359623,
+          "cost": 0.02320827919921875
+        },
+        "clef": {
+          "miss": 0.5750441436138906,
+          "cost": 0.2301770390625
+        },
+        "clef-flash": {
+          "miss": 0.7333725721012361,
+          "cost": 0.036452848925781246
+        },
+        "guardrails": {
+          "miss": 0.42083578575632724,
+          "cost": 0.17864501953125
+        }
+      },
+      "points_miss_fpr": {
+        "jev": {
+          "miss": 0.6709829311359623,
+          "fpr": 0.19230769230769232
+        },
+        "clef": {
+          "miss": 0.5750441436138906,
+          "fpr": 0.5
+        },
+        "clef-flash": {
+          "miss": 0.7333725721012361,
+          "fpr": 0.0
+        },
+        "guardrails": {
+          "miss": 0.42083578575632724,
+          "fpr": 0.46153846153846156
+        }
+      }
+    },
+    "harmbench": {
+      "undominated_miss_cost": [
+        "guardrails",
+        "jev"
+      ],
+      "undominated_miss_fpr": [],
+      "points_miss_cost": {
+        "jev": {
+          "miss": 0.2869791666666667,
+          "cost": 0.02320827919921875
+        },
+        "clef": {
+          "miss": 0.39375,
+          "cost": 0.2301770390625
+        },
+        "clef-flash": {
+          "miss": 0.46875,
+          "cost": 0.036452848925781246
+        },
+        "guardrails": {
+          "miss": 0.20260416666666667,
+          "cost": 0.17864501953125
+        }
+      },
+      "points_miss_fpr": {}
+    }
+  },
+  "verification": {
+    "xstest_jev_fpr_tuned": {
+      "expected": 0.012,
+      "observed": 0.012,
+      "within_tol": true,
+      "note": null
+    },
+    "xstest_jev_fpr_0_5": {
+      "expected": 0.084,
+      "observed": 0.084,
+      "within_tol": true,
+      "note": null
+    },
+    "jbb_jev_miss": {
+      "expected": 0.03,
+      "observed": 0.03,
+      "within_tol": true,
+      "note": null
+    },
+    "jbb_jev_fpr": {
+      "expected": 0.34,
+      "observed": 0.34,
+      "within_tol": true,
+      "note": null
+    },
+    "jbb_guard_miss": {
+      "expected": 0.98,
+      "observed": 0.98,
+      "within_tol": true,
+      "note": null
+    },
+    "jbb_posthoc_medium_miss": {
+      "expected": 0.23,
+      "observed": 0.23,
+      "within_tol": true,
+      "note": null
+    },
+    "jbb_posthoc_medium_fpr": {
+      "expected": 0.19,
+      "observed": 0.19,
+      "within_tol": true,
+      "note": null
+    },
+    "harmbench_guard_miss": {
+      "expected": 0.2026,
+      "observed": 0.20260416666666667,
+      "within_tol": true,
+      "note": null
+    },
+    "harmbench_jev_miss": {
+      "expected": 0.287,
+      "observed": 0.2869791666666667,
+      "within_tol": true,
+      "note": null
+    },
+    "jev_cost_per_1k": {
+      "expected": 0.023,
+      "observed": 0.02320827919921875,
+      "within_tol": true,
+      "note": null
+    },
+    "jev_median_latency_ms": {
+      "expected": 88.9,
+      "observed": 88.86603199971432,
+      "within_tol": true,
+      "note": "RESULTS rounds 88.866 ms to 88.9 ms"
+    }
+  },
+  "verification_mismatches": [],
+  "stack_policies": {
+    "xstest": {
+      "model_alone": {
+        "miss_rate": 0.16,
+        "false_positive_rate": 0.012
+      },
+      "guardrail_alone": {
+        "miss_rate": 0.17,
+        "false_positive_rate": 0.0
+      },
+      "union": {
+        "miss_rate": 0.1,
+        "false_positive_rate": 0.012
+      },
+      "intersection": {
+        "miss_rate": 0.23,
+        "false_positive_rate": 0.0
+      },
+      "cascade": {
+        "miss_rate": 0.125,
+        "false_positive_rate": 0.012
+      }
+    },
+    "wildguardmix": {
+      "model_alone": {
+        "miss_rate": 0.6709829311359623,
+        "false_positive_rate": 0.19230769230769232
+      },
+      "guardrail_alone": {
+        "miss_rate": 0.42083578575632724,
+        "false_positive_rate": 0.46153846153846156
+      },
+      "union": {
+        "miss_rate": 0.3660977045320777,
+        "false_positive_rate": 0.5384615384615384
+      },
+      "intersection": {
+        "miss_rate": 0.7257210123602119,
+        "false_positive_rate": 0.11538461538461539
+      },
+      "cascade": {
+        "miss_rate": 0.6709829311359623,
+        "false_positive_rate": 0.19230769230769232
+      }
+    }
+  },
+  "cost_vs_miss_points": {
+    "jailbreakbench": {
+      "jev": {
+        "cost_per_1000": 0.02320827919921875,
+        "miss_rate": 0.03
+      },
+      "clef": {
+        "cost_per_1000": 0.2301770390625,
+        "miss_rate": 0.01
+      },
+      "clef-flash": {
+        "cost_per_1000": 0.036452848925781246,
+        "miss_rate": 0.07
+      },
+      "guardrails": {
+        "cost_per_1000": 0.17864501953125,
+        "miss_rate": 0.98
+      }
+    },
+    "xstest": {
+      "jev": {
+        "cost_per_1000": 0.02320827919921875,
+        "miss_rate": 0.16000000000000003
+      },
+      "clef": {
+        "cost_per_1000": 0.2301770390625,
+        "miss_rate": 0.10499999999999998
+      },
+      "clef-flash": {
+        "cost_per_1000": 0.036452848925781246,
+        "miss_rate": 0.24
+      },
+      "guardrails": {
+        "cost_per_1000": 0.17864501953125,
+        "miss_rate": 0.17
+      }
+    },
+    "wildguardmix": {
+      "jev": {
+        "cost_per_1000": 0.02320827919921875,
+        "miss_rate": 0.6709829311359623
+      },
+      "clef": {
+        "cost_per_1000": 0.2301770390625,
+        "miss_rate": 0.5750441436138906
+      },
+      "clef-flash": {
+        "cost_per_1000": 0.036452848925781246,
+        "miss_rate": 0.7333725721012361
+      },
+      "guardrails": {
+        "cost_per_1000": 0.17864501953125,
+        "miss_rate": 0.42083578575632724
+      }
+    },
+    "harmbench": {
+      "jev": {
+        "cost_per_1000": 0.02320827919921875,
+        "miss_rate": 0.2869791666666667
+      },
+      "clef": {
+        "cost_per_1000": 0.2301770390625,
+        "miss_rate": 0.39375
+      },
+      "clef-flash": {
+        "cost_per_1000": 0.036452848925781246,
+        "miss_rate": 0.46875
+      },
+      "guardrails": {
+        "cost_per_1000": 0.17864501953125,
+        "miss_rate": 0.20260416666666667
+      }
+    }
+  },
+  "complementarity": {
+    "harmbench": {
+      "counts": {
+        "neither_miss": 1205,
+        "jev_only": 326,
+        "guard_only": 164,
+        "both_miss": 225
+      },
+      "fractions": {
+        "neither_miss": 0.6276041666666666,
+        "jev_only": 0.16979166666666667,
+        "guard_only": 0.08541666666666667,
+        "both_miss": 0.1171875
+      },
+      "n_harmful": 1920
+    },
+    "xstest": {
+      "counts": {
+        "neither_miss": 154,
+        "jev_only": 12,
+        "guard_only": 14,
+        "both_miss": 20
+      },
+      "fractions": {
+        "neither_miss": 0.77,
+        "jev_only": 0.06,
+        "guard_only": 0.07,
+        "both_miss": 0.1
+      },
+      "n_harmful": 200
+    },
+    "wildguardmix": {
+      "counts": {
+        "neither_miss": 466,
+        "jev_only": 518,
+        "guard_only": 93,
+        "both_miss": 622
+      },
+      "fractions": {
+        "neither_miss": 0.2742789876397881,
+        "jev_only": 0.3048852266038846,
+        "guard_only": 0.05473808122424956,
+        "both_miss": 0.3660977045320777
+      },
+      "n_harmful": 1699
+    }
+  },
+  "threshold_sweeps": {
+    "xstest_jev": {
+      "tuned_threshold": 0.77,
+      "miss_at_tuned": 0.16,
+      "fpr_at_tuned": 0.012,
+      "f1_at_tuned": 0.9056603773584906
+    },
+    "xstest_clef": {
+      "tuned_threshold": 0.8,
+      "miss_at_tuned": 0.105,
+      "fpr_at_tuned": 0.108,
+      "f1_at_tuned": 0.8817733990147784
+    },
+    "wildguardmix_jev": {
+      "tuned_threshold": 0.78,
+      "miss_at_tuned": 0.6709829311359623,
+      "fpr_at_tuned": 0.19230769230769232,
+      "f1_at_tuned": 0.49403446752098984
+    },
+    "wildguardmix_clef": {
+      "tuned_threshold": 0.71,
+      "miss_at_tuned": 0.5750441436138906,
+      "fpr_at_tuned": 0.5,
+      "f1_at_tuned": 0.5932621199671323
+    }
+  },
+  "xstest_jev_threshold_tradeoff": {
+    "threshold_0_5": {
+      "false_positive_rate_safe": 0.084,
+      "harmful_miss_rate": 0.07499999999999996
+    },
+    "threshold_tuned": {
+      "threshold": 0.77,
+      "false_positive_rate_safe": 0.012,
+      "harmful_miss_rate": 0.16000000000000003
+    }
+  },
+  "ece": {
+    "toxigen_jev": 0.06147872340425532,
+    "toxigen_clef": 0.19694702127659577,
+    "toxicchat_jev": 0.014448160535117056,
+    "toxicchat_clef": 0.0980086563053315,
+    "xstest_jev": 0.07322222222222223,
+    "xstest_clef": 0.11705088888888887
+  },
+  "harmbench_by_config": {
+    "DirectRequest": {
+      "n": 320,
+      "by_arm": {
+        "jev": {
+          "miss_rate": 0.340625,
+          "n": 320
+        },
+        "clef": {
+          "miss_rate": 0.4,
+          "n": 320
+        },
+        "clef-flash": {
+          "miss_rate": 0.434375,
+          "n": 320
+        },
+        "guardrails": {
+          "miss_rate": 0.584375,
+          "n": 320
+        }
+      }
+    },
+    "HumanJailbreaks": {
+      "n": 1600,
+      "by_arm": {
+        "jev": {
+          "miss_rate": 0.27625,
+          "n": 1600
+        },
+        "clef": {
+          "miss_rate": 0.3925,
+          "n": 1600
+        },
+        "clef-flash": {
+          "miss_rate": 0.475625,
+          "n": 1600
+        },
+        "guardrails": {
+          "miss_rate": 0.12625,
+          "n": 1600
+        }
+      }
+    }
+  }
+}

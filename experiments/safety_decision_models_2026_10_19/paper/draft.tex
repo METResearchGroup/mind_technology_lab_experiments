@@ -1,0 +1,49 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{amsmath}
+\usepackage[hidelinks,pdftitle={Benchmarking Decision Models for LLM Safety Screening}]{hyperref}
+
+\title{Benchmarking Decision Models for LLM Safety Screening}
+\author{%
+Mark Torres\thanks{Kellogg School of Management, Northwestern University.
+Email: \texttt{mark.torres1@kellogg.northwestern.edu}.}%
+\and
+William J.\ Brady\thanks{Kellogg School of Management, Northwestern University.
+Email: \texttt{william.brady@kellogg.northwestern.edu}.}%
+}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/related}
+\input{sections/systems}
+\input{sections/datasets}
+\input{sections/methods}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/limitations}
+\input{sections/ethics}
+\input{sections/conclusion}
+
+\clearpage
+\appendix
+\input{sections/appendix}
+
+\FloatBarrier
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

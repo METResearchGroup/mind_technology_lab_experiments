@@ -1,0 +1,12 @@
+\section{Datasets}
+\label{sec:datasets}
+
+Eleven Hugging Face datasets supply prompt-level labels: nine safety or jailbreak corpora plus GoEmotions and Emotion~\cite{hartvigsen2022toxigen,markov2023holistic,lin2023toxicchat,deepset2024promptinjections,han2024wildguard,wang2024donotanswer,rottger2024xstest,mazeika2024harmbench,chao2024jailbreakbench,demszky2020goemotions,saravia2018carer}.
+We score user text only, never model replies.
+Development pools fit thresholds (maximize harmful-class F1 with benign FPR $\leq 5\%$ on labeled benign rows, else 0.5); JailbreakBench stays at 0.5 because its labeled development pool has fewer than 200 rows.
+HarmBench merges DirectRequest ($n=320$ test) and HumanJailbreaks ($n=1600$ test) for overall miss.
+JailbreakBench balances 100 harmful and 100 benign goals.
+Do-Not-Answer reports detection rate and risk-area aggregates without reproducing item text.
+JailbreakBench, HarmBench, XSTest, WildGuardMix, and Do-Not-Answer carry the empirical claims; the other sets, including GoEmotions and Emotion, complete the appendix evaluation grid.
+GoEmotions and Emotion use empty guardrail crosswalks (miss rate 1.0 means all rows pass the guardrail layer under our block definition).
+Full row counts and split rules are in the appendix.

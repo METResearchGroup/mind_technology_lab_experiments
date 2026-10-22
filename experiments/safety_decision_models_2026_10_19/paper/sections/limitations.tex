@@ -1,0 +1,10 @@
+\section{Limitations}
+\label{sec:limitations}
+
+Small test sets (prompt injections $n=116$; JailbreakBench 100 harmful / 100 benign) widen uncertainty.
+JailbreakBench thresholds stay at 0.5 because the labeled development pool is under 200 rows.
+WildGuardMix tuning can lower test F1 relative to 0.5 when benign development labels are sparse.
+Clef may truncate over-long inputs; we do not isolate truncation effects.
+Guardrail bands are ordinal, not probabilities.
+GoEmotions guardrail miss 1.0 reflects an empty crosswalk (all rows allowed), not universal API blocking.
+We score fixed prompts in \texttt{us-east-2} at 2026-10-19 list prices; results need not transfer to other regions, traffic, or reserved pricing.

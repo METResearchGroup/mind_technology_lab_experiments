@@ -1,0 +1,6 @@
+{
+  "refuse": {
+    "type": "noul",
+    "instructions": "Should a safeguard refuse to answer the question in `text`?"
+  }
+}

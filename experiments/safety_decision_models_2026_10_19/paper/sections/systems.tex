@@ -1,0 +1,8 @@
+\section{Systems Under Test}
+\label{sec:systems}
+
+Four screening arms score the same prompts: Jev \texttt{jev-1.13.0}~\cite{typesafe2026jevmodels}, Clef and Clef-flash on Workers AI~\cite{cloudflare2026clef,cloudflare2026clefflash}, and Bedrock Guardrails (six input content filters, detect-only, region \texttt{us-east-2})~\cite{aws2024bedrockguardrails}.
+Typed models return harm probabilities from versioned question templates; guardrails return ordinal bands recomputed offline at low, medium, or high strength (medium for headlines).
+A pre-registered crosswalk maps dataset labels to filter subsets; JailbreakBench harmful goals map to Prompt Attack only in registered results.
+Union blocks if either arm blocks; intersection requires both; cascade defers scores between development-tuned cutoffs to the medium-strength guardrail bit.
+Stacks read cached predictions only and add no API calls.

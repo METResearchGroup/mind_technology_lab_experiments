@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2026-10-20
+
+1. Compared Jev, Clef, Clef-flash, and a detect-only Bedrock guardrail on eleven public safety and emotion datasets. The Jev harness check passed the published intervals, and the core-pack metrics, figures, and S3 prefix are in `experiments/safety_decision_models_2026_10_19/`. [PR #34](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/34)
+2. Added a draft titled Benchmarking Decision Models for LLM Safety Screening, with the recorded core-pack results, stack policies, and a labeled post-hoc JailbreakBench guardrail sensitivity analysis. [PR #34](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/34)
+
 ## 2026-09-24
 
 1. Repo-root callers can load `GITHUB_PAT_TOKEN` from AWS Secrets Manager secret `github-pat-token` (JSON field `GH_TOKEN`) through `EnvVarsContainer`, with the value cached in memory after the first read. [PR #26](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/26)

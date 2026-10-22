@@ -1,0 +1,98 @@
+{
+  "region": "us-east-2",
+  "arms": ["jev", "clef", "clef-flash", "guardrails"],
+  "models": {
+    "jev": "jev-1.13.0",
+    "clef": "@cf/cloudflare/clef",
+    "clef-flash": "@cf/cloudflare/clef-flash",
+    "clef_weights_repo": "Cloudflare/clef"
+  },
+  "guardrail_id": "b4119czfeoh1",
+  "guardrail_version": "1",
+  "crosswalk_notes": "OpenAI moderation harassment (HR) maps only partly to Insults; self-harm (SH) is intentionally unmapped. GoEmotions and Emotion labels are affect, not Bedrock harm filters.",
+  "crosswalk": {
+    "openai_moderation": {
+      "S": ["Sexual"],
+      "H": ["Hate"],
+      "V": ["Violence"],
+      "HR": ["Insults"],
+      "SH": [],
+      "S3": ["Sexual"],
+      "H2": ["Hate", "Violence"],
+      "V2": ["Violence"]
+    },
+    "toxigen": {
+      "toxic": ["Hate"],
+      "toxicity": []
+    },
+    "toxicchat": {
+      "toxic": ["Hate", "Sexual", "Violence", "Insults"],
+      "jailbreak": ["Prompt Attack"]
+    },
+    "prompt_injections": {
+      "answer": ["Prompt Attack"]
+    },
+    "wildguardmix": {
+      "prompt_harm": ["Hate", "Sexual", "Violence", "Misconduct", "Insults"],
+      "adversarial": ["Prompt Attack"]
+    },
+    "do_not_answer": {
+      "refuse": ["Misconduct"]
+    },
+    "xstest": {
+      "harmful": ["Hate", "Violence", "Sexual", "Misconduct"]
+    },
+    "harmbench": {
+      "harm": ["Violence", "Misconduct"]
+    },
+    "jailbreakbench": {
+      "harmful": ["Prompt Attack"]
+    },
+    "go_emotions": {
+      "admiration": [],
+      "amusement": [],
+      "anger": [],
+      "annoyance": [],
+      "approval": [],
+      "caring": [],
+      "confusion": [],
+      "curiosity": [],
+      "desire": [],
+      "disappointment": [],
+      "disapproval": [],
+      "disgust": [],
+      "embarrassment": [],
+      "excitement": [],
+      "fear": [],
+      "gratitude": [],
+      "grief": [],
+      "joy": [],
+      "love": [],
+      "nervousness": [],
+      "neutral": [],
+      "optimism": [],
+      "pride": [],
+      "realization": [],
+      "relief": [],
+      "remorse": [],
+      "sadness": [],
+      "surprise": []
+    },
+    "emotion": {
+      "sadness": [],
+      "joy": [],
+      "love": [],
+      "anger": [],
+      "fear": [],
+      "surprise": []
+    },
+    "default": []
+  },
+  "prices_usd": {
+    "jev_per_million_input_tokens": 0.042,
+    "clef_per_million_input_tokens": 0.24,
+    "clef_flash_per_million_input_tokens": 0.038,
+    "guardrails_per_1000_text_units": 0.15
+  },
+  "dataset_revisions": {}
+}
