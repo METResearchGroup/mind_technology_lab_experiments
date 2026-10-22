@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1440">
+  <title>Run overview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600&amp;family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="site-header">
+      <div class="brand">
+        <a class="lab" href="runs.html">Mind Technology Lab</a>
+        <span class="product">Results</span>
+      </div>
+      <nav>
+        <a href="runs.html">Runs</a><a href="run.html" class="active">Overview</a><a href="round.html">Round</a><a href="comparison.html">Comparison</a>
+      </nav>
+    </header>
+
+    <p class="kicker">Run mock-2026-10-21</p>
+    <h1>Five revisions, ranked</h1>
+    <p class="lede">Seven voters scored each revised proposal on three criteria from 1 to 5. The order is the stored ranking. The mean total is the sum of the three scores, averaged across the seven voters.</p>
+    <p class="mock">Mock data for review. Rank 1 is round 3, rank 2 is round 1, and rank 3 is round 5. No model was called.</p>
+    <p class="meta">
+      <span>Model <strong>gpt-6-sol</strong></span>
+      <span>Effort <strong>medium</strong></span>
+      <span>Uploaded <strong>21 Oct 2026, 18:40 UTC</strong></span>
+      <span>Estimated cost <strong>$1.48</strong></span>
+      <span>348,900 in</span>
+      <span>78,400 out</span>
+    </p>
+    <p class="hash">Brief SHA-256 0aa0202b88165f3a17e75984d06591e85d2ffb271801e75e0adb5276da82b105</p>
+    <p class="note">Vote thread 01936a80-0000-7000-8000-000000000006. The link stays off until LANGSMITH_THREAD_URL_TEMPLATE is set.</p>
+    <div class="section">
+      <h2>Top 3</h2>
+      <div class="cards">
+
+            <article class="card rank-1">
+              <div class="rank-row">
+                <span class="rank-num">Rank 1, round 3</span>
+                <a href="round.html">Open round</a>
+              </div>
+              <h3>The last comment before a restatement</h3>
+              <p class="field"><span class="label">Question</span>In a discussion of about five people, is the comment immediately before a person restates a view more associated with the direction of that restatement than the first disagreeing comment?</p>
+              <p class="field"><span class="label">Revised outcome</span>Movement of the public restatement toward the last comment or the first disagreement, plus a private scale item with the same endpoints after the thread closes.</p>
+              <div class="scores">
+                <span class="pill">Mean total <em>12.43</em></span>
+                <span class="pill">Non-obvious <em>4.00</em></span>
+                <span class="pill">Feasible <em>4.43</em></span>
+                <span class="pill">Method fits <em>4.00</em></span>
+              </div>
+            </article>
+
+            <article class="card rank-2">
+              <div class="rank-row">
+                <span class="rank-num">Rank 2, round 1</span>
+                <span class="note">Same layout as round 3</span>
+              </div>
+              <h3>Peer dissent in a five-person thread</h3>
+              <p class="field"><span class="label">Question</span>When someone has just stated an opinion, does one disagreeing comment from another member of the same small group shift the next stated opinion more than one disagreeing comment from someone outside the group?</p>
+              <p class="field"><span class="label">Revised outcome</span>The public gap inside the thread, plus a private scale item with the same endpoints, collected after the thread closes.</p>
+              <div class="scores">
+                <span class="pill">Mean total <em>11.14</em></span>
+                <span class="pill">Non-obvious <em>3.57</em></span>
+                <span class="pill">Feasible <em>3.57</em></span>
+                <span class="pill">Method fits <em>4.00</em></span>
+              </div>
+            </article>
+
+            <article class="card rank-3">
+              <div class="rank-row">
+                <span class="rank-num">Rank 3, round 5</span>
+                <span class="note">Same layout as round 3</span>
+              </div>
+              <h3>Party label versus a peer with no label</h3>
+              <p class="field"><span class="label">Question</span>Does a comment that names a party move a stated opinion more than a comment with the same argument and no party name, in a group of five strangers?</p>
+              <p class="field"><span class="label">Revised outcome</span>Change from the first statement to the restatement, with the labeled and unlabeled comments matched on length and argument.</p>
+              <div class="scores">
+                <span class="pill">Mean total <em>10.57</em></span>
+                <span class="pill">Non-obvious <em>3.57</em></span>
+                <span class="pill">Feasible <em>3.57</em></span>
+                <span class="pill">Method fits <em>3.43</em></span>
+              </div>
+            </article>
+
+      </div>
+    </div>
+    <div class="section">
+      <h2>All rounds</h2>
+      <table>
+        <thead>
+          <tr>
+            <th class="rank">Rank</th>
+            <th>Round</th>
+            <th>Seed</th>
+            <th>Title</th>
+            <th class="num">Mean total</th>
+            <th class="num">Non-obvious</th>
+            <th class="num">Feasible</th>
+            <th class="num">Method fits</th>
+          </tr>
+        </thead>
+        <tbody>
+
+            <tr class="is-top">
+              <td class="rank">1</td>
+              <td>3</td>
+              <td>Communications researcher</td>
+              <td><a href="round.html">The last comment before a restatement</a></td>
+              <td class="num">12.43</td>
+              <td class="num">4.00</td>
+              <td class="num">4.43</td>
+              <td class="num">4.00</td>
+            </tr>
+
+            <tr class="is-top">
+              <td class="rank">2</td>
+              <td>1</td>
+              <td>Social psychologist</td>
+              <td>Peer dissent in a five-person thread</td>
+              <td class="num">11.14</td>
+              <td class="num">3.57</td>
+              <td class="num">3.57</td>
+              <td class="num">4.00</td>
+            </tr>
+
+            <tr class="is-top">
+              <td class="rank">3</td>
+              <td>5</td>
+              <td>Political scientist</td>
+              <td>Party label versus a peer with no label</td>
+              <td class="num">10.57</td>
+              <td class="num">3.57</td>
+              <td class="num">3.57</td>
+              <td class="num">3.43</td>
+            </tr>
+
+            <tr>
+              <td class="rank">4</td>
+              <td>2</td>
+              <td>Computer scientist</td>
+              <td>How far a restatement moves from the prior sentence</td>
+              <td class="num">9.00</td>
+              <td class="num">2.71</td>
+              <td class="num">3.29</td>
+              <td class="num">3.00</td>
+            </tr>
+
+            <tr>
+              <td class="rank">5</td>
+              <td>4</td>
+              <td>Sociologist</td>
+              <td>Who is allowed to change their mind</td>
+              <td class="num">7.71</td>
+              <td class="num">2.43</td>
+              <td class="num">2.43</td>
+              <td class="num">2.86</td>
+            </tr>
+
+        </tbody>
+      </table>
+      <p class="note" style="margin-top:16px"><a href="comparison.html">Compare per-voter scores</a></p>
+    </div>
+
+  </div>
+</body>
+</html>
