@@ -1,0 +1,4 @@
+# Copy this file to .dev.vars for local `pywrangler dev`.
+# .dev.vars is gitignored. Do not put a production token here.
+# Deployed Workers receive NOTE_TOKEN from `pywrangler secret put NOTE_TOKEN`.
+NOTE_TOKEN=local-dev-only

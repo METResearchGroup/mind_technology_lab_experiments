@@ -1,0 +1,45 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cloudflare-deploy-demo-web",
+  // The local Workers runtime in this vinext toolchain accepts dates through 2026-10-19.
+  "compatibility_date": "2026-10-19",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "main": "vinext/server/fetch-handler",
+  "assets": {
+    "directory": "dist/client",
+    "html_handling": "none",
+    "not_found_handling": "none",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/*",
+      "!/_next/static/*",
+      "!/*/_next/static/*"
+    ]
+  },
+  "dev": {
+    "port": 8788
+  },
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1
+    },
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 1
+    }
+  },
+  "vars": {
+    // Public API origin. The browser and the server action both use this.
+    // Replace it with the deployed API URL before a production deploy.
+    "API_BASE_URL": "http://127.0.0.1:8787"
+  },
+  // NOTE_TOKEN is a secret. The server action sends it to the API.
+  // Local development reads it from .dev.vars, which is not committed.
+  "secrets": {
+    "required": ["NOTE_TOKEN"]
+  }
+}
