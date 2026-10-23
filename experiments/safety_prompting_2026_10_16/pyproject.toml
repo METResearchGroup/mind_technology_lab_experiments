@@ -1,0 +1,13 @@
+[project]
+name = "safety-prompting"
+version = "0.1.0"
+description = "Compare refusal rates for two system prompts on HarmBench, AdvBench, and AgentHarm."
+requires-python = ">=3.10"
+dependencies = [
+    "boto3>=1.35.0",
+    "datasets>=3.0.0",
+    "typesafe-sdk>=0.7.5",
+]
+
+[tool.uv]
+package = false
