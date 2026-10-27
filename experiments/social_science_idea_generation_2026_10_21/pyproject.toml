@@ -1,0 +1,17 @@
+[project]
+name = "social-science-idea-generation"
+version = "0.1.0"
+description = "Discuss one brief into social science research ideas."
+requires-python = ">=3.11"
+dependencies = [
+    "boto3>=1.43.117",
+    "deepagents>=0.7.29",
+    "langchain[openai]>=1.4.7",
+    "langsmith>=0.14.12",
+    "pandas>=3.0.6",
+    "pydantic>=2.14.1",
+    "tiktoken>=0.14.0",
+]
+
+[tool.uv]
+package = false

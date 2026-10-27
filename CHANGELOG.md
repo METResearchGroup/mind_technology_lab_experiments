@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2026-10-21
+
+1. A fixed brief can be discussed into one social science study idea, with LangSmith tracing and a short-context cost note for the five-round study. The full study stays unrun until that note is accepted. [PR #38](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/38)
+
 ## 2026-09-24
 
 1. Repo-root callers can load `GITHUB_PAT_TOKEN` from AWS Secrets Manager secret `github-pat-token` (JSON field `GH_TOKEN`) through `EnvVarsContainer`, with the value cached in memory after the first read. [PR #26](https://github.com/METResearchGroup/mind_technology_lab_experiments/pull/26)
