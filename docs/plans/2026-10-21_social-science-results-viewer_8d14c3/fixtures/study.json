@@ -1,0 +1,1292 @@
+{
+  "run_id": "mock-2026-10-21",
+  "model_id": "gpt-6-sol",
+  "reasoning_effort": "medium",
+  "brief_sha256": "0aa0202b88165f3a17e75984d06591e85d2ffb271801e75e0adb5276da82b105",
+  "rounds": [
+    {
+      "round_index": 1,
+      "seed_role": "social_psychologist",
+      "thread_id": "01936a80-0000-7000-8000-000000000001",
+      "brief_sha256": "0aa0202b88165f3a17e75984d06591e85d2ffb271801e75e0adb5276da82b105",
+      "turns": [
+        {
+          "role": "social_psychologist",
+          "kind": "seed",
+          "iteration": null,
+          "payload": {
+            "title": "Peer dissent in a five-person thread",
+            "question": "When someone has just stated an opinion, does one disagreeing comment from another member of the same small group shift the next stated opinion more than one disagreeing comment from someone outside the group?",
+            "claim": "Dissent from inside the group is harder to set aside as ignorance of the group's norms, so the update should be larger.",
+            "population": "Adults in a short online discussion of five people, recruited for a small experiment.",
+            "outcome": "The numeric gap between the opinion stated before the comment and the opinion stated after it.",
+            "why_it_might_be_nonobvious": "A public correction often produces a public concession. The design asks for the next stated opinion inside the same thread, which mixes a public concession with a private update."
+          },
+          "input_tokens": 2400,
+          "output_tokens": 1800,
+          "reasoning_tokens": 810,
+          "latency_ms": 6490
+        },
+        {
+          "role": "computer_scientist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Computer scientist says Peer dissent in a five-person thread still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4380,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 4460
+        },
+        {
+          "role": "communications_researcher",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Communications researcher says Peer dissent in a five-person thread still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4560,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 4630
+        },
+        {
+          "role": "sociologist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Sociologist says Peer dissent in a five-person thread still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4740,
+          "output_tokens": 900,
+          "reasoning_tokens": 405,
+          "latency_ms": 4800
+        },
+        {
+          "role": "political_scientist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Political scientist says Peer dissent in a five-person thread still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4920,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 4970
+        },
+        {
+          "role": "computer_scientist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Computer scientist says the comparison group is not named tightly enough for Peer dissent in a five-person thread.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5100,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 5140
+        },
+        {
+          "role": "communications_researcher",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Communications researcher says the comparison group is not named tightly enough for Peer dissent in a five-person thread.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5280,
+          "output_tokens": 900,
+          "reasoning_tokens": 405,
+          "latency_ms": 5310
+        },
+        {
+          "role": "sociologist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Sociologist says the comparison group is not named tightly enough for Peer dissent in a five-person thread.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5460,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 5480
+        },
+        {
+          "role": "political_scientist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Political scientist says the comparison group is not named tightly enough for Peer dissent in a five-person thread.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5640,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 5650
+        },
+        {
+          "role": "synthesizer",
+          "kind": "synthesis",
+          "iteration": null,
+          "payload": {
+            "title": "Peer dissent in a five-person thread",
+            "question": "When someone has just stated an opinion, does one disagreeing comment from another member of the same small group shift the next stated opinion more than one disagreeing comment from someone outside the group?",
+            "claim": "Dissent from inside the group is harder to set aside as ignorance of the group's norms, so the update should be larger.",
+            "population": "Adults in a short online discussion of five people, recruited for a small experiment.",
+            "outcome": "The numeric gap between the opinion stated before the comment and the opinion stated after it.",
+            "why_it_might_be_nonobvious": "A public correction often produces a public concession. The design asks for the next stated opinion inside the same thread, which mixes a public concession with a private update."
+          },
+          "input_tokens": 8600,
+          "output_tokens": 1600,
+          "reasoning_tokens": 720,
+          "latency_ms": 10720
+        },
+        {
+          "role": "methodologist",
+          "kind": "method",
+          "iteration": null,
+          "payload": {
+            "design": "Recruit adults into threads of five. Each person states an opinion, then reads one disagreement either from a member of the thread or from an outside account, then states the opinion again.",
+            "data": "A small experiment. No archival scrape in the revision.",
+            "comparison": "In-group dissent versus out-group dissent, with one disagreeing comment in both arms.",
+            "main_threat": "People may perform agreement because the group is still watching."
+          },
+          "input_tokens": 5200,
+          "output_tokens": 1400,
+          "reasoning_tokens": 630,
+          "latency_ms": 10590
+        },
+        {
+          "role": "critic",
+          "kind": "critique",
+          "iteration": null,
+          "payload": {
+            "fatal": false,
+            "flaws": [
+              "The public restatement can move without a private update.",
+              "The comparison can pick up comment length as well as the intended contrast."
+            ],
+            "required_change": "The revision adds a private scale item after the thread closes, because the critic said a public concession was not an update."
+          },
+          "input_tokens": 6100,
+          "output_tokens": 700,
+          "reasoning_tokens": 315,
+          "latency_ms": 9260
+        },
+        {
+          "role": "methodologist",
+          "kind": "revision",
+          "iteration": null,
+          "payload": {
+            "idea": {
+              "title": "Peer dissent in a five-person thread",
+              "question": "When someone has just stated an opinion, does one disagreeing comment from another member of the same small group shift the next stated opinion more than one disagreeing comment from someone outside the group?",
+              "claim": "Dissent from inside the group is harder to set aside as ignorance of the group's norms, so the update should be larger.",
+              "population": "Adults in a short online discussion of five people, recruited for a small experiment.",
+              "outcome": "The public gap inside the thread, plus a private scale item with the same endpoints, collected after the thread closes.",
+              "why_it_might_be_nonobvious": "A public correction often produces a public concession. The design asks for the next stated opinion inside the same thread, which mixes a public concession with a private update."
+            },
+            "method": {
+              "design": "Recruit adults into threads of five. Each person states an opinion, then reads one disagreement either from a member of the thread or from an outside account, then states the opinion again.",
+              "data": "A small experiment. No archival scrape in the revision.",
+              "comparison": "In-group dissent versus out-group dissent, with one disagreeing comment in both arms.",
+              "main_threat": "People may perform agreement because the group is still watching."
+            },
+            "what_changed": "The revision adds a private scale item after the thread closes, because the critic said a public concession was not an update."
+          },
+          "input_tokens": 7400,
+          "output_tokens": 1900,
+          "reasoning_tokens": 855,
+          "latency_ms": 13330
+        }
+      ]
+    },
+    {
+      "round_index": 2,
+      "seed_role": "computer_scientist",
+      "thread_id": "01936a80-0000-7000-8000-000000000002",
+      "brief_sha256": "0aa0202b88165f3a17e75984d06591e85d2ffb271801e75e0adb5276da82b105",
+      "turns": [
+        {
+          "role": "computer_scientist",
+          "kind": "seed",
+          "iteration": null,
+          "payload": {
+            "title": "How far a restatement moves from the prior sentence",
+            "question": "In public comment threads of about five speakers, how far does a person's restated opinion move, in embedding distance, after the intervening comments?",
+            "claim": "Distance from the original sentence tracks an update even when the person never writes an explicit change of mind.",
+            "population": "Public Reddit threads already limited to a handful of speakers. No new experiment.",
+            "outcome": "Cosine distance between the first statement and the restatement.",
+            "why_it_might_be_nonobvious": "Stance models are usually built for long debates. A thread of five speakers may be too short for those models, and the distance may still move."
+          },
+          "input_tokens": 2400,
+          "output_tokens": 1800,
+          "reasoning_tokens": 810,
+          "latency_ms": 6580
+        },
+        {
+          "role": "communications_researcher",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Communications researcher says How far a restatement moves from the prior sentence still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4380,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 4550
+        },
+        {
+          "role": "sociologist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Sociologist says How far a restatement moves from the prior sentence still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4560,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 4720
+        },
+        {
+          "role": "political_scientist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Political scientist says How far a restatement moves from the prior sentence still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4740,
+          "output_tokens": 900,
+          "reasoning_tokens": 405,
+          "latency_ms": 4890
+        },
+        {
+          "role": "social_psychologist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Social psychologist says How far a restatement moves from the prior sentence still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4920,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 5060
+        },
+        {
+          "role": "communications_researcher",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Communications researcher says the comparison group is not named tightly enough for How far a restatement moves from the prior sentence.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5100,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 5230
+        },
+        {
+          "role": "sociologist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Sociologist says the comparison group is not named tightly enough for How far a restatement moves from the prior sentence.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5280,
+          "output_tokens": 900,
+          "reasoning_tokens": 405,
+          "latency_ms": 5400
+        },
+        {
+          "role": "political_scientist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Political scientist says the comparison group is not named tightly enough for How far a restatement moves from the prior sentence.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5460,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 5570
+        },
+        {
+          "role": "social_psychologist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Social psychologist says the comparison group is not named tightly enough for How far a restatement moves from the prior sentence.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5640,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 5740
+        },
+        {
+          "role": "synthesizer",
+          "kind": "synthesis",
+          "iteration": null,
+          "payload": {
+            "title": "How far a restatement moves from the prior sentence",
+            "question": "In public comment threads of about five speakers, how far does a person's restated opinion move, in embedding distance, after the intervening comments?",
+            "claim": "Distance from the original sentence tracks an update even when the person never writes an explicit change of mind.",
+            "population": "Public Reddit threads already limited to a handful of speakers. No new experiment.",
+            "outcome": "Cosine distance between the first statement and the restatement.",
+            "why_it_might_be_nonobvious": "Stance models are usually built for long debates. A thread of five speakers may be too short for those models, and the distance may still move."
+          },
+          "input_tokens": 8600,
+          "output_tokens": 1600,
+          "reasoning_tokens": 720,
+          "latency_ms": 10810
+        },
+        {
+          "role": "methodologist",
+          "kind": "method",
+          "iteration": null,
+          "payload": {
+            "design": "Take public threads with about five speakers, embed the first opinion sentence and the later restatement, and record the cosine distance.",
+            "data": "Public Reddit threads. No new experiment.",
+            "comparison": "Threads whose middle comments disagree with the first statement versus threads whose middle comments agree.",
+            "main_threat": "A restatement that copies the old sentence with new politeness markers can look like movement to an embedding."
+          },
+          "input_tokens": 5200,
+          "output_tokens": 1400,
+          "reasoning_tokens": 630,
+          "latency_ms": 10680
+        },
+        {
+          "role": "critic",
+          "kind": "critique",
+          "iteration": null,
+          "payload": {
+            "fatal": false,
+            "flaws": [
+              "The public restatement can move without a private update.",
+              "The comparison can pick up comment length as well as the intended contrast."
+            ],
+            "required_change": "The revision drops threads shorter than five speakers before scoring, because the critic said the distance was not comparable across thread lengths."
+          },
+          "input_tokens": 6100,
+          "output_tokens": 700,
+          "reasoning_tokens": 315,
+          "latency_ms": 9350
+        },
+        {
+          "role": "methodologist",
+          "kind": "revision",
+          "iteration": null,
+          "payload": {
+            "idea": {
+              "title": "How far a restatement moves from the prior sentence",
+              "question": "In public comment threads of about five speakers, how far does a person's restated opinion move, in embedding distance, after the intervening comments?",
+              "claim": "Distance from the original sentence tracks an update even when the person never writes an explicit change of mind.",
+              "population": "Public Reddit threads already limited to a handful of speakers. No new experiment.",
+              "outcome": "Cosine distance between the first statement and the restatement, with threads shorter than five speakers dropped before scoring.",
+              "why_it_might_be_nonobvious": "Stance models are usually built for long debates. A thread of five speakers may be too short for those models, and the distance may still move."
+            },
+            "method": {
+              "design": "Take public threads with about five speakers, embed the first opinion sentence and the later restatement, and record the cosine distance.",
+              "data": "Public Reddit threads. No new experiment.",
+              "comparison": "Threads whose middle comments disagree with the first statement versus threads whose middle comments agree.",
+              "main_threat": "A restatement that copies the old sentence with new politeness markers can look like movement to an embedding."
+            },
+            "what_changed": "The revision drops threads shorter than five speakers before scoring, because the critic said the distance was not comparable across thread lengths."
+          },
+          "input_tokens": 7400,
+          "output_tokens": 1900,
+          "reasoning_tokens": 855,
+          "latency_ms": 13420
+        }
+      ]
+    },
+    {
+      "round_index": 3,
+      "seed_role": "communications_researcher",
+      "thread_id": "01936a80-0000-7000-8000-000000000003",
+      "brief_sha256": "0aa0202b88165f3a17e75984d06591e85d2ffb271801e75e0adb5276da82b105",
+      "turns": [
+        {
+          "role": "communications_researcher",
+          "kind": "seed",
+          "iteration": null,
+          "payload": {
+            "title": "The last comment before a restatement",
+            "question": "In a discussion of about five people, is the comment immediately before a person restates a view more associated with the direction of that restatement than the first disagreeing comment?",
+            "claim": "People answer the latest turn, not the strongest objection, when the group is small enough that every comment stays on screen.",
+            "population": "A small experiment. Groups of five, one short prompt, and one restatement from each person.",
+            "outcome": "Whether the restatement moves toward the last comment or toward the first disagreement.",
+            "why_it_might_be_nonobvious": "Recency is a common survey result. It is less clear that recency beats the first objection inside a group that can still see both."
+          },
+          "input_tokens": 2400,
+          "output_tokens": 1800,
+          "reasoning_tokens": 810,
+          "latency_ms": 6670
+        },
+        {
+          "role": "sociologist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "The last-comment effect may be the person answering whoever is still active in the thread. A design that closes the thread before the restatement would separate recency from interruption.",
+            "alternative": "Freeze the comment list, then ask for the restatement on the next screen."
+          },
+          "input_tokens": 4380,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 4640
+        },
+        {
+          "role": "political_scientist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "A five-person group still has a majority. The restatement may move toward the side with more speakers, and the last comment is only a stand-in for that side.",
+            "alternative": "Hold the count of disagreeing speakers at one, and vary only whether that speaker is first or last."
+          },
+          "input_tokens": 4560,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 4810
+        },
+        {
+          "role": "social_psychologist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Ask for the opinion in the thread and again on a private item. Public agreement with the last speaker is a different outcome from a private update.",
+            "alternative": "Use the same numeric scale for the public statement and the private item."
+          },
+          "input_tokens": 4740,
+          "output_tokens": 900,
+          "reasoning_tokens": 405,
+          "latency_ms": 4980
+        },
+        {
+          "role": "computer_scientist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Record order and timestamps. If two comments arrive close together, last is not well defined.",
+            "alternative": "Store the gap in seconds between the last two comments, and drop pairs that land inside two seconds."
+          },
+          "input_tokens": 4920,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 5150
+        },
+        {
+          "role": "sociologist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Vary whether the last speaker is the same person who disagreed first. Otherwise recency and first dissent can be the same speaker.",
+            "alternative": "Cross last-versus-first with same-speaker versus different-speaker."
+          },
+          "input_tokens": 5100,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 5320
+        },
+        {
+          "role": "political_scientist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "A party label would swamp a recency test. The party-cue study is a separate round and should stay out of this design.",
+            "alternative": "Ban party names and news-outlet names from the stimulus comments."
+          },
+          "input_tokens": 5280,
+          "output_tokens": 900,
+          "reasoning_tokens": 405,
+          "latency_ms": 5490
+        },
+        {
+          "role": "social_psychologist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "The private item has to use the same endpoints as the statement in the thread, or the gap is not interpretable.",
+            "alternative": "Copy the scale wording onto the private item and change only the privacy instruction."
+          },
+          "input_tokens": 5460,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 5660
+        },
+        {
+          "role": "computer_scientist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "A session that runs until someone restates will over-sample people who like the last word.",
+            "alternative": "Publish a stopping rule before the sessions. End the thread after the assigned comments, then ask for the restatement."
+          },
+          "input_tokens": 5640,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 5830
+        },
+        {
+          "role": "synthesizer",
+          "kind": "synthesis",
+          "iteration": null,
+          "payload": {
+            "title": "The last comment before a restatement",
+            "question": "In a discussion of about five people, is the comment immediately before a person restates a view more associated with the direction of that restatement than the first disagreeing comment?",
+            "claim": "People answer the latest turn, not the strongest objection, when the group is small enough that every comment stays on screen.",
+            "population": "A small experiment. Groups of five, one short prompt, and one restatement from each person.",
+            "outcome": "Whether the restatement moves toward the last comment or toward the first disagreement.",
+            "why_it_might_be_nonobvious": "Recency is a common survey result. It is less clear that recency beats the first objection inside a group that can still see both."
+          },
+          "input_tokens": 8600,
+          "output_tokens": 1600,
+          "reasoning_tokens": 720,
+          "latency_ms": 10900
+        },
+        {
+          "role": "methodologist",
+          "kind": "method",
+          "iteration": null,
+          "payload": {
+            "design": "Randomize groups of five adults. Each person states an opinion, reads four comments, and restates the opinion. In half the groups the last comment is the disagreeing one. In the other half the first comment disagrees and the last comment agrees.",
+            "data": "A small experiment. No public-data arm in the revision.",
+            "comparison": "Last-comment disagreement versus first-comment disagreement, with the number of disagreeing comments held at one.",
+            "main_threat": "People who expect to restate may write a vague first opinion, which shrinks every update."
+          },
+          "input_tokens": 5200,
+          "output_tokens": 1400,
+          "reasoning_tokens": 630,
+          "latency_ms": 10770
+        },
+        {
+          "role": "critic",
+          "kind": "critique",
+          "iteration": null,
+          "payload": {
+            "fatal": false,
+            "flaws": [
+              "The public restatement can move without a private update.",
+              "The comparison can pick up comment length as well as the intended contrast."
+            ],
+            "required_change": "The method now ends the thread after the assigned comments, and it adds a private scale item that uses the same endpoints as the public statement. The outcome names both."
+          },
+          "input_tokens": 6100,
+          "output_tokens": 700,
+          "reasoning_tokens": 315,
+          "latency_ms": 9440
+        },
+        {
+          "role": "methodologist",
+          "kind": "revision",
+          "iteration": null,
+          "payload": {
+            "idea": {
+              "title": "The last comment before a restatement",
+              "question": "In a discussion of about five people, is the comment immediately before a person restates a view more associated with the direction of that restatement than the first disagreeing comment?",
+              "claim": "People answer the latest turn, not the strongest objection, when the group is small enough that every comment stays on screen.",
+              "population": "A small experiment. Groups of five, one short prompt, and one restatement from each person.",
+              "outcome": "Movement of the public restatement toward the last comment or the first disagreement, plus a private scale item with the same endpoints after the thread closes.",
+              "why_it_might_be_nonobvious": "Recency is a common survey result. It is less clear that recency beats the first objection inside a group that can still see both."
+            },
+            "method": {
+              "design": "Randomize groups of five adults. Each person states an opinion, reads four comments, and restates the opinion. In half the groups the last comment is the disagreeing one. In the other half the first comment disagrees and the last comment agrees.",
+              "data": "A small experiment. No public-data arm in the revision.",
+              "comparison": "Last-comment disagreement versus first-comment disagreement, with the number of disagreeing comments held at one.",
+              "main_threat": "People who expect to restate may write a vague first opinion, which shrinks every update."
+            },
+            "what_changed": "The method now ends the thread after the assigned comments, and it adds a private scale item that uses the same endpoints as the public statement. The outcome names both."
+          },
+          "input_tokens": 7400,
+          "output_tokens": 1900,
+          "reasoning_tokens": 855,
+          "latency_ms": 13510
+        }
+      ]
+    },
+    {
+      "round_index": 4,
+      "seed_role": "sociologist",
+      "thread_id": "01936a80-0000-7000-8000-000000000004",
+      "brief_sha256": "0aa0202b88165f3a17e75984d06591e85d2ffb271801e75e0adb5276da82b105",
+      "turns": [
+        {
+          "role": "sociologist",
+          "kind": "seed",
+          "iteration": null,
+          "payload": {
+            "title": "Who is allowed to change their mind",
+            "question": "In a small online group, do speakers with fewer ties to the others update a stated opinion more often than speakers with more ties?",
+            "claim": "Dense ties turn a stated opinion into a commitment, so the well-connected speaker updates less.",
+            "population": "Public discussion threads with a reply graph, restricted to threads with about five participants.",
+            "outcome": "Whether the speaker's later statement moves toward the comments they received, split by degree in the thread.",
+            "why_it_might_be_nonobvious": "Network studies usually treat influence as incoming exposure. Here the tie is a constraint on the speaker's own revision."
+          },
+          "input_tokens": 2400,
+          "output_tokens": 1800,
+          "reasoning_tokens": 810,
+          "latency_ms": 6760
+        },
+        {
+          "role": "political_scientist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Political scientist says Who is allowed to change their mind still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4380,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 4730
+        },
+        {
+          "role": "social_psychologist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Social psychologist says Who is allowed to change their mind still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4560,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 4900
+        },
+        {
+          "role": "computer_scientist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Computer scientist says Who is allowed to change their mind still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4740,
+          "output_tokens": 900,
+          "reasoning_tokens": 405,
+          "latency_ms": 5070
+        },
+        {
+          "role": "communications_researcher",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Communications researcher says Who is allowed to change their mind still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4920,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 5240
+        },
+        {
+          "role": "political_scientist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Political scientist says the comparison group is not named tightly enough for Who is allowed to change their mind.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5100,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 5410
+        },
+        {
+          "role": "social_psychologist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Social psychologist says the comparison group is not named tightly enough for Who is allowed to change their mind.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5280,
+          "output_tokens": 900,
+          "reasoning_tokens": 405,
+          "latency_ms": 5580
+        },
+        {
+          "role": "computer_scientist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Computer scientist says the comparison group is not named tightly enough for Who is allowed to change their mind.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5460,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 5750
+        },
+        {
+          "role": "communications_researcher",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Communications researcher says the comparison group is not named tightly enough for Who is allowed to change their mind.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5640,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 5920
+        },
+        {
+          "role": "synthesizer",
+          "kind": "synthesis",
+          "iteration": null,
+          "payload": {
+            "title": "Who is allowed to change their mind",
+            "question": "In a small online group, do speakers with fewer ties to the others update a stated opinion more often than speakers with more ties?",
+            "claim": "Dense ties turn a stated opinion into a commitment, so the well-connected speaker updates less.",
+            "population": "Public discussion threads with a reply graph, restricted to threads with about five participants.",
+            "outcome": "Whether the speaker's later statement moves toward the comments they received, split by degree in the thread.",
+            "why_it_might_be_nonobvious": "Network studies usually treat influence as incoming exposure. Here the tie is a constraint on the speaker's own revision."
+          },
+          "input_tokens": 8600,
+          "output_tokens": 1600,
+          "reasoning_tokens": 720,
+          "latency_ms": 10990
+        },
+        {
+          "role": "methodologist",
+          "kind": "method",
+          "iteration": null,
+          "payload": {
+            "design": "Build the reply graph for public threads of about five people. Code whether the later statement moved toward the comments the speaker received, and split speakers by degree.",
+            "data": "Public threads with a reply graph.",
+            "comparison": "Low degree versus high degree inside the same thread.",
+            "main_threat": "High degree may mean the speaker wrote more, not that the speaker had more ties."
+          },
+          "input_tokens": 5200,
+          "output_tokens": 1400,
+          "reasoning_tokens": 630,
+          "latency_ms": 10860
+        },
+        {
+          "role": "critic",
+          "kind": "critique",
+          "iteration": null,
+          "payload": {
+            "fatal": false,
+            "flaws": [
+              "The public restatement can move without a private update.",
+              "The comparison can pick up comment length as well as the intended contrast."
+            ],
+            "required_change": "The revision drops threads where one person wrote most of the replies, because degree in those threads is not a tie so much as a volume effect."
+          },
+          "input_tokens": 6100,
+          "output_tokens": 700,
+          "reasoning_tokens": 315,
+          "latency_ms": 9530
+        },
+        {
+          "role": "methodologist",
+          "kind": "revision",
+          "iteration": null,
+          "payload": {
+            "idea": {
+              "title": "Who is allowed to change their mind",
+              "question": "In a small online group, do speakers with fewer ties to the others update a stated opinion more often than speakers with more ties?",
+              "claim": "Dense ties turn a stated opinion into a commitment, so the well-connected speaker updates less.",
+              "population": "Public discussion threads with a reply graph, restricted to threads with about five participants.",
+              "outcome": "Movement of the later statement toward received comments, split by degree, after dropping threads where one person wrote most replies.",
+              "why_it_might_be_nonobvious": "Network studies usually treat influence as incoming exposure. Here the tie is a constraint on the speaker's own revision."
+            },
+            "method": {
+              "design": "Build the reply graph for public threads of about five people. Code whether the later statement moved toward the comments the speaker received, and split speakers by degree.",
+              "data": "Public threads with a reply graph.",
+              "comparison": "Low degree versus high degree inside the same thread.",
+              "main_threat": "High degree may mean the speaker wrote more, not that the speaker had more ties."
+            },
+            "what_changed": "The revision drops threads where one person wrote most of the replies, because degree in those threads is not a tie so much as a volume effect."
+          },
+          "input_tokens": 7400,
+          "output_tokens": 1900,
+          "reasoning_tokens": 855,
+          "latency_ms": 13600
+        }
+      ]
+    },
+    {
+      "round_index": 5,
+      "seed_role": "political_scientist",
+      "thread_id": "01936a80-0000-7000-8000-000000000005",
+      "brief_sha256": "0aa0202b88165f3a17e75984d06591e85d2ffb271801e75e0adb5276da82b105",
+      "turns": [
+        {
+          "role": "political_scientist",
+          "kind": "seed",
+          "iteration": null,
+          "payload": {
+            "title": "Party label versus a peer with no label",
+            "question": "Does a comment that names a party move a stated opinion more than a comment with the same argument and no party name, in a group of five strangers?",
+            "claim": "In a group of strangers, a party label is a shortcut, and it should move the restatement more than an unlabeled argument of the same length.",
+            "population": "A small experiment with adults, five per group, one issue, and random assignment of the label.",
+            "outcome": "Change in the stated opinion from before the comments to the restatement.",
+            "why_it_might_be_nonobvious": "Party cues are strong in polls. They may be weaker when the other four people are visible peers rather than a news source."
+          },
+          "input_tokens": 2400,
+          "output_tokens": 1800,
+          "reasoning_tokens": 810,
+          "latency_ms": 6850
+        },
+        {
+          "role": "social_psychologist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Social psychologist says Party label versus a peer with no label still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4380,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 4820
+        },
+        {
+          "role": "computer_scientist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Computer scientist says Party label versus a peer with no label still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4560,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 4990
+        },
+        {
+          "role": "communications_researcher",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Communications researcher says Party label versus a peer with no label still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4740,
+          "output_tokens": 900,
+          "reasoning_tokens": 405,
+          "latency_ms": 5160
+        },
+        {
+          "role": "sociologist",
+          "kind": "comment",
+          "iteration": 1,
+          "payload": {
+            "objection": "Sociologist says Party label versus a peer with no label still mixes a public restatement with a private update.",
+            "alternative": "Add a private scale item after the thread closes, on the same endpoints as the public statement."
+          },
+          "input_tokens": 4920,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 5330
+        },
+        {
+          "role": "social_psychologist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Social psychologist says the comparison group is not named tightly enough for Party label versus a peer with no label.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5100,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 5500
+        },
+        {
+          "role": "computer_scientist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Computer scientist says the comparison group is not named tightly enough for Party label versus a peer with no label.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5280,
+          "output_tokens": 900,
+          "reasoning_tokens": 405,
+          "latency_ms": 5670
+        },
+        {
+          "role": "communications_researcher",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Communications researcher says the comparison group is not named tightly enough for Party label versus a peer with no label.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5460,
+          "output_tokens": 1020,
+          "reasoning_tokens": 459,
+          "latency_ms": 5840
+        },
+        {
+          "role": "sociologist",
+          "kind": "comment",
+          "iteration": 2,
+          "payload": {
+            "objection": "Sociologist says the comparison group is not named tightly enough for Party label versus a peer with no label.",
+            "alternative": "Write the contrast in one sentence before collecting any responses, and do not add a second contrast later."
+          },
+          "input_tokens": 5640,
+          "output_tokens": 1140,
+          "reasoning_tokens": 513,
+          "latency_ms": 6010
+        },
+        {
+          "role": "synthesizer",
+          "kind": "synthesis",
+          "iteration": null,
+          "payload": {
+            "title": "Party label versus a peer with no label",
+            "question": "Does a comment that names a party move a stated opinion more than a comment with the same argument and no party name, in a group of five strangers?",
+            "claim": "In a group of strangers, a party label is a shortcut, and it should move the restatement more than an unlabeled argument of the same length.",
+            "population": "A small experiment with adults, five per group, one issue, and random assignment of the label.",
+            "outcome": "Change in the stated opinion from before the comments to the restatement.",
+            "why_it_might_be_nonobvious": "Party cues are strong in polls. They may be weaker when the other four people are visible peers rather than a news source."
+          },
+          "input_tokens": 8600,
+          "output_tokens": 1600,
+          "reasoning_tokens": 720,
+          "latency_ms": 11080
+        },
+        {
+          "role": "methodologist",
+          "kind": "method",
+          "iteration": null,
+          "payload": {
+            "design": "Adults in groups of five read two comments that make the same argument. One comment names a party and one does not. Assignment of which comment is labeled is random.",
+            "data": "A small experiment on one issue.",
+            "comparison": "Party label versus the same argument with no label.",
+            "main_threat": "A familiar party name may change attention rather than the opinion itself."
+          },
+          "input_tokens": 5200,
+          "output_tokens": 1400,
+          "reasoning_tokens": 630,
+          "latency_ms": 10950
+        },
+        {
+          "role": "critic",
+          "kind": "critique",
+          "iteration": null,
+          "payload": {
+            "fatal": false,
+            "flaws": [
+              "The public restatement can move without a private update.",
+              "The comparison can pick up comment length as well as the intended contrast."
+            ],
+            "required_change": "The revision matches the labeled and unlabeled comments on length and on the argument, because the critic said a longer comment could imitate a party cue."
+          },
+          "input_tokens": 6100,
+          "output_tokens": 700,
+          "reasoning_tokens": 315,
+          "latency_ms": 9620
+        },
+        {
+          "role": "methodologist",
+          "kind": "revision",
+          "iteration": null,
+          "payload": {
+            "idea": {
+              "title": "Party label versus a peer with no label",
+              "question": "Does a comment that names a party move a stated opinion more than a comment with the same argument and no party name, in a group of five strangers?",
+              "claim": "In a group of strangers, a party label is a shortcut, and it should move the restatement more than an unlabeled argument of the same length.",
+              "population": "A small experiment with adults, five per group, one issue, and random assignment of the label.",
+              "outcome": "Change from the first statement to the restatement, with the labeled and unlabeled comments matched on length and argument.",
+              "why_it_might_be_nonobvious": "Party cues are strong in polls. They may be weaker when the other four people are visible peers rather than a news source."
+            },
+            "method": {
+              "design": "Adults in groups of five read two comments that make the same argument. One comment names a party and one does not. Assignment of which comment is labeled is random.",
+              "data": "A small experiment on one issue.",
+              "comparison": "Party label versus the same argument with no label.",
+              "main_threat": "A familiar party name may change attention rather than the opinion itself."
+            },
+            "what_changed": "The revision matches the labeled and unlabeled comments on length and on the argument, because the critic said a longer comment could imitate a party cue."
+          },
+          "input_tokens": 7400,
+          "output_tokens": 1900,
+          "reasoning_tokens": 855,
+          "latency_ms": 13690
+        }
+      ]
+    }
+  ],
+  "vote": {
+    "thread_id": "01936a80-0000-7000-8000-000000000006",
+    "ballots": [
+      {
+        "voter": "social_psychologist",
+        "scores": [
+          {
+            "round_index": 1,
+            "non_obvious": 4,
+            "feasible": 4,
+            "method_fits_question": 4
+          },
+          {
+            "round_index": 2,
+            "non_obvious": 3,
+            "feasible": 3,
+            "method_fits_question": 3
+          },
+          {
+            "round_index": 3,
+            "non_obvious": 5,
+            "feasible": 4,
+            "method_fits_question": 4
+          },
+          {
+            "round_index": 4,
+            "non_obvious": 3,
+            "feasible": 2,
+            "method_fits_question": 3
+          },
+          {
+            "round_index": 5,
+            "non_obvious": 4,
+            "feasible": 4,
+            "method_fits_question": 3
+          }
+        ]
+      },
+      {
+        "voter": "computer_scientist",
+        "scores": [
+          {
+            "round_index": 1,
+            "non_obvious": 4,
+            "feasible": 3,
+            "method_fits_question": 4
+          },
+          {
+            "round_index": 2,
+            "non_obvious": 3,
+            "feasible": 3,
+            "method_fits_question": 3
+          },
+          {
+            "round_index": 3,
+            "non_obvious": 4,
+            "feasible": 5,
+            "method_fits_question": 4
+          },
+          {
+            "round_index": 4,
+            "non_obvious": 2,
+            "feasible": 3,
+            "method_fits_question": 2
+          },
+          {
+            "round_index": 5,
+            "non_obvious": 4,
+            "feasible": 3,
+            "method_fits_question": 4
+          }
+        ]
+      },
+      {
+        "voter": "communications_researcher",
+        "scores": [
+          {
+            "round_index": 1,
+            "non_obvious": 3,
+            "feasible": 4,
+            "method_fits_question": 4
+          },
+          {
+            "round_index": 2,
+            "non_obvious": 3,
+            "feasible": 4,
+            "method_fits_question": 3
+          },
+          {
+            "round_index": 3,
+            "non_obvious": 4,
+            "feasible": 4,
+            "method_fits_question": 4
+          },
+          {
+            "round_index": 4,
+            "non_obvious": 3,
+            "feasible": 2,
+            "method_fits_question": 3
+          },
+          {
+            "round_index": 5,
+            "non_obvious": 3,
+            "feasible": 4,
+            "method_fits_question": 3
+          }
+        ]
+      },
+      {
+        "voter": "sociologist",
+        "scores": [
+          {
+            "round_index": 1,
+            "non_obvious": 4,
+            "feasible": 3,
+            "method_fits_question": 4
+          },
+          {
+            "round_index": 2,
+            "non_obvious": 3,
+            "feasible": 3,
+            "method_fits_question": 3
+          },
+          {
+            "round_index": 3,
+            "non_obvious": 4,
+            "feasible": 5,
+            "method_fits_question": 4
+          },
+          {
+            "round_index": 4,
+            "non_obvious": 2,
+            "feasible": 3,
+            "method_fits_question": 3
+          },
+          {
+            "round_index": 5,
+            "non_obvious": 4,
+            "feasible": 4,
+            "method_fits_question": 3
+          }
+        ]
+      },
+      {
+        "voter": "political_scientist",
+        "scores": [
+          {
+            "round_index": 1,
+            "non_obvious": 3,
+            "feasible": 4,
+            "method_fits_question": 4
+          },
+          {
+            "round_index": 2,
+            "non_obvious": 2,
+            "feasible": 3,
+            "method_fits_question": 3
+          },
+          {
+            "round_index": 3,
+            "non_obvious": 4,
+            "feasible": 4,
+            "method_fits_question": 4
+          },
+          {
+            "round_index": 4,
+            "non_obvious": 2,
+            "feasible": 2,
+            "method_fits_question": 3
+          },
+          {
+            "round_index": 5,
+            "non_obvious": 3,
+            "feasible": 3,
+            "method_fits_question": 4
+          }
+        ]
+      },
+      {
+        "voter": "methodologist",
+        "scores": [
+          {
+            "round_index": 1,
+            "non_obvious": 3,
+            "feasible": 4,
+            "method_fits_question": 4
+          },
+          {
+            "round_index": 2,
+            "non_obvious": 2,
+            "feasible": 4,
+            "method_fits_question": 3
+          },
+          {
+            "round_index": 3,
+            "non_obvious": 3,
+            "feasible": 5,
+            "method_fits_question": 4
+          },
+          {
+            "round_index": 4,
+            "non_obvious": 2,
+            "feasible": 3,
+            "method_fits_question": 3
+          },
+          {
+            "round_index": 5,
+            "non_obvious": 4,
+            "feasible": 4,
+            "method_fits_question": 3
+          }
+        ]
+      },
+      {
+        "voter": "critic",
+        "scores": [
+          {
+            "round_index": 1,
+            "non_obvious": 4,
+            "feasible": 3,
+            "method_fits_question": 4
+          },
+          {
+            "round_index": 2,
+            "non_obvious": 3,
+            "feasible": 3,
+            "method_fits_question": 3
+          },
+          {
+            "round_index": 3,
+            "non_obvious": 4,
+            "feasible": 4,
+            "method_fits_question": 4
+          },
+          {
+            "round_index": 4,
+            "non_obvious": 3,
+            "feasible": 2,
+            "method_fits_question": 3
+          },
+          {
+            "round_index": 5,
+            "non_obvious": 3,
+            "feasible": 3,
+            "method_fits_question": 4
+          }
+        ]
+      }
+    ],
+    "ranking": [
+      3,
+      1,
+      5,
+      2,
+      4
+    ],
+    "top_three": [
+      3,
+      1,
+      5
+    ]
+  },
+  "total_input_tokens": 348900,
+  "total_output_tokens": 78400
+}
