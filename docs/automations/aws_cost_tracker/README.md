@@ -23,10 +23,10 @@ Check the lab AWS account (account 517478598677, mostly us-east-2) for cost anom
    - A service appears that wasn't billed in the previous 30 days and costs more than $1.
    - Athena data scanned in one day exceeds 1 TB.
    - Bedrock or other model-inference charges appear unexpectedly.
-4. Budget threshold. The initial limit is $150 per calendar month.
-   - Alert when month-to-date spend crosses 80% ($120).
-   - Alert again when it crosses 100% ($150).
-   - Alert when the month's forecast exceeds $150 and month-to-date spend has not crossed it yet.
+4. Budget threshold. The initial limit is $200 per calendar month.
+   - Alert when month-to-date spend crosses 80% ($160).
+   - Alert again when it crosses 100% ($200).
+   - Alert when the month's forecast exceeds $200 and month-to-date spend has not crossed it yet.
    - Send each of these alerts once per month. Keep track of what has already been sent in `/workspace/aws_cost_tracker/state.json`, so the same crossing isn't reported every 3 hours.
 5. Find the cause of each anomaly.
    - Name the service, usage type, day, and dollar amount.
